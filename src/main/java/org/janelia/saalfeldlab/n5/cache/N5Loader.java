@@ -2,22 +2,13 @@ package org.janelia.saalfeldlab.n5.cache;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.concurrent.Callable;
 import java.util.function.Function;
 
 import org.janelia.saalfeldlab.n5.AbstractDataBlock;
 import org.janelia.saalfeldlab.n5.DatasetAttributes;
 import org.janelia.saalfeldlab.n5.N5;
 
-import bdv.util.BdvFunctions;
-import bdv.util.BdvStackSource;
 import net.imglib2.Interval;
-import net.imglib2.cache.img.DiskCellCache;
-import net.imglib2.cache.img.PrimitiveType;
-import net.imglib2.cache.queue.BlockingFetchQueues;
-import net.imglib2.cache.queue.FetcherThreads;
-import net.imglib2.cache.util.IntervalKeyLoaderAsLongKeyLoader;
-import net.imglib2.img.Img;
 import net.imglib2.img.basictypeaccess.array.ByteArray;
 import net.imglib2.img.basictypeaccess.array.CharArray;
 import net.imglib2.img.basictypeaccess.array.DoubleArray;
@@ -32,10 +23,6 @@ import net.imglib2.img.basictypeaccess.volatiles.array.VolatileFloatArray;
 import net.imglib2.img.basictypeaccess.volatiles.array.VolatileIntArray;
 import net.imglib2.img.basictypeaccess.volatiles.array.VolatileLongArray;
 import net.imglib2.img.basictypeaccess.volatiles.array.VolatileShortArray;
-import net.imglib2.img.cell.CellGrid;
-import net.imglib2.type.numeric.integer.UnsignedShortType;
-import net.imglib2.type.volatiles.VolatileUnsignedShortType;
-import net.imglib2.util.Pair;
 
 public class N5Loader< A > implements Function< Interval, A >
 {
@@ -105,37 +92,6 @@ public class N5Loader< A > implements Function< Interval, A >
 			else
 				throw new RuntimeException( "Do not support this class: " + blockData.getClass().getName() );
 		};
-	}
-
-
-	public static void main( final String[] args ) throws IOException
-	{
-		final String n5path = "/data/hanslovskyp/n5-tests/davi-toy-set";
-		final String dataset = "excerpt";
-		final N5 n5 = new N5( n5path );
-		final DatasetAttributes attr = n5.getDatasetAttributes( dataset );
-		final long[] dim = attr.getDimensions();
-		final int[] cellSize = attr.getBlockSize();
-
-		final CellGrid grid = new CellGrid( dim, cellSize );
-
-		System.out.println( attr.getNumDimensions() + " " + attr.getDataType() + " " + attr.getCompressionType() + " " + Arrays.toString( attr.getDimensions() ) + " " + Arrays.toString( attr.getBlockSize() ) );
-
-		final int numProc = Runtime.getRuntime().availableProcessors();
-		final int maxNumLevels = 1;
-		final int numFetcherThreads = numProc - 1;
-		final BlockingFetchQueues< Callable< ? > > queue = new BlockingFetchQueues<>( maxNumLevels );
-		new FetcherThreads( queue, numFetcherThreads );
-
-		final N5Loader< VolatileShortArray > loader = new N5Loader<>( n5, dataset, cellSize, defaultArrayAccessGenerator( true ) );
-		final IntervalKeyLoaderAsLongKeyLoader< VolatileShortArray > longKeyLoader = new IntervalKeyLoaderAsLongKeyLoader<>( grid, loader );
-
-		final Pair< Img< UnsignedShortType >, Img< VolatileUnsignedShortType > > imgs =
-				CacheUtil.createImgAndVolatileImgFromCacheLoader( grid, queue, longKeyLoader, new UnsignedShortType(), new VolatileUnsignedShortType(), PrimitiveType.SHORT, DiskCellCache.createTempDirectory( "blocks", true ) );
-
-		final BdvStackSource< VolatileUnsignedShortType > bdv = BdvFunctions.show( imgs.getB(), "volatile!" );
-		bdv.getBdvHandle().getSetupAssignments().getMinMaxGroups().get( 0 ).setRange( 0, 255 );
-
 	}
 
 }
