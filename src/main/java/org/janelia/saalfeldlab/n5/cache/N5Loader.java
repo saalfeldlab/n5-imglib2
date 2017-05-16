@@ -83,6 +83,7 @@ public class N5Loader< A > implements Function< Interval, A >
 		return access;
 	}
 
+	@SuppressWarnings( "unchecked" )
 	public static < A > Function< AbstractDataBlock< ? >, A > defaultArrayAccessGenerator( final boolean loadVolatile )
 	{
 		return block -> {
