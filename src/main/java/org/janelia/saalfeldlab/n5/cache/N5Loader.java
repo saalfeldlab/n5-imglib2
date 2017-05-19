@@ -2,29 +2,35 @@ package org.janelia.saalfeldlab.n5.cache;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.function.Function;
+import java.util.function.BiConsumer;
 
 import org.janelia.saalfeldlab.n5.AbstractDataBlock;
 import org.janelia.saalfeldlab.n5.DatasetAttributes;
 import org.janelia.saalfeldlab.n5.N5;
 
-import net.imglib2.Interval;
-import net.imglib2.img.basictypeaccess.array.ByteArray;
-import net.imglib2.img.basictypeaccess.array.CharArray;
-import net.imglib2.img.basictypeaccess.array.DoubleArray;
-import net.imglib2.img.basictypeaccess.array.FloatArray;
-import net.imglib2.img.basictypeaccess.array.IntArray;
-import net.imglib2.img.basictypeaccess.array.LongArray;
-import net.imglib2.img.basictypeaccess.array.ShortArray;
-import net.imglib2.img.basictypeaccess.volatiles.array.VolatileByteArray;
-import net.imglib2.img.basictypeaccess.volatiles.array.VolatileCharArray;
-import net.imglib2.img.basictypeaccess.volatiles.array.VolatileDoubleArray;
-import net.imglib2.img.basictypeaccess.volatiles.array.VolatileFloatArray;
-import net.imglib2.img.basictypeaccess.volatiles.array.VolatileIntArray;
-import net.imglib2.img.basictypeaccess.volatiles.array.VolatileLongArray;
-import net.imglib2.img.basictypeaccess.volatiles.array.VolatileShortArray;
+import net.imglib2.Cursor;
+import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.cache.img.CellLoader;
+import net.imglib2.img.Img;
+import net.imglib2.img.array.ArrayImgs;
+import net.imglib2.type.NativeType;
+import net.imglib2.type.Type;
+import net.imglib2.type.numeric.complex.ComplexDoubleType;
+import net.imglib2.type.numeric.complex.ComplexFloatType;
+import net.imglib2.type.numeric.integer.ByteType;
+import net.imglib2.type.numeric.integer.IntType;
+import net.imglib2.type.numeric.integer.LongType;
+import net.imglib2.type.numeric.integer.ShortType;
+import net.imglib2.type.numeric.integer.UnsignedByteType;
+import net.imglib2.type.numeric.integer.UnsignedIntType;
+import net.imglib2.type.numeric.integer.UnsignedShortType;
+import net.imglib2.type.numeric.real.DoubleType;
+import net.imglib2.type.numeric.real.FloatType;
+import net.imglib2.util.Intervals;
+import net.imglib2.util.Util;
+import net.imglib2.view.Views;
 
-public class N5Loader< A > implements Function< Interval, A >
+public class N5Loader< T extends NativeType< T > > implements CellLoader< T >
 {
 
 
@@ -36,22 +42,27 @@ public class N5Loader< A > implements Function< Interval, A >
 
 	private final DatasetAttributes attributes;
 
-	private final Function< AbstractDataBlock< ? >, A > accessGenerator;
+	private final BiConsumer< Img< T >, AbstractDataBlock< ? > > copyFromBlock;
 
-	public N5Loader( final N5 n5, final String dataset, final int[] cellDimensions, final Function< AbstractDataBlock< ? >, A > accessGenerator ) throws IOException
+	public N5Loader( final N5 n5, final String dataset, final int[] cellDimensions ) throws IOException
+	{
+		this( n5, dataset, cellDimensions, defaultCopyFromBlock() );
+	}
+
+	public N5Loader( final N5 n5, final String dataset, final int[] cellDimensions, final BiConsumer< Img< T >, AbstractDataBlock< ? > > copyFromBlock ) throws IOException
 	{
 		super();
 		this.n5 = n5;
 		this.dataset = dataset;
 		this.cellDimensions = cellDimensions;
-		this.accessGenerator = accessGenerator;
 		this.attributes = n5.getDatasetAttributes( dataset );
+		this.copyFromBlock = copyFromBlock;
 		if ( ! Arrays.equals( this.cellDimensions, attributes.getBlockSize() ) )
 			throw new RuntimeException( "Cell dimensions inconsistent! " + " " + Arrays.toString( cellDimensions ) + " " + Arrays.toString( attributes.getBlockSize() ) );
 	}
 
 	@Override
-	public A apply( final Interval interval )
+	public void load( final Img< T > interval )
 	{
 		final long[] gridPosition = new long[ interval.numDimensions() ];
 		for ( int d = 0; d < gridPosition.length; ++d )
@@ -66,32 +77,52 @@ public class N5Loader< A > implements Function< Interval, A >
 			throw new RuntimeException( e );
 		}
 
-		final A access = accessGenerator.apply( block );
-		return access;
+		copyFromBlock.accept( interval, block );
+	}
+
+	public static < T extends Type< T > > void burnIn( final RandomAccessibleInterval< T > source, final RandomAccessibleInterval< T > target )
+	{
+		for ( Cursor< T > s = Views.flatIterable( source ).cursor(), t = Views.flatIterable( target ).cursor(); t.hasNext(); )
+			t.next().set( s.next() );
 	}
 
 	@SuppressWarnings( "unchecked" )
-	public static < A > Function< AbstractDataBlock< ? >, A > defaultArrayAccessGenerator( final boolean loadVolatile )
+	public static < T extends NativeType< T > > BiConsumer< Img< T >, AbstractDataBlock< ? > > defaultCopyFromBlock()
 	{
-		return block -> {
-			final Object blockData = block.getData();
-			if ( blockData instanceof byte[] )
-				return ( A ) ( loadVolatile ? new VolatileByteArray( ( byte[] ) blockData, true ) : new ByteArray( ( byte[] ) blockData ) );
-			if ( blockData instanceof char[] )
-				return ( A ) ( loadVolatile ? new VolatileCharArray( ( char[] ) blockData, true ) : new CharArray( ( char[] ) blockData ) );
-			else if ( blockData instanceof short[] )
-				return ( A ) ( loadVolatile ? new VolatileShortArray( ( short[] ) blockData, true ) : new ShortArray( ( short[] ) blockData ) );
-			else if ( blockData instanceof int[] )
-				return ( A ) ( loadVolatile ? new VolatileIntArray( ( int[] ) blockData, true ) : new IntArray( ( int[] ) blockData ) );
-			else if ( blockData instanceof long[] )
-				return ( A ) ( loadVolatile ? new VolatileLongArray( ( long[] ) blockData, true ) : new LongArray( ( long[] ) blockData ) );
-			else if ( blockData instanceof float[] )
-				return ( A ) ( loadVolatile ? new VolatileFloatArray( ( float[] ) blockData, true ) : new FloatArray( ( float[] ) blockData ) );
-			else if ( blockData instanceof double[] )
-				return ( A ) ( loadVolatile ? new VolatileDoubleArray( ( double[] ) blockData, true ) : new DoubleArray( ( double[] ) blockData ) );
+
+		final BiConsumer< Img< T >, AbstractDataBlock< ? > > copyFromBlock = ( img, block ) -> {
+			final T t = Util.getTypeFromInterval( img );
+			final long[] dim = Intervals.dimensionsAsLongArray( img );
+
+			if ( t instanceof ByteType )
+				burnIn( (Img< T > )ArrayImgs.bytes( (byte[]) block.getData(), dim ), img );
+			else if ( t instanceof ShortType )
+				burnIn( ( Img< T > ) ArrayImgs.shorts( ( short[] ) block.getData(), dim ), img );
+			else if ( t instanceof IntType )
+				burnIn( ( Img< T > ) ArrayImgs.ints( ( int[] ) block.getData(), dim ), img );
+			else if ( t instanceof LongType )
+				burnIn( ( Img< T > ) ArrayImgs.longs( ( long[] ) block.getData(), dim ), img );
+			else if ( t instanceof UnsignedByteType )
+				burnIn( ( Img< T > ) ArrayImgs.unsignedBytes( ( byte[] ) block.getData(), dim ), img );
+			else if ( t instanceof UnsignedShortType )
+				burnIn( ( Img< T > ) ArrayImgs.unsignedShorts( ( short[] ) block.getData(), dim ), img );
+			else if ( t instanceof UnsignedIntType )
+				burnIn( ( Img< T > ) ArrayImgs.unsignedInts( ( int[] ) block.getData(), dim ), img );
+			else if ( t instanceof FloatType )
+				burnIn( ( Img< T > ) ArrayImgs.floats( ( float[] ) block.getData(), dim ), img );
+			else if ( t instanceof DoubleType )
+				burnIn( ( Img< T > ) ArrayImgs.doubles( ( double[] ) block.getData(), dim ), img );
+			else if ( t instanceof ComplexFloatType )
+				burnIn( ( Img< T > ) ArrayImgs.complexFloats( ( float[] ) block.getData(), dim ), img );
+			else if ( t instanceof ComplexDoubleType )
+				burnIn( ( Img< T > ) ArrayImgs.complexDoubles( ( double[] ) block.getData(), dim ), img );
 			else
-				throw new RuntimeException( "Do not support this class: " + blockData.getClass().getName() );
+				throw new IllegalArgumentException( "Type " + t.getClass().getName() + " not supported!" );
+
 		};
+
+		return copyFromBlock;
+
 	}
 
 }

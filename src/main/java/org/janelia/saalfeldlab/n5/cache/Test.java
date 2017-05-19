@@ -2,33 +2,21 @@ package org.janelia.saalfeldlab.n5.cache;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.concurrent.Callable;
 
 import org.janelia.saalfeldlab.n5.DatasetAttributes;
 import org.janelia.saalfeldlab.n5.N5;
 
 import bdv.util.BdvFunctions;
-import bdv.util.BdvOptions;
 import bdv.util.BdvStackSource;
+import bdv.util.volatiles.SharedQueue;
+import bdv.util.volatiles.VolatileViews;
 import bdv.viewer.DisplayMode;
-import net.imglib2.RealRandomAccessible;
-import net.imglib2.cache.img.DiskCellCache;
-import net.imglib2.cache.img.PrimitiveType;
-import net.imglib2.cache.queue.BlockingFetchQueues;
-import net.imglib2.cache.queue.FetcherThreads;
-import net.imglib2.cache.util.IntervalKeyLoaderAsLongKeyLoader;
-import net.imglib2.img.Img;
-import net.imglib2.img.basictypeaccess.volatiles.array.VolatileByteArray;
+import net.imglib2.cache.img.DiskCachedCellImg;
+import net.imglib2.cache.img.DiskCachedCellImgFactory;
+import net.imglib2.cache.img.DiskCachedCellImgOptions;
 import net.imglib2.img.cell.CellGrid;
-import net.imglib2.interpolation.randomaccess.NearestNeighborInterpolatorFactory;
-import net.imglib2.realtransform.AffineTransform3D;
-import net.imglib2.realtransform.InverseRealTransform;
-import net.imglib2.realtransform.RealTransformRealRandomAccessible;
-import net.imglib2.realtransform.RealViews;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.volatiles.VolatileUnsignedByteType;
-import net.imglib2.util.Pair;
-import net.imglib2.view.Views;
 
 public class Test
 {
@@ -40,8 +28,13 @@ public class Test
 //		final String dataset = "excerpt";
 
 		// tomoko
-		final String n5path = "/data/hanslovskyp/tomoko/n5-test";
-		final String dataset = "z=0,512-raw";
+//		final String n5path = "/data/hanslovskyp/tomoko/n5-test";
+//		final String dataset = "z=0,512-bzip2";
+
+		// nrs
+		final String n5path = "/nrs/saalfeld/hanslovskyp/CutOn4-15-2013_ImagedOn1-27-2014/aligned/substacks/1300-3449/4000x2500+5172+1416/n5";
+		final String dataset = "gzip";
+
 		final N5 n5 = new N5( n5path );
 		final DatasetAttributes attr = n5.getDatasetAttributes( dataset );
 		final long[] dim = attr.getDimensions();
@@ -52,33 +45,24 @@ public class Test
 		System.out.println( attr.getNumDimensions() + " " + attr.getDataType() + " " + attr.getCompressionType() + " " + Arrays.toString( attr.getDimensions() ) + " " + Arrays.toString( attr.getBlockSize() ) );
 
 		final int numProc = Runtime.getRuntime().availableProcessors();
-		final int maxNumLevels = 1;
-		final int numFetcherThreads = numProc - 1;
-		final BlockingFetchQueues< Callable< ? > > queue = new BlockingFetchQueues<>( maxNumLevels );
-		new FetcherThreads( queue, numFetcherThreads );
 
-		final N5Loader< VolatileByteArray > loader = new N5Loader<>( n5, dataset, cellSize, N5Loader.defaultArrayAccessGenerator( true ) );
-		final IntervalKeyLoaderAsLongKeyLoader< VolatileByteArray > longKeyLoader = new IntervalKeyLoaderAsLongKeyLoader<>( grid, loader );
+		final SharedQueue queue = new SharedQueue( numProc - 1 );
 
-		final Pair< Img< UnsignedByteType >, Img< VolatileUnsignedByteType > > imgs =
-				CacheUtil.createImgAndVolatileImgFromCacheLoader( grid, queue, longKeyLoader, new UnsignedByteType(), new VolatileUnsignedByteType(), PrimitiveType.BYTE, DiskCellCache.createTempDirectory( "blocks", true ) );
+		final N5Loader< UnsignedByteType > loader = new N5Loader<>( n5, dataset, cellSize );
 
+		final DiskCachedCellImgOptions options = DiskCachedCellImgOptions
+				.options()
+				.cellDimensions( cellSize )
+				.dirtyAccesses( false )
+				.maxCacheSize( 100 );
 
-		final AffineTransform3D tf = new AffineTransform3D();
-		tf.setTranslation( 1000, 1000, 0 );
-		final RealRandomAccessible< UnsignedByteType > extendedAndInterpolated = Views.interpolate( Views.extendValue( imgs.getA(), new UnsignedByteType( 255 ) ), new NearestNeighborInterpolatorFactory<>() );
-		final RealTransformRealRandomAccessible< UnsignedByteType, InverseRealTransform > transformed = RealViews.transformReal( extendedAndInterpolated, tf );
+		final DiskCachedCellImgFactory< UnsignedByteType > factory = new DiskCachedCellImgFactory<>( options );
 
-		final IntervalKeyLoaderAsLongKeyLoader< VolatileByteArray > otherLoader = new IntervalKeyLoaderAsLongKeyLoader<>( grid, new TransformedAccessibleLoader<>( Views.raster( transformed ), new UnsignedByteType() ) );
+		final DiskCachedCellImg< UnsignedByteType, ? > img = factory.create( dim, new UnsignedByteType(), loader );
 
-		final Pair< Img< UnsignedByteType >, Img< VolatileUnsignedByteType > > imgs2 =
-				CacheUtil.createImgAndVolatileImgFromCacheLoader( grid, queue, otherLoader, new UnsignedByteType(), new VolatileUnsignedByteType(), PrimitiveType.BYTE, DiskCellCache.createTempDirectory( "translated", true ) );
-
-		final BdvStackSource< VolatileUnsignedByteType > bdv = BdvFunctions.show( imgs.getB(), "volatile!" );
-		BdvFunctions.show( imgs2.getB(), "translated!", BdvOptions.options().addTo( bdv ) );
+		final BdvStackSource< VolatileUnsignedByteType > bdv = BdvFunctions.show( VolatileViews.wrapAsVolatile( img, queue ), "volatile!" );
 
 		bdv.getBdvHandle().getSetupAssignments().getMinMaxGroups().get( 0 ).setRange( 0, 255 );
-		bdv.getBdvHandle().getSetupAssignments().getMinMaxGroups().get( 1 ).setRange( 0, 255 );
 		bdv.getBdvHandle().getViewerPanel().setDisplayMode( DisplayMode.SINGLE );
 
 	}
