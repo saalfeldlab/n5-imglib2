@@ -7,16 +7,23 @@ import org.janelia.saalfeldlab.n5.DatasetAttributes;
 import org.janelia.saalfeldlab.n5.N5;
 
 import bdv.util.BdvFunctions;
+import bdv.util.BdvOptions;
 import bdv.util.BdvStackSource;
 import bdv.util.volatiles.SharedQueue;
 import bdv.util.volatiles.VolatileViews;
 import bdv.viewer.DisplayMode;
+import net.imglib2.RealRandomAccessible;
 import net.imglib2.cache.img.DiskCachedCellImg;
 import net.imglib2.cache.img.DiskCachedCellImgFactory;
 import net.imglib2.cache.img.DiskCachedCellImgOptions;
 import net.imglib2.img.cell.CellGrid;
+import net.imglib2.interpolation.randomaccess.NLinearInterpolatorFactory;
+import net.imglib2.realtransform.AffineTransform3D;
+import net.imglib2.realtransform.RealViews;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.volatiles.VolatileUnsignedByteType;
+import net.imglib2.view.RandomAccessibleOnRealRandomAccessible;
+import net.imglib2.view.Views;
 
 public class Test
 {
@@ -61,9 +68,19 @@ public class Test
 		final DiskCachedCellImg< UnsignedByteType, ? > img = factory.create( dim, new UnsignedByteType(), loader );
 
 		final BdvStackSource< VolatileUnsignedByteType > bdv = BdvFunctions.show( VolatileViews.wrapAsVolatile( img, queue ), "volatile!" );
-
 		bdv.getBdvHandle().getSetupAssignments().getMinMaxGroups().get( 0 ).setRange( 0, 255 );
 		bdv.getBdvHandle().getViewerPanel().setDisplayMode( DisplayMode.SINGLE );
+
+		final RealRandomAccessible< UnsignedByteType > transformSource = Views.interpolate( Views.extendBorder( img ), new NLinearInterpolatorFactory<>() );
+		final AffineTransform3D transform = new AffineTransform3D();
+		transform.setTranslation( 100, 200, 0 );
+		final RandomAccessibleOnRealRandomAccessible< UnsignedByteType > transformed = Views.raster( RealViews.transformReal( transformSource, transform ) );
+		final RandomAccessibleLoader< UnsignedByteType > transformLoader = new RandomAccessibleLoader<>( transformed );
+		final DiskCachedCellImg< UnsignedByteType, ? > transformedCellImg = factory.create( dim, new UnsignedByteType(), transformLoader );
+		BdvFunctions.show( VolatileViews.wrapAsVolatile( transformedCellImg, queue ), "transformed", BdvOptions.options().addTo( bdv ) );
+		bdv.getBdvHandle().getSetupAssignments().getMinMaxGroups().get( 1 ).setRange( 0, 255 );
+
+
 
 	}
 
