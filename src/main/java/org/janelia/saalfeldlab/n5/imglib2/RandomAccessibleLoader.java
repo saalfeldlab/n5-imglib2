@@ -1,4 +1,4 @@
-package org.janelia.saalfeldlab.n5.cache;
+package org.janelia.saalfeldlab.n5.imglib2;
 
 import net.imglib2.Cursor;
 import net.imglib2.Interval;
@@ -12,7 +12,6 @@ import net.imglib2.view.Views;
 
 public class RandomAccessibleLoader< T extends NativeType< T > > implements CellLoader< T >
 {
-
 	public static interface AccessGenerator< T extends NativeType< T >, A >
 	{
 		public ArrayImg< T, A > createAccess( long[] dim );
@@ -21,11 +20,9 @@ public class RandomAccessibleLoader< T extends NativeType< T > > implements Cell
 		{
 			return createAccess( Intervals.dimensionsAsLongArray( interval ) );
 		}
-
 	}
 
 	private final RandomAccessible< T > source;
-
 
 	public RandomAccessibleLoader( final RandomAccessible< T > source )
 	{
@@ -39,7 +36,4 @@ public class RandomAccessibleLoader< T extends NativeType< T > > implements Cell
 		for ( Cursor< T > s = Views.flatIterable( Views.interval( source, interval ) ).cursor(), t = interval.cursor(); s.hasNext(); )
 			t.next().set( s.next() );
 	}
-
-
-
 }

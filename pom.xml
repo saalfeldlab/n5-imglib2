@@ -10,7 +10,7 @@
 	</parent>
 
 	<groupId>org.janelia.saalfeldlab</groupId>
-	<artifactId>n5-cache-loader</artifactId>
+	<artifactId>n5-imglib2</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 
 	<name>N5 Cache Loader</name>

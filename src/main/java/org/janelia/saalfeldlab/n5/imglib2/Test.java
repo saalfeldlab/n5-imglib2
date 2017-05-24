@@ -1,4 +1,4 @@
-package org.janelia.saalfeldlab.n5.cache;
+package org.janelia.saalfeldlab.n5.imglib2;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -55,7 +55,7 @@ public class Test
 
 		final SharedQueue queue = new SharedQueue( numProc - 1 );
 
-		final N5Loader< UnsignedByteType > loader = new N5Loader<>( n5, dataset, cellSize );
+		final N5CellLoader< UnsignedByteType > loader = new N5CellLoader<>( n5, dataset, cellSize );
 
 		final DiskCachedCellImgOptions options = DiskCachedCellImgOptions
 				.options()
