@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.function.BiConsumer;
 
 import org.janelia.saalfeldlab.n5.DataBlock;
+import org.janelia.saalfeldlab.n5.DataType;
 import org.janelia.saalfeldlab.n5.DatasetAttributes;
 import org.janelia.saalfeldlab.n5.N5;
 
@@ -12,24 +13,14 @@ import net.imglib2.Cursor;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.cache.img.CellLoader;
 import net.imglib2.img.Img;
-import net.imglib2.img.array.ArrayImgs;
-import net.imglib2.img.basictypeaccess.array.LongArray;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.Type;
-import net.imglib2.type.numeric.complex.ComplexDoubleType;
-import net.imglib2.type.numeric.complex.ComplexFloatType;
-import net.imglib2.type.numeric.integer.ByteType;
-import net.imglib2.type.numeric.integer.IntType;
-import net.imglib2.type.numeric.integer.LongType;
-import net.imglib2.type.numeric.integer.ShortType;
-import net.imglib2.type.numeric.integer.UnsignedByteType;
-import net.imglib2.type.numeric.integer.UnsignedIntType;
-import net.imglib2.type.numeric.integer.UnsignedLongType;
-import net.imglib2.type.numeric.integer.UnsignedShortType;
+import net.imglib2.type.numeric.integer.GenericByteType;
+import net.imglib2.type.numeric.integer.GenericIntType;
+import net.imglib2.type.numeric.integer.GenericLongType;
+import net.imglib2.type.numeric.integer.GenericShortType;
 import net.imglib2.type.numeric.real.DoubleType;
 import net.imglib2.type.numeric.real.FloatType;
-import net.imglib2.util.Intervals;
-import net.imglib2.util.Util;
 import net.imglib2.view.Views;
 
 public class N5CellLoader< T extends NativeType< T > > implements CellLoader< T >
@@ -46,17 +37,12 @@ public class N5CellLoader< T extends NativeType< T > > implements CellLoader< T 
 
 	public N5CellLoader( final N5 n5, final String dataset, final int[] cellDimensions ) throws IOException
 	{
-		this( n5, dataset, cellDimensions, defaultCopyFromBlock() );
-	}
-
-	public N5CellLoader( final N5 n5, final String dataset, final int[] cellDimensions, final BiConsumer< Img< T >, DataBlock< ? > > copyFromBlock ) throws IOException
-	{
 		super();
 		this.n5 = n5;
 		this.dataset = dataset;
 		this.cellDimensions = cellDimensions;
 		this.attributes = n5.getDatasetAttributes( dataset );
-		this.copyFromBlock = copyFromBlock;
+		this.copyFromBlock = createCopy( attributes.getDataType() );
 		if ( ! Arrays.equals( this.cellDimensions, attributes.getBlockSize() ) )
 			throw new RuntimeException( "Cell dimensions inconsistent! " + " " + Arrays.toString( cellDimensions ) + " " + Arrays.toString( attributes.getBlockSize() ) );
 	}
@@ -86,42 +72,64 @@ public class N5CellLoader< T extends NativeType< T > > implements CellLoader< T 
 			t.next().set( s.next() );
 	}
 
-	@SuppressWarnings( "unchecked" )
-	public static < T extends NativeType< T > > BiConsumer< Img< T >, DataBlock< ? > > defaultCopyFromBlock()
+	public static < T extends NativeType< T > > BiConsumer< Img< T >, DataBlock< ? > > createCopy( final DataType dataType )
 	{
-		final BiConsumer< Img< T >, DataBlock< ? > > copyFromBlock = ( img, block ) -> {
-			final T t = Util.getTypeFromInterval( img );
-			final long[] dim = Intervals.dimensionsAsLongArray( img );
-
-			if ( t instanceof ByteType )
-				burnIn( (Img< T > )ArrayImgs.bytes( (byte[]) block.getData(), dim ), img );
-			else if ( t instanceof ShortType )
-				burnIn( ( Img< T > ) ArrayImgs.shorts( ( short[] ) block.getData(), dim ), img );
-			else if ( t instanceof IntType )
-				burnIn( ( Img< T > ) ArrayImgs.ints( ( int[] ) block.getData(), dim ), img );
-			else if ( t instanceof LongType )
-				burnIn( ( Img< T > ) ArrayImgs.longs( ( long[] ) block.getData(), dim ), img );
-			else if ( t instanceof UnsignedByteType )
-				burnIn( ( Img< T > ) ArrayImgs.unsignedBytes( ( byte[] ) block.getData(), dim ), img );
-			else if ( t instanceof UnsignedShortType )
-				burnIn( ( Img< T > ) ArrayImgs.unsignedShorts( ( short[] ) block.getData(), dim ), img );
-			else if ( t instanceof UnsignedIntType )
-				burnIn( ( Img< T > ) ArrayImgs.unsignedInts( ( int[] ) block.getData(), dim ), img );
-			else if ( t instanceof UnsignedLongType )
-				/* TODO missing factory method in ArrayImgs, replace when ImgLib2 updated */
-				burnIn( ( Img< T > ) ArrayImgs.unsignedLongs( new LongArray( ( long[] ) block.getData() ), dim ), img );
-			else if ( t instanceof FloatType )
-				burnIn( ( Img< T > ) ArrayImgs.floats( ( float[] ) block.getData(), dim ), img );
-			else if ( t instanceof DoubleType )
-				burnIn( ( Img< T > ) ArrayImgs.doubles( ( double[] ) block.getData(), dim ), img );
-			else if ( t instanceof ComplexFloatType )
-				burnIn( ( Img< T > ) ArrayImgs.complexFloats( ( float[] ) block.getData(), dim ), img );
-			else if ( t instanceof ComplexDoubleType )
-				burnIn( ( Img< T > ) ArrayImgs.complexDoubles( ( double[] ) block.getData(), dim ), img );
-			else
-				throw new IllegalArgumentException( "Type " + t.getClass().getName() + " not supported!" );
-		};
-
-		return copyFromBlock;
+		switch ( dataType )
+		{
+		case INT8:
+		case UINT8:
+			return ( a, b ) -> {
+				final byte[] data = ( byte[] )b.getData();
+				@SuppressWarnings( "unchecked" )
+				final Cursor< ? extends GenericByteType< ? > > c = ( Cursor< ? extends GenericByteType< ? > > )a.cursor();
+				for ( int i = 0; i < data.length; ++i )
+					c.next().setByte( data[ i ] );
+			};
+		case INT16:
+		case UINT16:
+			return ( a, b ) -> {
+				final short[] data = ( short[] )b.getData();
+				@SuppressWarnings( "unchecked" )
+				final Cursor< ? extends GenericShortType< ? > > c = ( Cursor< ? extends GenericShortType< ? > > )a.cursor();
+				for ( int i = 0; i < data.length; ++i )
+					c.next().setShort( data[ i ] );
+			};
+		case INT32:
+		case UINT32:
+			return ( a, b ) -> {
+				final int[] data = ( int[] )b.getData();
+				@SuppressWarnings( "unchecked" )
+				final Cursor< ? extends GenericIntType< ? > > c = ( Cursor< ? extends GenericIntType< ? > > )a.cursor();
+				for ( int i = 0; i < data.length; ++i )
+					c.next().setInt( data[ i ] );
+			};
+		case INT64:
+		case UINT64:
+			return ( a, b ) -> {
+				final long[] data = ( long[] )b.getData();
+				@SuppressWarnings( "unchecked" )
+				final Cursor< ? extends GenericLongType< ? > > c = ( Cursor< ? extends GenericLongType< ? > > )a.cursor();
+				for ( int i = 0; i < data.length; ++i )
+					c.next().setLong( data[ i ] );
+			};
+		case FLOAT32:
+			return ( a, b ) -> {
+				final float[] data = ( float[] )b.getData();
+				@SuppressWarnings( "unchecked" )
+				final Cursor< ? extends FloatType > c = ( Cursor< ? extends FloatType > )a.cursor();
+				for ( int i = 0; i < data.length; ++i )
+					c.next().set( data[ i ] );
+			};
+		case FLOAT64:
+			return ( a, b ) -> {
+				final double[] data = ( double[] )b.getData();
+				@SuppressWarnings( "unchecked" )
+				final Cursor< ? extends DoubleType > c = ( Cursor< ? extends DoubleType > )a.cursor();
+				for ( int i = 0; i < data.length; ++i )
+					c.next().set( data[ i ] );
+			};
+		default:
+			throw new IllegalArgumentException( "Type " + dataType.name() + " not supported!" );
+		}
 	}
 }
