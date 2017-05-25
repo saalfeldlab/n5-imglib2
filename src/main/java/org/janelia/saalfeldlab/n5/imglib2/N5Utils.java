@@ -14,11 +14,24 @@ import org.janelia.saalfeldlab.n5.N5;
 
 import net.imglib2.Interval;
 import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.cache.Cache;
+import net.imglib2.cache.img.ArrayDataAccessFactory;
+import net.imglib2.cache.img.CachedCellImg;
 import net.imglib2.cache.img.DiskCachedCellImg;
 import net.imglib2.cache.img.DiskCachedCellImgFactory;
 import net.imglib2.cache.img.DiskCachedCellImgOptions;
+import net.imglib2.cache.img.LoadedCellCacheLoader;
+import net.imglib2.cache.img.PrimitiveType;
+import net.imglib2.cache.ref.SoftRefLoaderCache;
 import net.imglib2.img.array.ArrayImgs;
+import net.imglib2.img.basictypeaccess.array.ByteArray;
+import net.imglib2.img.basictypeaccess.array.DoubleArray;
+import net.imglib2.img.basictypeaccess.array.FloatArray;
+import net.imglib2.img.basictypeaccess.array.IntArray;
 import net.imglib2.img.basictypeaccess.array.LongArray;
+import net.imglib2.img.basictypeaccess.array.ShortArray;
+import net.imglib2.img.cell.Cell;
+import net.imglib2.img.cell.CellGrid;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.integer.ByteType;
 import net.imglib2.type.numeric.integer.IntType;
@@ -145,6 +158,92 @@ public class N5Utils {
 	}
 
 	public static final < T extends NativeType< T > > RandomAccessibleInterval< T > open(
+			final N5 n5,
+			final String dataset ) throws IOException
+	{
+		final DatasetAttributes attributes = n5.getDatasetAttributes( dataset );
+		final long[] dimensions = attributes.getDimensions();
+		final int[] cellSize = attributes.getBlockSize();
+
+		final N5CellLoader< T > loader = new N5CellLoader<>( n5, dataset, cellSize );
+
+		final CellGrid grid = new CellGrid( dimensions, cellSize );
+
+		final CachedCellImg< T, ? > img;
+		final T type;
+		final Cache< Long, Cell< ? > > cache;
+
+		switch ( attributes.getDataType() )
+		{
+		case INT8:
+			type = ( T )new ByteType();
+			cache = ( Cache )new SoftRefLoaderCache< Long, Cell< ByteArray > >()
+					.withLoader( LoadedCellCacheLoader.get( grid, loader, type ) );
+			img = new CachedCellImg( grid, type, cache, ArrayDataAccessFactory.get( PrimitiveType.BYTE ) );
+			break;
+		case UINT8:
+			type = ( T )new UnsignedByteType();
+			cache = ( Cache )new SoftRefLoaderCache< Long, Cell< ByteArray > >()
+					.withLoader( LoadedCellCacheLoader.get( grid, loader, type ) );
+			img = new CachedCellImg( grid,type, cache, ArrayDataAccessFactory.get( PrimitiveType.BYTE ) );
+			break;
+		case INT16:
+			type = ( T )new ShortType();
+			cache = ( Cache )new SoftRefLoaderCache< Long, Cell< ShortArray > >()
+					.withLoader( LoadedCellCacheLoader.get( grid, loader, type ) );
+			img = new CachedCellImg( grid, type, cache, ArrayDataAccessFactory.get( PrimitiveType.SHORT ) );
+			break;
+		case UINT16:
+			type = ( T )new UnsignedShortType();
+			cache = ( Cache )new SoftRefLoaderCache< Long, Cell< ShortArray > >()
+					.withLoader( LoadedCellCacheLoader.get( grid, loader, type ) );
+			img = new CachedCellImg( grid, type, cache, ArrayDataAccessFactory.get( PrimitiveType.SHORT ) );
+			break;
+		case INT32:
+			type = ( T )new IntType();
+			cache = ( Cache )new SoftRefLoaderCache< Long, Cell< IntArray > >()
+					.withLoader( LoadedCellCacheLoader.get( grid, loader, type ) );
+			img = new CachedCellImg( grid, type, cache, ArrayDataAccessFactory.get( PrimitiveType.INT ) );
+			break;
+		case UINT32:
+			type = ( T )new UnsignedIntType();
+			cache = ( Cache )new SoftRefLoaderCache< Long, Cell< IntArray > >()
+					.withLoader( LoadedCellCacheLoader.get( grid, loader, type ) );
+			img = new CachedCellImg( grid, type, cache, ArrayDataAccessFactory.get( PrimitiveType.INT ) );
+			break;
+		case INT64:
+			type = ( T )new LongType();
+			cache = ( Cache )new SoftRefLoaderCache< Long, Cell< LongArray > >()
+					.withLoader( LoadedCellCacheLoader.get( grid, loader, type ) );
+			img = new CachedCellImg( grid, type, cache, ArrayDataAccessFactory.get( PrimitiveType.LONG ) );
+			break;
+		case UINT64:
+			type = ( T )new UnsignedLongType();
+			cache = ( Cache )new SoftRefLoaderCache< Long, Cell< LongArray > >()
+					.withLoader( LoadedCellCacheLoader.get( grid, loader, type ) );
+			img = new CachedCellImg( grid, type, cache, ArrayDataAccessFactory.get( PrimitiveType.LONG ) );
+			break;
+		case FLOAT32:
+			type = ( T )new FloatType();
+			cache = ( Cache )new SoftRefLoaderCache< Long, Cell< FloatArray > >()
+					.withLoader( LoadedCellCacheLoader.get( grid, loader, type ) );
+			img = new CachedCellImg( grid, type, cache, ArrayDataAccessFactory.get( PrimitiveType.FLOAT ) );
+			break;
+		case FLOAT64:
+			type = ( T )new DoubleType();
+			cache = ( Cache )new SoftRefLoaderCache< Long, Cell< DoubleArray > >()
+					.withLoader( LoadedCellCacheLoader.get( grid, loader, type ) );
+			img = new CachedCellImg( grid, type, cache, ArrayDataAccessFactory.get( PrimitiveType.DOUBLE ) );
+			break;
+		default:
+			img = null;
+		}
+
+		return img;
+	}
+
+
+	public static final < T extends NativeType< T > > RandomAccessibleInterval< T > openWithDiskCache(
 			final N5 n5,
 			final String dataset ) throws IOException
 	{
