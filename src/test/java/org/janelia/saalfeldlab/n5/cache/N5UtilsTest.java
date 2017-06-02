@@ -5,6 +5,9 @@ import static org.junit.Assert.fail;
 import java.io.File;
 import java.io.IOException;
 import java.util.Random;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.janelia.saalfeldlab.n5.CompressionType;
 import org.janelia.saalfeldlab.n5.N5;
@@ -73,18 +76,25 @@ public class N5UtilsTest
 	{}
 
 	@Test
-	public void testSaveAndOpen()
+	public void testSaveAndOpen() throws InterruptedException, ExecutionException
 	{
 		final ArrayImg< UnsignedShortType, ? > img = ArrayImgs.unsignedShorts( data, dimensions );
 		try
 		{
-			N5Utils.save( img, n5, datasetName, blockSize, CompressionType.RAW, null );
-			final RandomAccessibleInterval< UnsignedShortType > loaded = N5Utils.open( n5, datasetName );
+			N5Utils.save( img, n5, datasetName, blockSize, CompressionType.RAW );
+			RandomAccessibleInterval< UnsignedShortType > loaded = N5Utils.open( n5, datasetName );
 			for ( final Pair< UnsignedShortType, UnsignedShortType > pair : Views.flatIterable( Views.interval( Views.pair( img, loaded ), img ) ) )
 				Assert.assertEquals( pair.getA().get(), pair.getB().get() );
 
+			final ExecutorService exec = Executors.newFixedThreadPool( 4 );
+			N5Utils.save( img, n5, datasetName, blockSize, CompressionType.RAW, exec );
+			loaded = N5Utils.open( n5, datasetName );
+			for ( final Pair< UnsignedShortType, UnsignedShortType > pair : Views.flatIterable( Views.interval( Views.pair( img, loaded ), img ) ) )
+				Assert.assertEquals( pair.getA().get(), pair.getB().get() );
+			exec.shutdown();
+
 		}
-		catch ( IOException e )
+		catch ( final IOException e )
 		{
 			fail("Failed by I/O exception.");
 			e.printStackTrace();
