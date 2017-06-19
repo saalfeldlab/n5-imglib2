@@ -11,6 +11,7 @@ import java.util.concurrent.Executors;
 
 import org.janelia.saalfeldlab.n5.CompressionType;
 import org.janelia.saalfeldlab.n5.N5;
+import org.janelia.saalfeldlab.n5.N5Writer;
 import org.janelia.saalfeldlab.n5.imglib2.N5Utils;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -38,7 +39,7 @@ public class N5UtilsTest
 
 	static short[] data;
 
-	static private N5 n5;
+	static private N5Writer n5;
 
 	/**
 	 * @throws java.lang.Exception
@@ -50,7 +51,7 @@ public class N5UtilsTest
 		if (!(testDir.exists() && testDir.isDirectory()))
 			throw new IOException("Could not create test directory for HDF5Utils test.");
 
-		n5 = new N5(testDirPath);
+		n5 = N5.openFSWriter(testDirPath);
 
 		final Random rnd = new Random();
 

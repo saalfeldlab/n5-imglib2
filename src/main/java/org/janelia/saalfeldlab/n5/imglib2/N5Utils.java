@@ -22,7 +22,8 @@ import org.janelia.saalfeldlab.n5.CompressionType;
 import org.janelia.saalfeldlab.n5.DataBlock;
 import org.janelia.saalfeldlab.n5.DataType;
 import org.janelia.saalfeldlab.n5.DatasetAttributes;
-import org.janelia.saalfeldlab.n5.N5;
+import org.janelia.saalfeldlab.n5.N5Reader;
+import org.janelia.saalfeldlab.n5.N5Writer;
 
 import net.imglib2.Interval;
 import net.imglib2.RandomAccessibleInterval;
@@ -231,7 +232,7 @@ public class N5Utils {
 	 */
 	@SuppressWarnings( { "unchecked", "rawtypes" } )
 	public static final < T extends NativeType< T > > RandomAccessibleInterval< T > open(
-			final N5 n5,
+			final N5Reader n5,
 			final String dataset ) throws IOException
 	{
 		final DatasetAttributes attributes = n5.getDatasetAttributes( dataset );
@@ -325,7 +326,7 @@ public class N5Utils {
 	 */
 	@SuppressWarnings( { "unchecked", "rawtypes" } )
 	public static final < T extends NativeType< T > > RandomAccessibleInterval< T > openVolatile(
-			final N5 n5,
+			final N5Reader n5,
 			final String dataset ) throws IOException
 	{
 		final DatasetAttributes attributes = n5.getDatasetAttributes( dataset );
@@ -421,7 +422,7 @@ public class N5Utils {
 	 */
 	@SuppressWarnings( { "unchecked", "rawtypes" } )
 	public static final < T extends NativeType< T > > RandomAccessibleInterval< T > openWithDiskCache(
-			final N5 n5,
+			final N5Reader n5,
 			final String dataset ) throws IOException
 	{
 		final DatasetAttributes attributes = n5.getDatasetAttributes( dataset );
@@ -483,12 +484,13 @@ public class N5Utils {
 	 * @param source
 	 * @param n5
 	 * @param dataset
+	 * @param attributes
 	 * @param gridOffset
 	 * @throws IOException
 	 */
 	public static final < T extends NativeType< T > > void saveBlock(
 			RandomAccessibleInterval< T > source,
-			final N5 n5,
+			final N5Writer n5,
 			final String dataset,
 			final DatasetAttributes attributes,
 			final long[] gridOffset ) throws IOException
@@ -569,7 +571,7 @@ public class N5Utils {
 	 */
 	public static final < T extends NativeType< T > > void saveBlock(
 			final RandomAccessibleInterval< T > source,
-			final N5 n5,
+			final N5Writer n5,
 			final String dataset,
 			final long[] gridOffset,
 			final ExecutorService exec ) throws IOException, InterruptedException, ExecutionException
@@ -649,7 +651,7 @@ public class N5Utils {
 	 */
 	public static final < T extends NativeType< T > > void save(
 			RandomAccessibleInterval< T > source,
-			final N5 n5,
+			final N5Writer n5,
 			final String dataset,
 			final int[] blockSize,
 			final CompressionType compressionType) throws IOException
@@ -710,7 +712,7 @@ public class N5Utils {
 	 */
 	public static final < T extends NativeType< T > > void save(
 			final RandomAccessibleInterval< T > source,
-			final N5 n5,
+			final N5Writer n5,
 			final String dataset,
 			final int[] blockSize,
 			final CompressionType compressionType,

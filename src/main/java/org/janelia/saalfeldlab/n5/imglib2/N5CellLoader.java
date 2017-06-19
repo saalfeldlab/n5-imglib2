@@ -7,11 +7,12 @@ import java.util.function.BiConsumer;
 import org.janelia.saalfeldlab.n5.DataBlock;
 import org.janelia.saalfeldlab.n5.DataType;
 import org.janelia.saalfeldlab.n5.DatasetAttributes;
-import org.janelia.saalfeldlab.n5.N5;
+import org.janelia.saalfeldlab.n5.N5Reader;
 
 import net.imglib2.Cursor;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.cache.img.CellLoader;
+import net.imglib2.cache.img.SingleCellArrayImg;
 import net.imglib2.img.Img;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.Type;
@@ -25,7 +26,7 @@ import net.imglib2.view.Views;
 
 public class N5CellLoader< T extends NativeType< T > > implements CellLoader< T >
 {
-	private final N5 n5;
+	private final N5Reader n5;
 
 	private final String dataset;
 
@@ -35,7 +36,7 @@ public class N5CellLoader< T extends NativeType< T > > implements CellLoader< T 
 
 	private final BiConsumer< Img< T >, DataBlock< ? > > copyFromBlock;
 
-	public N5CellLoader( final N5 n5, final String dataset, final int[] cellDimensions ) throws IOException
+	public N5CellLoader( final N5Reader n5, final String dataset, final int[] cellDimensions ) throws IOException
 	{
 		super();
 		this.n5 = n5;

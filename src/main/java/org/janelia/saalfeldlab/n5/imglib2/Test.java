@@ -5,6 +5,7 @@ import java.util.Arrays;
 
 import org.janelia.saalfeldlab.n5.DatasetAttributes;
 import org.janelia.saalfeldlab.n5.N5;
+import org.janelia.saalfeldlab.n5.N5Writer;
 
 import bdv.util.BdvFunctions;
 import bdv.util.BdvOptions;
@@ -42,7 +43,7 @@ public class Test
 		final String n5path = "/nrs/saalfeld/hanslovskyp/CutOn4-15-2013_ImagedOn1-27-2014/aligned/substacks/1300-3449/4000x2500+5172+1416/n5";
 		final String dataset = "gzip";
 
-		final N5 n5 = new N5( n5path );
+		final N5Writer n5 = N5.openFSWriter( n5path );
 		final DatasetAttributes attr = n5.getDatasetAttributes( dataset );
 		final long[] dim = attr.getDimensions();
 		final int[] cellSize = attr.getBlockSize();
