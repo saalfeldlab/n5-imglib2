@@ -7,7 +7,7 @@ import java.util.function.BiConsumer;
 import org.janelia.saalfeldlab.n5.DataBlock;
 import org.janelia.saalfeldlab.n5.DataType;
 import org.janelia.saalfeldlab.n5.DatasetAttributes;
-import org.janelia.saalfeldlab.n5.N5;
+import org.janelia.saalfeldlab.n5.N5Reader;
 
 import net.imglib2.Cursor;
 import net.imglib2.RandomAccessibleInterval;
@@ -26,7 +26,7 @@ import net.imglib2.view.Views;
 
 public class N5CellLoader< T extends NativeType< T > > implements CellLoader< T >
 {
-	private final N5 n5;
+	private final N5Reader n5;
 
 	private final String dataset;
 
@@ -36,7 +36,7 @@ public class N5CellLoader< T extends NativeType< T > > implements CellLoader< T 
 
 	private final BiConsumer< Img< T >, DataBlock< ? > > copyFromBlock;
 
-	public N5CellLoader( final N5 n5, final String dataset, final int[] cellDimensions ) throws IOException
+	public N5CellLoader( final N5Reader n5, final String dataset, final int[] cellDimensions ) throws IOException
 	{
 		super();
 		this.n5 = n5;
@@ -49,9 +49,9 @@ public class N5CellLoader< T extends NativeType< T > > implements CellLoader< T 
 	}
 
 	@Override
-	public void load( final SingleCellArrayImg< T, ? > interval )
+	public void load( final SingleCellArrayImg< T, ? > cell )
 	{
-		final long[] gridPosition = new long[ interval.numDimensions() ];
+		final long[] gridPosition = new long[ cell.numDimensions() ];
 		for ( int d = 0; d < gridPosition.length; ++d )
 			gridPosition[ d ] = interval.min( d ) / cellDimensions[ d ];
 		final DataBlock< ? > block;
@@ -65,7 +65,7 @@ public class N5CellLoader< T extends NativeType< T > > implements CellLoader< T 
 		}
 
 		if ( block != null )
-			copyFromBlock.accept( interval, block );
+			copyFromBlock.accept( cell, block );
 	}
 
 	public static < T extends Type< T > > void burnIn( final RandomAccessibleInterval< T > source, final RandomAccessibleInterval< T > target )

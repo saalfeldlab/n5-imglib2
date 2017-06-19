@@ -31,9 +31,9 @@ public class RandomAccessibleLoader< T extends NativeType< T > > implements Cell
 	}
 
 	@Override
-	public void load( final SingleCellArrayImg< T, ? > interval )
+	public void load( final SingleCellArrayImg< T, ? > cell )
 	{
-		for ( Cursor< T > s = Views.flatIterable( Views.interval( source, interval ) ).cursor(), t = interval.cursor(); s.hasNext(); )
+		for ( Cursor< T > s = Views.flatIterable( Views.interval( source, cell ) ).cursor(), t = cell.cursor(); s.hasNext(); )
 			t.next().set( s.next() );
 	}
 }

@@ -74,7 +74,7 @@
 
 		<dependency>
 			<groupId>org.janelia.saalfeldlab</groupId>
-			<artifactId>nothdf5</artifactId>
+			<artifactId>n5</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 		
@@ -93,7 +93,7 @@
 		<dependency>
 			<groupId>net.imglib2</groupId>
 			<artifactId>imglib2-cache</artifactId>
-			<version>1.0.0-beta-7-SNAPSHOT</version>
+			<version>1.0.0-beta-8-SNAPSHOT</version>
 		</dependency>
 		
 		<dependency>
