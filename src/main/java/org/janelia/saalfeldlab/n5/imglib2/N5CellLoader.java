@@ -12,6 +12,7 @@ import org.janelia.saalfeldlab.n5.N5;
 import net.imglib2.Cursor;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.cache.img.CellLoader;
+import net.imglib2.cache.img.SingleCellArrayImg;
 import net.imglib2.img.Img;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.Type;
@@ -48,7 +49,7 @@ public class N5CellLoader< T extends NativeType< T > > implements CellLoader< T 
 	}
 
 	@Override
-	public void load( final Img< T > interval )
+	public void load( final SingleCellArrayImg< T, ? > interval )
 	{
 		final long[] gridPosition = new long[ interval.numDimensions() ];
 		for ( int d = 0; d < gridPosition.length; ++d )
