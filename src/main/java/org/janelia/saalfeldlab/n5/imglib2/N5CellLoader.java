@@ -48,11 +48,11 @@ public class N5CellLoader< T extends NativeType< T > > implements CellLoader< T 
 	}
 
 	@Override
-	public void load( final Img< T > interval )
+	public void load( final SingleCellArrayImg< T, ? > cell )
 	{
-		final long[] gridPosition = new long[ interval.numDimensions() ];
+		final long[] gridPosition = new long[ cell.numDimensions() ];
 		for ( int d = 0; d < gridPosition.length; ++d )
-			gridPosition[ d ] = interval.min( d ) / cellDimensions[ d ];
+			gridPosition[ d ] = cell.min( d ) / cellDimensions[ d ];
 		DataBlock< ? > block;
 		try
 		{
@@ -63,7 +63,7 @@ public class N5CellLoader< T extends NativeType< T > > implements CellLoader< T 
 			throw new RuntimeException( e );
 		}
 
-		copyFromBlock.accept( interval, block );
+		copyFromBlock.accept( cell, block );
 	}
 
 	public static < T extends Type< T > > void burnIn( final RandomAccessibleInterval< T > source, final RandomAccessibleInterval< T > target )

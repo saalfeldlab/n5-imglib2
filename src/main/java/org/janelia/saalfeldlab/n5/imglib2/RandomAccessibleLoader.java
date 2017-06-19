@@ -4,7 +4,7 @@ import net.imglib2.Cursor;
 import net.imglib2.Interval;
 import net.imglib2.RandomAccessible;
 import net.imglib2.cache.img.CellLoader;
-import net.imglib2.img.Img;
+import net.imglib2.cache.img.SingleCellArrayImg;
 import net.imglib2.img.array.ArrayImg;
 import net.imglib2.type.NativeType;
 import net.imglib2.util.Intervals;
@@ -31,9 +31,9 @@ public class RandomAccessibleLoader< T extends NativeType< T > > implements Cell
 	}
 
 	@Override
-	public void load( final Img< T > interval )
+	public void load( final SingleCellArrayImg< T, ? > cell )
 	{
-		for ( Cursor< T > s = Views.flatIterable( Views.interval( source, interval ) ).cursor(), t = interval.cursor(); s.hasNext(); )
+		for ( Cursor< T > s = Views.flatIterable( Views.interval( source, cell ) ).cursor(), t = cell.cursor(); s.hasNext(); )
 			t.next().set( s.next() );
 	}
 }
