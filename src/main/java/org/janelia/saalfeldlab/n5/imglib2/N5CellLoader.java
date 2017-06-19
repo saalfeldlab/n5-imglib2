@@ -54,7 +54,7 @@ public class N5CellLoader< T extends NativeType< T > > implements CellLoader< T 
 		final long[] gridPosition = new long[ cell.numDimensions() ];
 		for ( int d = 0; d < gridPosition.length; ++d )
 			gridPosition[ d ] = cell.min( d ) / cellDimensions[ d ];
-		DataBlock< ? > block;
+		final DataBlock< ? > block;
 		try
 		{
 			block = n5.readBlock( dataset, attributes, gridPosition );
@@ -64,7 +64,8 @@ public class N5CellLoader< T extends NativeType< T > > implements CellLoader< T 
 			throw new RuntimeException( e );
 		}
 
-		copyFromBlock.accept( cell, block );
+		if ( block != null )
+			copyFromBlock.accept( cell, block );
 	}
 
 	public static < T extends Type< T > > void burnIn( final RandomAccessibleInterval< T > source, final RandomAccessibleInterval< T > target )
