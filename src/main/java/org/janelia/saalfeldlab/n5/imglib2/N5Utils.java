@@ -490,42 +490,62 @@ public class N5Utils {
 			RandomAccessibleInterval< T > source,
 			final N5 n5,
 			final String dataset,
+			final DatasetAttributes attributes,
 			final long[] gridOffset ) throws IOException
 	{
 		source = Views.zeroMin( source );
 		final long[] dimensions = Intervals.dimensionsAsLongArray( source );
+
+		final int n = dimensions.length;
+		final long[] max = Intervals.maxAsLongArray( source );
+		final long[] offset = new long[ n ];
+		final long[] gridPosition = new long[ n ];
+		final int[] blockSize = attributes.getBlockSize();
+		final int[] intCroppedBlockSize = new int[ n ];
+		final long[] longCroppedBlockSize = new long[ n ];
+		for ( int d = 0; d < n; )
+		{
+			cropBlockDimensions( max, offset, gridOffset, blockSize, longCroppedBlockSize, intCroppedBlockSize, gridPosition );
+			final RandomAccessibleInterval< T > sourceBlock = Views.offsetInterval( source, offset, longCroppedBlockSize );
+			final DataBlock< ? > dataBlock = createDataBlock(
+					sourceBlock,
+					attributes.getDataType(),
+					intCroppedBlockSize,
+					longCroppedBlockSize,
+					gridPosition );
+
+			n5.writeBlock( dataset, attributes, dataBlock );
+
+			for ( d = 0; d < n; ++d )
+			{
+				offset[ d ] += blockSize[ d ];
+				if ( offset[ d ] <= max[ d ] )
+					break;
+				else
+					offset[ d ] = 0;
+			}
+		}
+	}
+
+	/**
+	 * Save a {@link RandomAccessibleInterval} as an N5 dataset.
+	 *
+	 * @param source
+	 * @param n5
+	 * @param dataset
+	 * @param gridOffset
+	 * @throws IOException
+	 */
+	public static final < T extends NativeType< T > > void saveBlock(
+			final RandomAccessibleInterval< T > source,
+			final N5Writer n5,
+			final String dataset,
+			final long[] gridOffset ) throws IOException
+	{
 		final DatasetAttributes attributes = n5.getDatasetAttributes( dataset );
 		if ( attributes != null )
 		{
-			final int n = dimensions.length;
-			final long[] max = Intervals.maxAsLongArray( source );
-			final long[] offset = new long[ n ];
-			final long[] gridPosition = new long[ n ];
-			final int[] blockSize = attributes.getBlockSize();
-			final int[] intCroppedBlockSize = new int[ n ];
-			final long[] longCroppedBlockSize = new long[ n ];
-			for ( int d = 0; d < n; )
-			{
-				cropBlockDimensions( max, offset, gridOffset, blockSize, longCroppedBlockSize, intCroppedBlockSize, gridPosition );
-				final RandomAccessibleInterval< T > sourceBlock = Views.offsetInterval( source, offset, longCroppedBlockSize );
-				final DataBlock< ? > dataBlock = createDataBlock(
-						sourceBlock,
-						attributes.getDataType(),
-						intCroppedBlockSize,
-						longCroppedBlockSize,
-						gridPosition );
-
-				n5.writeBlock( dataset, attributes, dataBlock );
-
-				for ( d = 0; d < n; ++d )
-				{
-					offset[ d ] += blockSize[ d ];
-					if ( offset[ d ] <= max[ d ] )
-						break;
-					else
-						offset[ d ] = 0;
-				}
-			}
+			saveBlock( source, n5, dataset, attributes, gridOffset );
 		}
 		else
 		{
