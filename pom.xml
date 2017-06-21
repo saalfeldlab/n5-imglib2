@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
@@ -76,12 +77,12 @@
 			</roles>
 		</developer>
 	</developers>
-	
+
 	<repositories>
 		<repository>
-	        <id>saalfeld-lab-maven-repo</id>
-	        <url>https://saalfeldlab.github.io/maven</url>
-	    </repository>
+			<id>saalfeld-lab-maven-repo</id>
+			<url>https://saalfeldlab.github.io/maven</url>
+		</repository>
 		<repository>
 			<id>imagej.public</id>
 			<url>https://maven.imagej.net/content/groups/public</url>
@@ -95,40 +96,40 @@
 			<artifactId>n5</artifactId>
 			<version>1.0.0</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>args4j</groupId>
 			<artifactId>args4j</artifactId>
 			<version>2.33</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>net.imglib2</groupId>
 			<artifactId>imglib2</artifactId>
 			<version>4.3.0</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>net.imglib2</groupId>
 			<artifactId>imglib2-cache</artifactId>
 			<version>1.0.0-beta-7</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>sc.fiji</groupId>
 			<artifactId>bigdataviewer-core</artifactId>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>sc.fiji</groupId>
 			<artifactId>bigdataviewer-vistools</artifactId>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>net.imglib2</groupId>
 			<artifactId>imglib2-realtransform</artifactId>
 		</dependency>
-		
+
 
 		<!-- Test dependencies -->
 		<dependency>
@@ -137,17 +138,35 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
-	
+
 	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<configuration>
-					<source>1.8</source>
-					<target>1.8</target>
-				</configuration>
-			</plugin>
-		</plugins>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<configuration>
+						<source>1.8</source>
+						<target>1.8</target>
+					</configuration>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-deploy-plugin</artifactId>
+					<version>2.8.2</version>
+					<configuration>
+						<altDeploymentRepository>internal.repo::default::file://${deploy.path}</altDeploymentRepository>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
 	</build>
+
+	<distributionManagement>
+		<repository>
+			<id>local-maven-repo</id>
+			<name>Local Maven Repository</name>
+			<url>file://${deploy.path}</url>
+		</repository>
+	</distributionManagement>
 </project>
