@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>14.0.0</version>
+		<version>16.1.0</version>
 		<relativePath />
 	</parent>
 
@@ -13,8 +13,8 @@
 	<artifactId>n5-imglib2</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 
-	<name>N5 Cache Loader</name>
-	<description>Populate imglib2 caches from N5 source</description>
+	<name>N5 ImgLib2 Bindings</name>
+	<description>Open N5 datasets as ImgLib2 RandomAccessibles, and write ImgLib2 RandomAccessibles as/ into N5 datasets.</description>
 	<url></url>
 	<inceptionYear>2017</inceptionYear>
 	<organization>
@@ -41,7 +41,7 @@
 		<license.licenseName>bsd_2</license.licenseName>
 		<license.projectName>N5 Cache Loader</license.projectName>
 		<license.organizationName>Saalfeld Lab</license.organizationName>
-		<license.copyrightOwners>Philipp Hanslovsky</license.copyrightOwners>
+		<license.copyrightOwners>Philipp Hanslovsky, Stephan Saalfeld</license.copyrightOwners>
 
 		<enforcer.skip>true</enforcer.skip>
 	</properties>
@@ -61,9 +61,27 @@
 				<role>maintainer</role>
 			</roles>
 		</developer>
+		<developer>
+			<id>axtimwalde</id>
+			<name>Stephan Saalfeld</name>
+			<url>http://imagej.net/User:Saalfeld</url>
+			<roles>
+				<role>founder</role>
+				<role>lead</role>
+				<role>developer</role>
+				<role>debugger</role>
+				<role>reviewer</role>
+				<role>support</role>
+				<role>maintainer</role>
+			</roles>
+		</developer>
 	</developers>
 	
 	<repositories>
+		<repository>
+	        <id>saalfeld-lab-maven-repo</id>
+	        <url>https://saalfeldlab.github.io/maven</url>
+	    </repository>
 		<repository>
 			<id>imagej.public</id>
 			<url>https://maven.imagej.net/content/groups/public</url>
@@ -75,7 +93,7 @@
 		<dependency>
 			<groupId>org.janelia.saalfeldlab</groupId>
 			<artifactId>n5</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>1.0.0</version>
 		</dependency>
 		
 		<dependency>
@@ -87,27 +105,29 @@
 		<dependency>
 			<groupId>net.imglib2</groupId>
 			<artifactId>imglib2</artifactId>
-			<version>4.2.2-SNAPSHOT</version>
+			<version>4.3.0</version>
 		</dependency>
 		
 		<dependency>
 			<groupId>net.imglib2</groupId>
 			<artifactId>imglib2-cache</artifactId>
-			<version>1.0.0-beta-8-SNAPSHOT</version>
+			<version>1.0.0-beta-7</version>
 		</dependency>
 		
 		<dependency>
 			<groupId>sc.fiji</groupId>
 			<artifactId>bigdataviewer-core</artifactId>
-			<version>4.1.0</version>
 		</dependency>
 		
 		<dependency>
 			<groupId>sc.fiji</groupId>
 			<artifactId>bigdataviewer-vistools</artifactId>
-			<version>1.0.0-beta-5</version>
 		</dependency>
 		
+		<dependency>
+			<groupId>net.imglib2</groupId>
+			<artifactId>imglib2-realtransform</artifactId>
+		</dependency>
 		
 
 		<!-- Test dependencies -->

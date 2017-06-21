@@ -80,9 +80,6 @@ public class Test
 		final DiskCachedCellImg< UnsignedByteType, ? > transformedCellImg = factory.create( dim, new UnsignedByteType(), transformLoader );
 		BdvFunctions.show( VolatileViews.wrapAsVolatile( transformedCellImg, queue ), "transformed", BdvOptions.options().addTo( bdv ) );
 		bdv.getBdvHandle().getSetupAssignments().getMinMaxGroups().get( 1 ).setRange( 0, 255 );
-
-
-
 	}
 
 }
