@@ -11,27 +11,42 @@ import org.janelia.saalfeldlab.n5.N5Reader;
 import bdv.util.Bdv;
 import bdv.util.BdvFunctions;
 import bdv.util.BdvOptions;
+import bdv.util.volatiles.SharedQueue;
+import bdv.util.volatiles.VolatileViews;
 import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.cache.volatiles.CacheHints;
+import net.imglib2.cache.volatiles.LoadingStrategy;
 
 /**
  * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
  *
  */
-public class N5DatasetViewer {
-
+public class N5DatasetViewer
+{
 	@SuppressWarnings( "unchecked" )
-	public static final void main(final String... args) throws IOException {
-
-		final N5Reader n5Reader = N5.openFSReader(args[0]);
+	public static final void main( final String... args ) throws IOException
+	{
+		final N5Reader n5Reader = N5.openFSReader( args[ 0 ] );
 		Bdv bdv = null;
 
-		for (int i = 1; i < args.length; ++i) {
+		final int numProc = Math.max( 1, Runtime.getRuntime().availableProcessors() / 2 );
+		final SharedQueue queue = new SharedQueue( numProc );
+		final CacheHints cacheHints = new CacheHints( LoadingStrategy.VOLATILE, 0, true );
 
-			final String n5Dataset = args[i];
-			if (n5Reader.datasetExists(n5Dataset)) {
-				final BdvOptions options = bdv == null ? Bdv.options() : Bdv.options().addTo(bdv);
-				final RandomAccessibleInterval dataset = N5Utils.openVolatile(n5Reader, n5Dataset);
-				bdv = BdvFunctions.show(dataset, n5Dataset, options);
+		for ( int i = 1; i < args.length; ++i )
+		{
+			final String n5Dataset = args[ i ];
+			if ( n5Reader.datasetExists( n5Dataset ) )
+			{
+				final BdvOptions options = bdv == null ? Bdv.options() : Bdv.options().addTo( bdv );
+				final RandomAccessibleInterval dataset = N5Utils.openVolatile( n5Reader, n5Dataset );
+				bdv = BdvFunctions.show(
+						VolatileViews.wrapAsVolatile(
+								dataset,
+								queue,
+								cacheHints ),
+						n5Dataset,
+						options );
 			}
 		}
 	}
