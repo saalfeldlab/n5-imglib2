@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>16.2.0</version>
+		<version>17.2.0</version>
 		<relativePath />
 	</parent>
 
@@ -94,7 +94,7 @@
 		<dependency>
 			<groupId>org.janelia.saalfeldlab</groupId>
 			<artifactId>n5</artifactId>
-			<version>1.2.0</version>
+			<version>1.3.0</version>
 		</dependency>
 
 		<dependency>
@@ -106,13 +106,11 @@
 		<dependency>
 			<groupId>net.imglib2</groupId>
 			<artifactId>imglib2</artifactId>
-			<version>4.3.0</version>
 		</dependency>
 
 		<dependency>
 			<groupId>net.imglib2</groupId>
 			<artifactId>imglib2-cache</artifactId>
-			<version>1.0.0-beta-7</version>
 		</dependency>
 
 		<dependency>
