@@ -13,7 +13,6 @@ import static net.imglib2.cache.img.PrimitiveType.SHORT;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -601,8 +600,6 @@ public class N5Utils {
 
 									cropBlockDimensions( max, fOffset, gridOffset, blockSize, longCroppedBlockSize, intCroppedBlockSize, gridPosition );
 
-									System.out.println( Arrays.toString( gridPosition ) );
-
 									final RandomAccessibleInterval< T > sourceBlock = Views.offsetInterval( zeroMinSource, fOffset, longCroppedBlockSize );
 									final DataBlock< ? > dataBlock = createDataBlock(
 											sourceBlock,
@@ -746,8 +743,6 @@ public class N5Utils {
 								final long[] longCroppedBlockSize = new long[ n ];
 
 								cropBlockDimensions( max, fOffset, blockSize, longCroppedBlockSize, intCroppedBlockSize, gridPosition );
-
-								System.out.println( Arrays.toString( gridPosition ) );
 
 								final RandomAccessibleInterval< T > sourceBlock = Views.offsetInterval( zeroMinSource, fOffset, longCroppedBlockSize );
 								final DataBlock< ? > dataBlock = createDataBlock(
