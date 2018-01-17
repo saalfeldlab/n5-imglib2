@@ -5,7 +5,7 @@ package org.janelia.saalfeldlab.n5.imglib2;
 
 import java.io.IOException;
 
-import org.janelia.saalfeldlab.n5.N5;
+import org.janelia.saalfeldlab.n5.N5FSReader;
 import org.janelia.saalfeldlab.n5.N5Reader;
 
 import bdv.util.Bdv;
@@ -26,7 +26,7 @@ public class N5DatasetViewer
 	@SuppressWarnings( "unchecked" )
 	public static final void main( final String... args ) throws IOException
 	{
-		final N5Reader n5Reader = N5.openFSReader( args[ 0 ] );
+		final N5Reader n5Reader = new N5FSReader( args[ 0 ] );
 		Bdv bdv = null;
 
 		final int numProc = Math.max( 1, Runtime.getRuntime().availableProcessors() / 2 );
