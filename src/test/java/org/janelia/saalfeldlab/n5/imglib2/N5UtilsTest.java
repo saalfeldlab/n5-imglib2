@@ -1,4 +1,4 @@
-package org.janelia.saalfeldlab.n5.cache;
+package org.janelia.saalfeldlab.n5.imglib2;
 
 import static org.junit.Assert.fail;
 
@@ -9,10 +9,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import org.janelia.saalfeldlab.n5.CompressionType;
-import org.janelia.saalfeldlab.n5.N5;
+import org.janelia.saalfeldlab.n5.N5FSWriter;
 import org.janelia.saalfeldlab.n5.N5Writer;
-import org.janelia.saalfeldlab.n5.imglib2.N5Utils;
+import org.janelia.saalfeldlab.n5.RawCompression;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -51,7 +50,7 @@ public class N5UtilsTest
 		if (!(testDir.exists() && testDir.isDirectory()))
 			throw new IOException("Could not create test directory for HDF5Utils test.");
 
-		n5 = N5.openFSWriter(testDirPath);
+		n5 = new N5FSWriter(testDirPath);
 
 		final Random rnd = new Random();
 
@@ -82,13 +81,13 @@ public class N5UtilsTest
 		final ArrayImg< UnsignedShortType, ? > img = ArrayImgs.unsignedShorts( data, dimensions );
 		try
 		{
-			N5Utils.save( img, n5, datasetName, blockSize, CompressionType.RAW );
+			N5Utils.save( img, n5, datasetName, blockSize, new RawCompression() );
 			RandomAccessibleInterval< UnsignedShortType > loaded = N5Utils.open( n5, datasetName );
 			for ( final Pair< UnsignedShortType, UnsignedShortType > pair : Views.flatIterable( Views.interval( Views.pair( img, loaded ), img ) ) )
 				Assert.assertEquals( pair.getA().get(), pair.getB().get() );
 
 			final ExecutorService exec = Executors.newFixedThreadPool( 4 );
-			N5Utils.save( img, n5, datasetName, blockSize, CompressionType.RAW, exec );
+			N5Utils.save( img, n5, datasetName, blockSize, new RawCompression(), exec );
 			loaded = N5Utils.open( n5, datasetName );
 			for ( final Pair< UnsignedShortType, UnsignedShortType > pair : Views.flatIterable( Views.interval( Views.pair( img, loaded ), img ) ) )
 				Assert.assertEquals( pair.getA().get(), pair.getB().get() );

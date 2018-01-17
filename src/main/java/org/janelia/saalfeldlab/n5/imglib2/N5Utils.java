@@ -13,12 +13,11 @@ import static net.imglib2.cache.img.PrimitiveType.SHORT;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
-import org.janelia.saalfeldlab.n5.CompressionType;
+import org.janelia.saalfeldlab.n5.Compression;
 import org.janelia.saalfeldlab.n5.DataBlock;
 import org.janelia.saalfeldlab.n5.DataType;
 import org.janelia.saalfeldlab.n5.DatasetAttributes;
@@ -601,8 +600,6 @@ public class N5Utils {
 
 									cropBlockDimensions( max, fOffset, gridOffset, blockSize, longCroppedBlockSize, intCroppedBlockSize, gridPosition );
 
-									System.out.println( Arrays.toString( gridPosition ) );
-
 									final RandomAccessibleInterval< T > sourceBlock = Views.offsetInterval( zeroMinSource, fOffset, longCroppedBlockSize );
 									final DataBlock< ? > dataBlock = createDataBlock(
 											sourceBlock,
@@ -654,7 +651,7 @@ public class N5Utils {
 			final N5Writer n5,
 			final String dataset,
 			final int[] blockSize,
-			final CompressionType compressionType) throws IOException
+			final Compression compression) throws IOException
 	{
 		source = Views.zeroMin( source );
 		final long[] dimensions = Intervals.dimensionsAsLongArray( source );
@@ -662,7 +659,7 @@ public class N5Utils {
 				dimensions,
 				blockSize,
 				dataType( Util.getTypeFromInterval( source ) ),
-				compressionType );
+				compression );
 
 		n5.createDataset( dataset, attributes );
 
@@ -715,7 +712,7 @@ public class N5Utils {
 			final N5Writer n5,
 			final String dataset,
 			final int[] blockSize,
-			final CompressionType compressionType,
+			final Compression compression,
 			final ExecutorService exec ) throws IOException, InterruptedException, ExecutionException
 	{
 		final RandomAccessibleInterval< T > zeroMinSource = Views.zeroMin( source );
@@ -724,7 +721,7 @@ public class N5Utils {
 				dimensions,
 				blockSize,
 				dataType( Util.getTypeFromInterval( zeroMinSource ) ),
-				compressionType );
+				compression );
 
 		n5.createDataset( dataset, attributes );
 
@@ -746,8 +743,6 @@ public class N5Utils {
 								final long[] longCroppedBlockSize = new long[ n ];
 
 								cropBlockDimensions( max, fOffset, blockSize, longCroppedBlockSize, intCroppedBlockSize, gridPosition );
-
-								System.out.println( Arrays.toString( gridPosition ) );
 
 								final RandomAccessibleInterval< T > sourceBlock = Views.offsetInterval( zeroMinSource, fOffset, longCroppedBlockSize );
 								final DataBlock< ? > dataBlock = createDataBlock(
