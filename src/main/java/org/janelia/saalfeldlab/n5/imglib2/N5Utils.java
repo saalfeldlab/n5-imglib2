@@ -52,6 +52,7 @@ import net.imglib2.img.cell.Cell;
 import net.imglib2.img.cell.CellGrid;
 import net.imglib2.img.cell.LazyCellImg;
 import net.imglib2.type.NativeType;
+import net.imglib2.type.Type;
 import net.imglib2.type.numeric.integer.ByteType;
 import net.imglib2.type.numeric.integer.IntType;
 import net.imglib2.type.numeric.integer.LongType;
@@ -158,6 +159,99 @@ public class N5Utils {
 		}
 
 		return dataBlock;
+	}
+
+	/**
+	 * Creates a {@link DataBlock} of matching type and copies the content of
+	 * source into it.  This is a helper method with redundant parameters.
+	 *
+	 * @param source
+	 * @param dataType
+	 * @param intBlockSize
+	 * @param longBlockSize
+	 * @param gridPosition
+	 * @param defaultValue
+	 * @return
+	 */
+	@SuppressWarnings( "unchecked" )
+	private static final < T extends Type< T > > DataBlock< ? > createNonEmptyDataBlock(
+			final RandomAccessibleInterval< ? > source,
+			final DataType dataType,
+			final int[] intBlockSize,
+			final long[] longBlockSize,
+			final long[] gridPosition,
+			final T defaultValue )
+	{
+		final DataBlock< ? > dataBlock = dataType.createDataBlock( intBlockSize, gridPosition );
+		final boolean isEmpty;
+		switch ( dataType )
+		{
+		case UINT8:
+			isEmpty = N5CellLoader.burnInTestAllEqual(
+					( RandomAccessibleInterval< UnsignedByteType > )source,
+					ArrayImgs.unsignedBytes( ( byte[] )dataBlock.getData(), longBlockSize ),
+					( UnsignedByteType )defaultValue );
+			break;
+		case INT8:
+			isEmpty = N5CellLoader.burnInTestAllEqual(
+					( RandomAccessibleInterval< ByteType > )source,
+					ArrayImgs.bytes( ( byte[] )dataBlock.getData(), longBlockSize ),
+					( ByteType )defaultValue );
+			break;
+		case UINT16:
+			isEmpty = N5CellLoader.burnInTestAllEqual(
+					( RandomAccessibleInterval< UnsignedShortType > )source,
+					ArrayImgs.unsignedShorts( ( short[] )dataBlock.getData(), longBlockSize ),
+					( UnsignedShortType )defaultValue );
+			break;
+		case INT16:
+			isEmpty = N5CellLoader.burnInTestAllEqual(
+					( RandomAccessibleInterval< ShortType > )source,
+					ArrayImgs.shorts( ( short[] )dataBlock.getData(), longBlockSize ),
+					( ShortType )defaultValue );
+			break;
+		case UINT32:
+			isEmpty = N5CellLoader.burnInTestAllEqual(
+					( RandomAccessibleInterval< UnsignedIntType > )source,
+					ArrayImgs.unsignedInts( ( int[] )dataBlock.getData(), longBlockSize ),
+					( UnsignedIntType )defaultValue );
+			break;
+		case INT32:
+			isEmpty = N5CellLoader.burnInTestAllEqual(
+					( RandomAccessibleInterval< IntType > )source,
+					ArrayImgs.ints( ( int[] )dataBlock.getData(), longBlockSize ),
+					( IntType )defaultValue );
+			break;
+		case UINT64:
+			/* TODO missing factory method in ArrayImgs, replace when ImgLib2 updated */
+			isEmpty = N5CellLoader.burnInTestAllEqual(
+					( RandomAccessibleInterval< UnsignedLongType > )source,
+					ArrayImgs.unsignedLongs( new LongArray( ( long[] )dataBlock.getData() ), longBlockSize ),
+					( UnsignedLongType )defaultValue );
+			break;
+		case INT64:
+			isEmpty = N5CellLoader.burnInTestAllEqual(
+					( RandomAccessibleInterval< LongType > )source,
+					ArrayImgs.longs( ( long[] )dataBlock.getData(), longBlockSize ),
+					( LongType )defaultValue );
+			break;
+		case FLOAT32:
+			isEmpty = N5CellLoader.burnInTestAllEqual(
+					( RandomAccessibleInterval< FloatType > )source,
+					ArrayImgs.floats( ( float[] )dataBlock.getData(), longBlockSize ),
+					( FloatType )defaultValue );
+			break;
+		case FLOAT64:
+			isEmpty = N5CellLoader.burnInTestAllEqual(
+					( RandomAccessibleInterval< DoubleType > )source,
+					ArrayImgs.doubles( ( double[] )dataBlock.getData(), longBlockSize ),
+					( DoubleType )defaultValue );
+			break;
+		default:
+			throw new IllegalArgumentException( "Type " + dataType.name() + " not supported!" );
+		}
+
+		return isEmpty ? null : dataBlock;
 	}
 
 	/**
@@ -629,6 +723,97 @@ public class N5Utils {
 			}
 			for ( final Future< ? > f : futures )
 				f.get();
+		}
+		else
+		{
+			throw new IOException( "Dataset " + dataset + " does not exist." );
+		}
+	}
+
+	/**
+	 * Save a {@link RandomAccessibleInterval} into an N5 dataset at a given
+	 * offset.  The offset is given in {@link DataBlock} grid coordinates and
+	 * the source is assumed to align with the {@link DataBlock} grid of the
+	 * dataset.  Only {@link DataBlock DataBlocks} that contain values other
+	 * than a given default value are stored.
+	 *
+	 * @param source
+	 * @param n5
+	 * @param dataset
+	 * @param attributes
+	 * @param gridOffset
+	 * @param defaultValue
+	 * @throws IOException
+	 */
+	public static final < T extends NativeType< T > > void saveNonEmptyBlock(
+			RandomAccessibleInterval< T > source,
+			final N5Writer n5,
+			final String dataset,
+			final DatasetAttributes attributes,
+			final long[] gridOffset,
+			final T defaultValue ) throws IOException
+	{
+		source = Views.zeroMin( source );
+		final long[] dimensions = Intervals.dimensionsAsLongArray( source );
+
+		final int n = dimensions.length;
+		final long[] max = Intervals.maxAsLongArray( source );
+		final long[] offset = new long[ n ];
+		final long[] gridPosition = new long[ n ];
+		final int[] blockSize = attributes.getBlockSize();
+		final int[] intCroppedBlockSize = new int[ n ];
+		final long[] longCroppedBlockSize = new long[ n ];
+		for ( int d = 0; d < n; )
+		{
+			cropBlockDimensions( max, offset, gridOffset, blockSize, longCroppedBlockSize, intCroppedBlockSize, gridPosition );
+			final RandomAccessibleInterval< T > sourceBlock = Views.offsetInterval( source, offset, longCroppedBlockSize );
+			final DataBlock< ? > dataBlock = createNonEmptyDataBlock(
+					sourceBlock,
+					attributes.getDataType(),
+					intCroppedBlockSize,
+					longCroppedBlockSize,
+					gridPosition,
+					defaultValue );
+
+			if ( dataBlock != null )
+				n5.writeBlock( dataset, attributes, dataBlock );
+
+			for ( d = 0; d < n; ++d )
+			{
+				offset[ d ] += blockSize[ d ];
+				if ( offset[ d ] <= max[ d ] )
+					break;
+				else
+					offset[ d ] = 0;
+			}
+		}
+	}
+
+	/**
+	 * Save a {@link RandomAccessibleInterval} into an N5 dataset at a given
+	 * offset.  The offset is given in {@link DataBlock} grid coordinates and
+	 * the source is assumed to align with the {@link DataBlock} grid of the
+	 * dataset.  Only {@link DataBlock DataBlocks} that contain values other
+	 * than a given default value are stored.
+	 *
+	 * @param source
+	 * @param n5
+	 * @param dataset
+	 * @param gridOffset
+	 * @param defaultValue
+	 * @throws IOException
+	 */
+	public static final < T extends NativeType< T > > void saveNonEmptyBlock(
+			final RandomAccessibleInterval< T > source,
+			final N5Writer n5,
+			final String dataset,
+			final long[] gridOffset,
+			final T defaultValue ) throws IOException
+	{
+		final DatasetAttributes attributes = n5.getDatasetAttributes( dataset );
+		if ( attributes != null )
+		{
+			saveNonEmptyBlock( source, n5, dataset, attributes, gridOffset, defaultValue );
 		}
 		else
 		{
