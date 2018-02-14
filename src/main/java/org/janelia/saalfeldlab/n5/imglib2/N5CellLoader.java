@@ -74,6 +74,30 @@ public class N5CellLoader< T extends NativeType< T > > implements CellLoader< T 
 			t.next().set( s.next() );
 	}
 
+	/**
+	 * Copies data from source into target and tests whether all values equal
+	 * a reference value.
+	 *
+	 * @param source
+	 * @param target
+	 * @return
+	 */
+	public static < T extends Type< T > > boolean burnInTestAllEqual(
+			final RandomAccessibleInterval< T > source,
+			final RandomAccessibleInterval< T > target,
+			final T reference )
+	{
+		boolean equal = true;
+		for ( Cursor< T > s = Views.flatIterable( source ).cursor(), t = Views.flatIterable( target ).cursor(); t.hasNext(); )
+		{
+			final T ts = s.next();
+			equal &= reference.valueEquals( ts );
+			t.next().set( ts );
+		}
+
+		return equal;
+	}
+
 	public static < T extends NativeType< T > > BiConsumer< Img< T >, DataBlock< ? > > createCopy( final DataType dataType )
 	{
 		switch ( dataType )
