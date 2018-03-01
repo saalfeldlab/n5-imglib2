@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.function.BiConsumer;
 
 import org.janelia.saalfeldlab.n5.Compression;
 import org.janelia.saalfeldlab.n5.DataBlock;
@@ -34,6 +35,7 @@ import net.imglib2.cache.img.DiskCachedCellImgFactory;
 import net.imglib2.cache.img.DiskCachedCellImgOptions;
 import net.imglib2.cache.img.LoadedCellCacheLoader;
 import net.imglib2.cache.ref.SoftRefLoaderCache;
+import net.imglib2.img.Img;
 import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.img.basictypeaccess.array.ByteArray;
 import net.imglib2.img.basictypeaccess.array.DoubleArray;
@@ -323,16 +325,118 @@ public class N5Utils {
 	 * @return
 	 * @throws IOException
 	 */
-	@SuppressWarnings( { "unchecked", "rawtypes" } )
 	public static final < T extends NativeType< T > > RandomAccessibleInterval< T > open(
 			final N5Reader n5,
 			final String dataset ) throws IOException
+	{
+		return openSparse( n5, dataset, ExceptionHandlers.asRuntimeException() );
+	}
+
+	/**
+	 * Open an N5 dataset as a memory cached {@link LazyCellImg} using {@link VolatileAccess}.
+	 *
+	 * @param n5
+	 * @param dataset
+	 * @return
+	 * @throws IOException
+	 */
+	public static final < T extends NativeType< T > > RandomAccessibleInterval< T > openVolatile(
+			final N5Reader n5,
+			final String dataset ) throws IOException
+	{
+		return openSparseVolatile( n5, dataset, ExceptionHandlers.asRuntimeException() );
+	}
+
+	/**
+	 * Open an N5 dataset as a disk-cached LazyCellImg.  Note that this
+	 * requires that al part of the the N5 dataset that will be accessed fit
+	 * into /tmp.
+	 *
+	 * @param n5
+	 * @param dataset
+	 * @return
+	 * @throws IOException
+	 */
+	public static final < T extends NativeType< T > > RandomAccessibleInterval< T > openWithDiskCache(
+			final N5Reader n5,
+			final String dataset ) throws IOException
+	{
+		return openSparseWithDiskCache( n5, dataset, ExceptionHandlers.asRuntimeException() );
+	}
+
+	/**
+	 * Open an N5 dataset as a memory cached {@link LazyCellImg}.
+	 *
+	 * @param n5
+	 * @param dataset
+	 * @param defaultValue
+	 * @return
+	 * @throws IOException
+	 */
+	public static final < T extends NativeType< T > > RandomAccessibleInterval< T > openSparse(
+			final N5Reader n5,
+			final String dataset,
+			final T defaultValue ) throws IOException
+	{
+		return openSparse( n5, dataset, ExceptionHandlers.fillWithDefaultValue( defaultValue ) );
+	}
+
+	/**
+	 * Open an N5 dataset as a memory cached {@link LazyCellImg} using {@link VolatileAccess}.
+	 *
+	 * @param n5
+	 * @param dataset
+	 * @param defaultValue
+	 * @return
+	 * @throws IOException
+	 */
+	public static final < T extends NativeType< T > > RandomAccessibleInterval< T > openSparseVolatile(
+			final N5Reader n5,
+			final String dataset,
+			final T defaultValue ) throws IOException
+	{
+		return openSparseVolatile( n5, dataset, ExceptionHandlers.fillWithDefaultValue( defaultValue ) );
+	}
+
+	/**
+	 * Open an N5 dataset as a disk-cached LazyCellImg.  Note that this
+	 * requires that al part of the the N5 dataset that will be accessed fit
+	 * into /tmp.
+	 *
+	 * @param n5
+	 * @param dataset
+	 * @param defaultValue
+	 * @return
+	 * @throws IOException
+	 */
+	public static final < T extends NativeType< T > > RandomAccessibleInterval< T > openSparseWithDiskCache(
+			final N5Reader n5,
+			final String dataset,
+			final T defaultValue ) throws IOException
+	{
+		return openSparseWithDiskCache( n5, dataset, ExceptionHandlers.fillWithDefaultValue( defaultValue ) );
+	}
+
+	/**
+	 * Open an N5 dataset as a memory cached {@link LazyCellImg}.
+	 *
+	 * @param n5
+	 * @param dataset
+	 * @param ioExceptionHandler
+	 * @return
+	 * @throws IOException
+	 */
+	@SuppressWarnings( { "unchecked", "rawtypes" } )
+	public static final < T extends NativeType< T > > RandomAccessibleInterval< T > openSparse(
+			final N5Reader n5,
+			final String dataset,
+			final BiConsumer< Exception, Img< T > > ioExceptionHandler ) throws IOException
 	{
 		final DatasetAttributes attributes = n5.getDatasetAttributes( dataset );
 		final long[] dimensions = attributes.getDimensions();
 		final int[] blockSize = attributes.getBlockSize();
 
-		final N5CellLoader< T > loader = new N5CellLoader<>( n5, dataset, blockSize );
+		final N5CellLoader< T > loader = new N5CellLoader<>( n5, dataset, blockSize, ioExceptionHandler );
 
 		final CellGrid grid = new CellGrid( dimensions, blockSize );
 
@@ -414,19 +518,21 @@ public class N5Utils {
 	 *
 	 * @param n5
 	 * @param dataset
+	 * @param ioExceptionHandler
 	 * @return
 	 * @throws IOException
 	 */
 	@SuppressWarnings( { "unchecked", "rawtypes" } )
-	public static final < T extends NativeType< T > > RandomAccessibleInterval< T > openVolatile(
+	public static final < T extends NativeType< T > > RandomAccessibleInterval< T > openSparseVolatile(
 			final N5Reader n5,
-			final String dataset ) throws IOException
+			final String dataset,
+			final BiConsumer< Exception, Img< T > > ioExceptionHandler ) throws IOException
 	{
 		final DatasetAttributes attributes = n5.getDatasetAttributes( dataset );
 		final long[] dimensions = attributes.getDimensions();
 		final int[] blockSize = attributes.getBlockSize();
 
-		final N5CellLoader< T > loader = new N5CellLoader<>( n5, dataset, blockSize );
+		final N5CellLoader< T > loader = new N5CellLoader<>( n5, dataset, blockSize, ioExceptionHandler );
 
 		final CellGrid grid = new CellGrid( dimensions, blockSize );
 
@@ -510,19 +616,21 @@ public class N5Utils {
 	 *
 	 * @param n5
 	 * @param dataset
+	 * @param ioExceptionHandler
 	 * @return
 	 * @throws IOException
 	 */
 	@SuppressWarnings( { "unchecked", "rawtypes" } )
-	public static final < T extends NativeType< T > > RandomAccessibleInterval< T > openWithDiskCache(
+	public static final < T extends NativeType< T > > RandomAccessibleInterval< T > openSparseWithDiskCache(
 			final N5Reader n5,
-			final String dataset ) throws IOException
+			final String dataset,
+			final BiConsumer< Exception, Img< T > > ioExceptionHandler ) throws IOException
 	{
 		final DatasetAttributes attributes = n5.getDatasetAttributes( dataset );
 		final long[] dimensions = attributes.getDimensions();
 		final int[] blockSize = attributes.getBlockSize();
 
-		final N5CellLoader< ? > loader = new N5CellLoader<>( n5, dataset, blockSize );
+		final N5CellLoader< ? > loader = new N5CellLoader<>( n5, dataset, blockSize, ioExceptionHandler );
 
 		final DiskCachedCellImgOptions options = DiskCachedCellImgOptions
 				.options()

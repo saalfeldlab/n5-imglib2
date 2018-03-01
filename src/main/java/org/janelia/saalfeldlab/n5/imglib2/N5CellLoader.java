@@ -36,7 +36,14 @@ public class N5CellLoader< T extends NativeType< T > > implements CellLoader< T 
 
 	private final BiConsumer< Img< T >, DataBlock< ? > > copyFromBlock;
 
+	private final BiConsumer< Exception, Img< T > > ioExceptionHandler;
+
 	public N5CellLoader( final N5Reader n5, final String dataset, final int[] cellDimensions ) throws IOException
+	{
+		this( n5, dataset, cellDimensions, ExceptionHandlers.asRuntimeException() );
+	}
+
+	public N5CellLoader( final N5Reader n5, final String dataset, final int[] cellDimensions, final BiConsumer< Exception, Img< T > > ioExceptionHandler ) throws IOException
 	{
 		super();
 		this.n5 = n5;
@@ -44,6 +51,7 @@ public class N5CellLoader< T extends NativeType< T > > implements CellLoader< T 
 		this.cellDimensions = cellDimensions;
 		this.attributes = n5.getDatasetAttributes( dataset );
 		this.copyFromBlock = createCopy( attributes.getDataType() );
+		this.ioExceptionHandler = ioExceptionHandler;
 		if ( ! Arrays.equals( this.cellDimensions, attributes.getBlockSize() ) )
 			throw new RuntimeException( "Cell dimensions inconsistent! " + " " + Arrays.toString( cellDimensions ) + " " + Arrays.toString( attributes.getBlockSize() ) );
 	}
@@ -54,18 +62,16 @@ public class N5CellLoader< T extends NativeType< T > > implements CellLoader< T 
 		final long[] gridPosition = new long[ cell.numDimensions() ];
 		for ( int d = 0; d < gridPosition.length; ++d )
 			gridPosition[ d ] = cell.min( d ) / cellDimensions[ d ];
-		final DataBlock< ? > block;
 		try
 		{
-			block = n5.readBlock( dataset, attributes, gridPosition );
+			final DataBlock< ? > block = n5.readBlock( dataset, attributes, gridPosition );
+			copyFromBlock.accept( cell, block );
 		}
-		catch ( final IOException e )
+		catch ( final Exception e )
 		{
-			throw new RuntimeException( e );
+			ioExceptionHandler.accept(e, cell);
 		}
 
-		if ( block != null )
-			copyFromBlock.accept( cell, block );
 	}
 
 	public static < T extends Type< T > > void burnIn( final RandomAccessibleInterval< T > source, final RandomAccessibleInterval< T > target )
