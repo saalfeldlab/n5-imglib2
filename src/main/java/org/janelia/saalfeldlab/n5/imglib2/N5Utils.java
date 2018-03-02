@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
-import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 import org.janelia.saalfeldlab.n5.Compression;
 import org.janelia.saalfeldlab.n5.DataBlock;
@@ -329,7 +329,7 @@ public class N5Utils {
 			final N5Reader n5,
 			final String dataset ) throws IOException
 	{
-		return openSparse( n5, dataset, ExceptionHandlers.asRuntimeException() );
+		return openSparse( n5, dataset, N5CellLoader.noOpConsumer() );
 	}
 
 	/**
@@ -344,7 +344,7 @@ public class N5Utils {
 			final N5Reader n5,
 			final String dataset ) throws IOException
 	{
-		return openSparseVolatile( n5, dataset, ExceptionHandlers.asRuntimeException() );
+		return openSparseVolatile( n5, dataset, N5CellLoader.noOpConsumer() );
 	}
 
 	/**
@@ -361,7 +361,7 @@ public class N5Utils {
 			final N5Reader n5,
 			final String dataset ) throws IOException
 	{
-		return openSparseWithDiskCache( n5, dataset, ExceptionHandlers.asRuntimeException() );
+		return openSparseWithDiskCache( n5, dataset, N5CellLoader.noOpConsumer() );
 	}
 
 	/**
@@ -378,7 +378,7 @@ public class N5Utils {
 			final String dataset,
 			final T defaultValue ) throws IOException
 	{
-		return openSparse( n5, dataset, ExceptionHandlers.fillWithDefaultValue( defaultValue ) );
+		return openSparse( n5, dataset, N5CellLoader.setToDefaultValue( defaultValue ) );
 	}
 
 	/**
@@ -395,7 +395,7 @@ public class N5Utils {
 			final String dataset,
 			final T defaultValue ) throws IOException
 	{
-		return openSparseVolatile( n5, dataset, ExceptionHandlers.fillWithDefaultValue( defaultValue ) );
+		return openSparseVolatile( n5, dataset, N5CellLoader.setToDefaultValue( defaultValue ) );
 	}
 
 	/**
@@ -414,7 +414,7 @@ public class N5Utils {
 			final String dataset,
 			final T defaultValue ) throws IOException
 	{
-		return openSparseWithDiskCache( n5, dataset, ExceptionHandlers.fillWithDefaultValue( defaultValue ) );
+		return openSparseWithDiskCache( n5, dataset, N5CellLoader.setToDefaultValue( defaultValue ) );
 	}
 
 	/**
@@ -430,13 +430,13 @@ public class N5Utils {
 	public static final < T extends NativeType< T > > RandomAccessibleInterval< T > openSparse(
 			final N5Reader n5,
 			final String dataset,
-			final BiConsumer< Exception, Img< T > > ioExceptionHandler ) throws IOException
+			final Consumer< Img< T > > blockNotFoundHandler ) throws IOException
 	{
 		final DatasetAttributes attributes = n5.getDatasetAttributes( dataset );
 		final long[] dimensions = attributes.getDimensions();
 		final int[] blockSize = attributes.getBlockSize();
 
-		final N5CellLoader< T > loader = new N5CellLoader<>( n5, dataset, blockSize, ioExceptionHandler );
+		final N5CellLoader< T > loader = new N5CellLoader<>( n5, dataset, blockSize, blockNotFoundHandler );
 
 		final CellGrid grid = new CellGrid( dimensions, blockSize );
 
@@ -526,13 +526,13 @@ public class N5Utils {
 	public static final < T extends NativeType< T > > RandomAccessibleInterval< T > openSparseVolatile(
 			final N5Reader n5,
 			final String dataset,
-			final BiConsumer< Exception, Img< T > > ioExceptionHandler ) throws IOException
+			final Consumer< Img< T > > blockNotFoundHandler ) throws IOException
 	{
 		final DatasetAttributes attributes = n5.getDatasetAttributes( dataset );
 		final long[] dimensions = attributes.getDimensions();
 		final int[] blockSize = attributes.getBlockSize();
 
-		final N5CellLoader< T > loader = new N5CellLoader<>( n5, dataset, blockSize, ioExceptionHandler );
+		final N5CellLoader< T > loader = new N5CellLoader<>( n5, dataset, blockSize, blockNotFoundHandler );
 
 		final CellGrid grid = new CellGrid( dimensions, blockSize );
 
@@ -624,13 +624,13 @@ public class N5Utils {
 	public static final < T extends NativeType< T > > RandomAccessibleInterval< T > openSparseWithDiskCache(
 			final N5Reader n5,
 			final String dataset,
-			final BiConsumer< Exception, Img< T > > ioExceptionHandler ) throws IOException
+			final Consumer< Img< T > > blockNotFoundHandler ) throws IOException
 	{
 		final DatasetAttributes attributes = n5.getDatasetAttributes( dataset );
 		final long[] dimensions = attributes.getDimensions();
 		final int[] blockSize = attributes.getBlockSize();
 
-		final N5CellLoader< ? > loader = new N5CellLoader<>( n5, dataset, blockSize, ioExceptionHandler );
+		final N5CellLoader< ? > loader = new N5CellLoader<>( n5, dataset, blockSize, blockNotFoundHandler );
 
 		final DiskCachedCellImgOptions options = DiskCachedCellImgOptions
 				.options()

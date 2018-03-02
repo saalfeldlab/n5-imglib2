@@ -3,6 +3,7 @@ package org.janelia.saalfeldlab.n5.imglib2;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 import org.janelia.saalfeldlab.n5.DataBlock;
 import org.janelia.saalfeldlab.n5.DataType;
@@ -36,14 +37,14 @@ public class N5CellLoader< T extends NativeType< T > > implements CellLoader< T 
 
 	private final BiConsumer< Img< T >, DataBlock< ? > > copyFromBlock;
 
-	private final BiConsumer< Exception, Img< T > > ioExceptionHandler;
+	private final Consumer< Img< T > > blockNotFoundHandler;
 
 	public N5CellLoader( final N5Reader n5, final String dataset, final int[] cellDimensions ) throws IOException
 	{
-		this( n5, dataset, cellDimensions, ExceptionHandlers.asRuntimeException() );
+		this( n5, dataset, cellDimensions, noOpConsumer() );
 	}
 
-	public N5CellLoader( final N5Reader n5, final String dataset, final int[] cellDimensions, final BiConsumer< Exception, Img< T > > ioExceptionHandler ) throws IOException
+	public N5CellLoader( final N5Reader n5, final String dataset, final int[] cellDimensions, final Consumer< Img< T > > blockNotFoundHandler ) throws IOException
 	{
 		super();
 		this.n5 = n5;
@@ -51,7 +52,7 @@ public class N5CellLoader< T extends NativeType< T > > implements CellLoader< T 
 		this.cellDimensions = cellDimensions;
 		this.attributes = n5.getDatasetAttributes( dataset );
 		this.copyFromBlock = createCopy( attributes.getDataType() );
-		this.ioExceptionHandler = ioExceptionHandler;
+		this.blockNotFoundHandler = blockNotFoundHandler;
 		if ( ! Arrays.equals( this.cellDimensions, attributes.getBlockSize() ) )
 			throw new RuntimeException( "Cell dimensions inconsistent! " + " " + Arrays.toString( cellDimensions ) + " " + Arrays.toString( attributes.getBlockSize() ) );
 	}
@@ -62,15 +63,20 @@ public class N5CellLoader< T extends NativeType< T > > implements CellLoader< T 
 		final long[] gridPosition = new long[ cell.numDimensions() ];
 		for ( int d = 0; d < gridPosition.length; ++d )
 			gridPosition[ d ] = cell.min( d ) / cellDimensions[ d ];
+		final DataBlock< ? >  block;
 		try
 		{
-			final DataBlock< ? > block = n5.readBlock( dataset, attributes, gridPosition );
-			copyFromBlock.accept( cell, block );
+			block = n5.readBlock( dataset, attributes, gridPosition );
 		}
-		catch ( final Exception e )
+		catch ( final IOException e )
 		{
-			ioExceptionHandler.accept(e, cell);
+			throw new RuntimeException( e );
 		}
+
+		if ( block == null )
+			blockNotFoundHandler.accept( cell );
+		else
+			copyFromBlock.accept( cell, block );
 
 	}
 
@@ -163,5 +169,13 @@ public class N5CellLoader< T extends NativeType< T > > implements CellLoader< T 
 		default:
 			throw new IllegalArgumentException( "Type " + dataType.name() + " not supported!" );
 		}
+	}
+
+	public static < T > Consumer< T > noOpConsumer() {
+		return t -> {};
+	}
+
+	public static < T extends Type< T >, I extends RandomAccessibleInterval< T > > Consumer< I > setToDefaultValue( T defaultValue ) {
+		return rai -> Views.iterable( rai ).forEach( pixel -> pixel.set( defaultValue ) );
 	}
 }
