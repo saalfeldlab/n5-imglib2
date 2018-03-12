@@ -349,7 +349,7 @@ public class N5Utils {
 
 	/**
 	 * Open an N5 dataset as a disk-cached LazyCellImg.  Note that this
-	 * requires that al part of the the N5 dataset that will be accessed fit
+	 * requires that all parts of the the N5 dataset that will be accessed fit
 	 * into /tmp.
 	 *
 	 * @param n5
@@ -400,7 +400,7 @@ public class N5Utils {
 
 	/**
 	 * Open an N5 dataset as a disk-cached LazyCellImg.  Note that this
-	 * requires that al part of the the N5 dataset that will be accessed fit
+	 * requires that all parts of the the N5 dataset that will be accessed fit
 	 * into /tmp.
 	 *
 	 * @param n5
@@ -611,7 +611,7 @@ public class N5Utils {
 
 	/**
 	 * Open an N5 dataset as a disk-cached LazyCellImg.  Note that this
-	 * requires that al part of the the N5 dataset that will be accessed fit
+	 * requires that all parts of the the N5 dataset that will be accessed fit
 	 * into /tmp.
 	 *
 	 * @param n5

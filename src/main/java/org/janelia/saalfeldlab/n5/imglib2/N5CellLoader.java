@@ -39,11 +39,33 @@ public class N5CellLoader< T extends NativeType< T > > implements CellLoader< T 
 
 	private final Consumer< Img< T > > blockNotFoundHandler;
 
+	/**
+	 *
+	 * Calls
+	 * {@link N5CellLoader#N5CellLoader(N5Reader, String, int[], Consumer)} with
+	 * {@code blockNotFoundHandler} defaulting to
+	 * {@link N5CellLoader#noOpConsumer()}.
+	 *
+	 * @param n5
+	 * @param dataset
+	 * @param cellDimensions
+	 * @throws IOException
+	 */
 	public N5CellLoader( final N5Reader n5, final String dataset, final int[] cellDimensions ) throws IOException
 	{
 		this( n5, dataset, cellDimensions, noOpConsumer() );
 	}
 
+	/**
+	 *
+	 * @param n5
+	 * @param dataset
+	 * @param cellDimensions
+	 * @param blockNotFoundHandler
+	 *            Sets block contents if the appropriate {@link N5Reader}
+	 *            returns {@code null} for that block.
+	 * @throws IOException
+	 */
 	public N5CellLoader( final N5Reader n5, final String dataset, final int[] cellDimensions, final Consumer< Img< T > > blockNotFoundHandler ) throws IOException
 	{
 		super();
@@ -63,7 +85,7 @@ public class N5CellLoader< T extends NativeType< T > > implements CellLoader< T 
 		final long[] gridPosition = new long[ cell.numDimensions() ];
 		for ( int d = 0; d < gridPosition.length; ++d )
 			gridPosition[ d ] = cell.min( d ) / cellDimensions[ d ];
-		final DataBlock< ? >  block;
+		final DataBlock< ? > block;
 		try
 		{
 			block = n5.readBlock( dataset, attributes, gridPosition );
@@ -87,8 +109,8 @@ public class N5CellLoader< T extends NativeType< T > > implements CellLoader< T 
 	}
 
 	/**
-	 * Copies data from source into target and tests whether all values equal
-	 * a reference value.
+	 * Copies data from source into target and tests whether all values equal a
+	 * reference value.
 	 *
 	 * @param source
 	 * @param target
@@ -171,11 +193,23 @@ public class N5CellLoader< T extends NativeType< T > > implements CellLoader< T 
 		}
 	}
 
-	public static < T > Consumer< T > noOpConsumer() {
+	/**
+	 *
+	 * @return {@link Consumer} that does not do anything.
+	 */
+	public static < T > Consumer< T > noOpConsumer()
+	{
 		return t -> {};
 	}
 
-	public static < T extends Type< T >, I extends RandomAccessibleInterval< T > > Consumer< I > setToDefaultValue( T defaultValue ) {
+	/**
+	 *
+	 * @param defaultValue
+	 * @return {@link Consumer} that sets all values of its argument to
+	 *         {@code defaultValue}.
+	 */
+	public static < T extends Type< T >, I extends RandomAccessibleInterval< T > > Consumer< I > setToDefaultValue( T defaultValue )
+	{
 		return rai -> Views.iterable( rai ).forEach( pixel -> pixel.set( defaultValue ) );
 	}
 }
