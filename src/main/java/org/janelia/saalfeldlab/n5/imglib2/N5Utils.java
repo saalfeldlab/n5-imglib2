@@ -329,7 +329,7 @@ public class N5Utils {
 			final N5Reader n5,
 			final String dataset ) throws IOException
 	{
-		return openSparse( n5, dataset, ( Consumer< IterableInterval< T > > ) img -> {} );
+		return open( n5, dataset, ( Consumer< IterableInterval< T > > ) img -> {} );
 	}
 
 	/**
@@ -344,7 +344,7 @@ public class N5Utils {
 			final N5Reader n5,
 			final String dataset ) throws IOException
 	{
-		return openSparseVolatile( n5, dataset, ( Consumer< IterableInterval< T > > ) img -> {} );
+		return openVolatile( n5, dataset, ( Consumer< IterableInterval< T > > ) img -> {} );
 	}
 
 	/**
@@ -361,7 +361,7 @@ public class N5Utils {
 			final N5Reader n5,
 			final String dataset ) throws IOException
 	{
-		return openSparseWithDiskCache( n5, dataset, ( Consumer< IterableInterval< T > > ) img -> {} );
+		return openWithDiskCache( n5, dataset, ( Consumer< IterableInterval< T > > ) img -> {} );
 	}
 
 	/**
@@ -373,12 +373,12 @@ public class N5Utils {
 	 * @return
 	 * @throws IOException
 	 */
-	public static final < T extends NativeType< T > > RandomAccessibleInterval< T > openSparse(
+	public static final < T extends NativeType< T > > RandomAccessibleInterval< T > open(
 			final N5Reader n5,
 			final String dataset,
 			final T defaultValue ) throws IOException
 	{
-		return openSparse( n5, dataset, N5CellLoader.setToDefaultValue( defaultValue ) );
+		return open( n5, dataset, N5CellLoader.setToDefaultValue( defaultValue ) );
 	}
 
 	/**
@@ -390,12 +390,12 @@ public class N5Utils {
 	 * @return
 	 * @throws IOException
 	 */
-	public static final < T extends NativeType< T > > RandomAccessibleInterval< T > openSparseVolatile(
+	public static final < T extends NativeType< T > > RandomAccessibleInterval< T > openVolatile(
 			final N5Reader n5,
 			final String dataset,
 			final T defaultValue ) throws IOException
 	{
-		return openSparseVolatile( n5, dataset, N5CellLoader.setToDefaultValue( defaultValue ) );
+		return openVolatile( n5, dataset, N5CellLoader.setToDefaultValue( defaultValue ) );
 	}
 
 	/**
@@ -409,12 +409,12 @@ public class N5Utils {
 	 * @return
 	 * @throws IOException
 	 */
-	public static final < T extends NativeType< T > > RandomAccessibleInterval< T > openSparseWithDiskCache(
+	public static final < T extends NativeType< T > > RandomAccessibleInterval< T > openWithDiskCache(
 			final N5Reader n5,
 			final String dataset,
 			final T defaultValue ) throws IOException
 	{
-		return openSparseWithDiskCache( n5, dataset, N5CellLoader.setToDefaultValue( defaultValue ) );
+		return openWithDiskCache( n5, dataset, N5CellLoader.setToDefaultValue( defaultValue ) );
 	}
 
 	/**
@@ -427,7 +427,7 @@ public class N5Utils {
 	 * @throws IOException
 	 */
 	@SuppressWarnings( { "unchecked", "rawtypes" } )
-	public static final < T extends NativeType< T > > RandomAccessibleInterval< T > openSparse(
+	public static final < T extends NativeType< T > > RandomAccessibleInterval< T > open(
 			final N5Reader n5,
 			final String dataset,
 			final Consumer< IterableInterval< T > > blockNotFoundHandler ) throws IOException
@@ -523,7 +523,7 @@ public class N5Utils {
 	 * @throws IOException
 	 */
 	@SuppressWarnings( { "unchecked", "rawtypes" } )
-	public static final < T extends NativeType< T > > RandomAccessibleInterval< T > openSparseVolatile(
+	public static final < T extends NativeType< T > > RandomAccessibleInterval< T > openVolatile(
 			final N5Reader n5,
 			final String dataset,
 			final Consumer< IterableInterval< T > > blockNotFoundHandler ) throws IOException
@@ -670,7 +670,7 @@ public class N5Utils {
 	 * @throws IOException
 	 */
 	@SuppressWarnings( { "unchecked", "rawtypes" } )
-	public static final < T extends NativeType< T > > RandomAccessibleInterval< T > openSparseWithDiskCache(
+	public static final < T extends NativeType< T > > RandomAccessibleInterval< T > openWithDiskCache(
 			final N5Reader n5,
 			final String dataset,
 			final Consumer< IterableInterval< T > > blockNotFoundHandler ) throws IOException
