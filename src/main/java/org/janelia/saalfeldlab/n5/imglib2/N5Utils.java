@@ -329,7 +329,7 @@ public class N5Utils {
 			final N5Reader n5,
 			final String dataset ) throws IOException
 	{
-		return openSparse( n5, dataset, N5CellLoader.noOpConsumer() );
+		return openSparse( n5, dataset, ( Consumer< Img< T > > ) img -> {} );
 	}
 
 	/**
@@ -344,11 +344,11 @@ public class N5Utils {
 			final N5Reader n5,
 			final String dataset ) throws IOException
 	{
-		return openSparseVolatile( n5, dataset, N5CellLoader.noOpConsumer() );
+		return openSparseVolatile( n5, dataset, ( Consumer< Img< T > > ) img -> {} );
 	}
 
 	/**
-	 * Open an N5 dataset as a disk-cached LazyCellImg.  Note that this
+	 * Open an N5 dataset as a disk-cached {@link LazyCellImg}. Note that this
 	 * requires that all parts of the the N5 dataset that will be accessed fit
 	 * into /tmp.
 	 *
@@ -361,7 +361,7 @@ public class N5Utils {
 			final N5Reader n5,
 			final String dataset ) throws IOException
 	{
-		return openSparseWithDiskCache( n5, dataset, N5CellLoader.noOpConsumer() );
+		return openSparseWithDiskCache( n5, dataset, ( Consumer< Img< T > > ) img -> {} );
 	}
 
 	/**
@@ -399,7 +399,7 @@ public class N5Utils {
 	}
 
 	/**
-	 * Open an N5 dataset as a disk-cached LazyCellImg.  Note that this
+	 * Open an N5 dataset as a disk-cached {@link LazyCellImg}. Note that this
 	 * requires that all parts of the the N5 dataset that will be accessed fit
 	 * into /tmp.
 	 *
@@ -422,7 +422,7 @@ public class N5Utils {
 	 *
 	 * @param n5
 	 * @param dataset
-	 * @param ioExceptionHandler
+	 * @param blockNotFoundHandler
 	 * @return
 	 * @throws IOException
 	 */
@@ -456,7 +456,7 @@ public class N5Utils {
 			type = ( T )new UnsignedByteType();
 			cache = ( Cache )new SoftRefLoaderCache< Long, Cell< ByteArray > >()
 					.withLoader( LoadedCellCacheLoader.get( grid, loader, type ) );
-			img = new CachedCellImg( grid,type, cache, ArrayDataAccessFactory.get( BYTE ) );
+			img = new CachedCellImg( grid, type, cache, ArrayDataAccessFactory.get( BYTE ) );
 			break;
 		case INT16:
 			type = ( T )new ShortType();
@@ -518,7 +518,7 @@ public class N5Utils {
 	 *
 	 * @param n5
 	 * @param dataset
-	 * @param ioExceptionHandler
+	 * @param blockNotFoundHandler
 	 * @return
 	 * @throws IOException
 	 */
@@ -552,7 +552,7 @@ public class N5Utils {
 			type = ( T )new UnsignedByteType();
 			cache = ( Cache )new SoftRefLoaderCache< Long, Cell< VolatileByteArray > >()
 					.withLoader( LoadedCellCacheLoader.get( grid, loader, type, VOLATILE ) );
-			img = new CachedCellImg( grid,type, cache, ArrayDataAccessFactory.get( BYTE, VOLATILE ) );
+			img = new CachedCellImg( grid, type, cache, ArrayDataAccessFactory.get( BYTE, VOLATILE ) );
 			break;
 		case INT16:
 			type = ( T )new ShortType();
@@ -610,13 +610,13 @@ public class N5Utils {
 	}
 
 	/**
-	 * Open an N5 dataset as a disk-cached LazyCellImg.  Note that this
+	 * Open an N5 dataset as a disk-cached {@link LazyCellImg}. Note that this
 	 * requires that all parts of the the N5 dataset that will be accessed fit
 	 * into /tmp.
 	 *
 	 * @param n5
 	 * @param dataset
-	 * @param ioExceptionHandler
+	 * @param blockNotFoundHandler
 	 * @return
 	 * @throws IOException
 	 */

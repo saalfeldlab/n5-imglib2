@@ -43,8 +43,7 @@ public class N5CellLoader< T extends NativeType< T > > implements CellLoader< T 
 	 *
 	 * Calls
 	 * {@link N5CellLoader#N5CellLoader(N5Reader, String, int[], Consumer)} with
-	 * {@code blockNotFoundHandler} defaulting to
-	 * {@link N5CellLoader#noOpConsumer()}.
+	 * {@code blockNotFoundHandler} defaulting to no action ({@code img -> {}})
 	 *
 	 * @param n5
 	 * @param dataset
@@ -53,7 +52,7 @@ public class N5CellLoader< T extends NativeType< T > > implements CellLoader< T 
 	 */
 	public N5CellLoader( final N5Reader n5, final String dataset, final int[] cellDimensions ) throws IOException
 	{
-		this( n5, dataset, cellDimensions, noOpConsumer() );
+		this( n5, dataset, cellDimensions, img -> {} );
 	}
 
 	/**
@@ -195,20 +194,11 @@ public class N5CellLoader< T extends NativeType< T > > implements CellLoader< T 
 
 	/**
 	 *
-	 * @return {@link Consumer} that does not do anything.
-	 */
-	public static < T > Consumer< T > noOpConsumer()
-	{
-		return t -> {};
-	}
-
-	/**
-	 *
 	 * @param defaultValue
 	 * @return {@link Consumer} that sets all values of its argument to
 	 *         {@code defaultValue}.
 	 */
-	public static < T extends Type< T >, I extends RandomAccessibleInterval< T > > Consumer< I > setToDefaultValue( T defaultValue )
+	public static < T extends Type< T >, I extends RandomAccessibleInterval< T > > Consumer< I > setToDefaultValue( final T defaultValue )
 	{
 		return rai -> Views.iterable( rai ).forEach( pixel -> pixel.set( defaultValue ) );
 	}
