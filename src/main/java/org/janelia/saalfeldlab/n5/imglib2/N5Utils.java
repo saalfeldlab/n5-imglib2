@@ -26,6 +26,7 @@ import org.janelia.saalfeldlab.n5.N5Reader;
 import org.janelia.saalfeldlab.n5.N5Writer;
 
 import net.imglib2.Interval;
+import net.imglib2.IterableInterval;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.cache.Cache;
 import net.imglib2.cache.img.ArrayDataAccessFactory;
@@ -35,7 +36,6 @@ import net.imglib2.cache.img.DiskCachedCellImgFactory;
 import net.imglib2.cache.img.DiskCachedCellImgOptions;
 import net.imglib2.cache.img.LoadedCellCacheLoader;
 import net.imglib2.cache.ref.SoftRefLoaderCache;
-import net.imglib2.img.Img;
 import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.img.basictypeaccess.array.ByteArray;
 import net.imglib2.img.basictypeaccess.array.DoubleArray;
@@ -329,7 +329,7 @@ public class N5Utils {
 			final N5Reader n5,
 			final String dataset ) throws IOException
 	{
-		return openSparse( n5, dataset, ( Consumer< Img< T > > ) img -> {} );
+		return openSparse( n5, dataset, ( Consumer< IterableInterval< T > > ) img -> {} );
 	}
 
 	/**
@@ -344,7 +344,7 @@ public class N5Utils {
 			final N5Reader n5,
 			final String dataset ) throws IOException
 	{
-		return openSparseVolatile( n5, dataset, ( Consumer< Img< T > > ) img -> {} );
+		return openSparseVolatile( n5, dataset, ( Consumer< IterableInterval< T > > ) img -> {} );
 	}
 
 	/**
@@ -361,7 +361,7 @@ public class N5Utils {
 			final N5Reader n5,
 			final String dataset ) throws IOException
 	{
-		return openSparseWithDiskCache( n5, dataset, ( Consumer< Img< T > > ) img -> {} );
+		return openSparseWithDiskCache( n5, dataset, ( Consumer< IterableInterval< T > > ) img -> {} );
 	}
 
 	/**
@@ -430,7 +430,7 @@ public class N5Utils {
 	public static final < T extends NativeType< T > > RandomAccessibleInterval< T > openSparse(
 			final N5Reader n5,
 			final String dataset,
-			final Consumer< Img< T > > blockNotFoundHandler ) throws IOException
+			final Consumer< IterableInterval< T > > blockNotFoundHandler ) throws IOException
 	{
 		final DatasetAttributes attributes = n5.getDatasetAttributes( dataset );
 		final long[] dimensions = attributes.getDimensions();
@@ -526,7 +526,7 @@ public class N5Utils {
 	public static final < T extends NativeType< T > > RandomAccessibleInterval< T > openSparseVolatile(
 			final N5Reader n5,
 			final String dataset,
-			final Consumer< Img< T > > blockNotFoundHandler ) throws IOException
+			final Consumer< IterableInterval< T > > blockNotFoundHandler ) throws IOException
 	{
 		final DatasetAttributes attributes = n5.getDatasetAttributes( dataset );
 		final long[] dimensions = attributes.getDimensions();
@@ -673,7 +673,7 @@ public class N5Utils {
 	public static final < T extends NativeType< T > > RandomAccessibleInterval< T > openSparseWithDiskCache(
 			final N5Reader n5,
 			final String dataset,
-			final Consumer< Img< T > > blockNotFoundHandler ) throws IOException
+			final Consumer< IterableInterval< T > > blockNotFoundHandler ) throws IOException
 	{
 		final DatasetAttributes attributes = n5.getDatasetAttributes( dataset );
 		final long[] dimensions = attributes.getDimensions();

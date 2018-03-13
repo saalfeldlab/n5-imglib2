@@ -11,10 +11,10 @@ import org.janelia.saalfeldlab.n5.DatasetAttributes;
 import org.janelia.saalfeldlab.n5.N5Reader;
 
 import net.imglib2.Cursor;
+import net.imglib2.IterableInterval;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.cache.img.CellLoader;
 import net.imglib2.cache.img.SingleCellArrayImg;
-import net.imglib2.img.Img;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.Type;
 import net.imglib2.type.numeric.integer.GenericByteType;
@@ -35,9 +35,9 @@ public class N5CellLoader< T extends NativeType< T > > implements CellLoader< T 
 
 	private final DatasetAttributes attributes;
 
-	private final BiConsumer< Img< T >, DataBlock< ? > > copyFromBlock;
+	private final BiConsumer< IterableInterval< T >, DataBlock< ? > > copyFromBlock;
 
-	private final Consumer< Img< T > > blockNotFoundHandler;
+	private final Consumer< IterableInterval< T > > blockNotFoundHandler;
 
 	/**
 	 *
@@ -65,7 +65,7 @@ public class N5CellLoader< T extends NativeType< T > > implements CellLoader< T 
 	 *            returns {@code null} for that block.
 	 * @throws IOException
 	 */
-	public N5CellLoader( final N5Reader n5, final String dataset, final int[] cellDimensions, final Consumer< Img< T > > blockNotFoundHandler ) throws IOException
+	public N5CellLoader( final N5Reader n5, final String dataset, final int[] cellDimensions, final Consumer< IterableInterval< T > > blockNotFoundHandler ) throws IOException
 	{
 		super();
 		this.n5 = n5;
@@ -131,7 +131,7 @@ public class N5CellLoader< T extends NativeType< T > > implements CellLoader< T 
 		return equal;
 	}
 
-	public static < T extends NativeType< T > > BiConsumer< Img< T >, DataBlock< ? > > createCopy( final DataType dataType )
+	public static < T extends NativeType< T > > BiConsumer< IterableInterval< T >, DataBlock< ? > > createCopy( final DataType dataType )
 	{
 		switch ( dataType )
 		{
@@ -198,8 +198,8 @@ public class N5CellLoader< T extends NativeType< T > > implements CellLoader< T 
 	 * @return {@link Consumer} that sets all values of its argument to
 	 *         {@code defaultValue}.
 	 */
-	public static < T extends Type< T >, I extends RandomAccessibleInterval< T > > Consumer< I > setToDefaultValue( final T defaultValue )
+	public static < T extends Type< T >, I extends IterableInterval< T > > Consumer< I > setToDefaultValue( final T defaultValue )
 	{
-		return rai -> Views.iterable( rai ).forEach( pixel -> pixel.set( defaultValue ) );
+		return rai -> rai.forEach( pixel -> pixel.set( defaultValue ) );
 	}
 }
