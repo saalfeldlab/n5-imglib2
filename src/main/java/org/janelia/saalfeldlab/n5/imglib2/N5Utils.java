@@ -16,6 +16,8 @@ import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.function.Consumer;
+import java.util.function.IntFunction;
 
 import org.janelia.saalfeldlab.n5.Compression;
 import org.janelia.saalfeldlab.n5.DataBlock;
@@ -25,6 +27,7 @@ import org.janelia.saalfeldlab.n5.N5Reader;
 import org.janelia.saalfeldlab.n5.N5Writer;
 
 import net.imglib2.Interval;
+import net.imglib2.IterableInterval;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.cache.Cache;
 import net.imglib2.cache.img.ArrayDataAccessFactory;
@@ -323,16 +326,118 @@ public class N5Utils {
 	 * @return
 	 * @throws IOException
 	 */
-	@SuppressWarnings( { "unchecked", "rawtypes" } )
 	public static final < T extends NativeType< T > > RandomAccessibleInterval< T > open(
 			final N5Reader n5,
 			final String dataset ) throws IOException
+	{
+		return open( n5, dataset, ( Consumer< IterableInterval< T > > ) img -> {} );
+	}
+
+	/**
+	 * Open an N5 dataset as a memory cached {@link LazyCellImg} using {@link VolatileAccess}.
+	 *
+	 * @param n5
+	 * @param dataset
+	 * @return
+	 * @throws IOException
+	 */
+	public static final < T extends NativeType< T > > RandomAccessibleInterval< T > openVolatile(
+			final N5Reader n5,
+			final String dataset ) throws IOException
+	{
+		return openVolatile( n5, dataset, ( Consumer< IterableInterval< T > > ) img -> {} );
+	}
+
+	/**
+	 * Open an N5 dataset as a disk-cached {@link LazyCellImg}. Note that this
+	 * requires that all parts of the the N5 dataset that will be accessed fit
+	 * into /tmp.
+	 *
+	 * @param n5
+	 * @param dataset
+	 * @return
+	 * @throws IOException
+	 */
+	public static final < T extends NativeType< T > > RandomAccessibleInterval< T > openWithDiskCache(
+			final N5Reader n5,
+			final String dataset ) throws IOException
+	{
+		return openWithDiskCache( n5, dataset, ( Consumer< IterableInterval< T > > ) img -> {} );
+	}
+
+	/**
+	 * Open an N5 dataset as a memory cached {@link LazyCellImg}.
+	 *
+	 * @param n5
+	 * @param dataset
+	 * @param defaultValue
+	 * @return
+	 * @throws IOException
+	 */
+	public static final < T extends NativeType< T > > RandomAccessibleInterval< T > open(
+			final N5Reader n5,
+			final String dataset,
+			final T defaultValue ) throws IOException
+	{
+		return open( n5, dataset, N5CellLoader.setToDefaultValue( defaultValue ) );
+	}
+
+	/**
+	 * Open an N5 dataset as a memory cached {@link LazyCellImg} using {@link VolatileAccess}.
+	 *
+	 * @param n5
+	 * @param dataset
+	 * @param defaultValue
+	 * @return
+	 * @throws IOException
+	 */
+	public static final < T extends NativeType< T > > RandomAccessibleInterval< T > openVolatile(
+			final N5Reader n5,
+			final String dataset,
+			final T defaultValue ) throws IOException
+	{
+		return openVolatile( n5, dataset, N5CellLoader.setToDefaultValue( defaultValue ) );
+	}
+
+	/**
+	 * Open an N5 dataset as a disk-cached {@link LazyCellImg}. Note that this
+	 * requires that all parts of the the N5 dataset that will be accessed fit
+	 * into /tmp.
+	 *
+	 * @param n5
+	 * @param dataset
+	 * @param defaultValue
+	 * @return
+	 * @throws IOException
+	 */
+	public static final < T extends NativeType< T > > RandomAccessibleInterval< T > openWithDiskCache(
+			final N5Reader n5,
+			final String dataset,
+			final T defaultValue ) throws IOException
+	{
+		return openWithDiskCache( n5, dataset, N5CellLoader.setToDefaultValue( defaultValue ) );
+	}
+
+	/**
+	 * Open an N5 dataset as a memory cached {@link LazyCellImg}.
+	 *
+	 * @param n5
+	 * @param dataset
+	 * @param blockNotFoundHandler
+	 * @return
+	 * @throws IOException
+	 */
+	@SuppressWarnings( { "unchecked", "rawtypes" } )
+	public static final < T extends NativeType< T > > RandomAccessibleInterval< T > open(
+			final N5Reader n5,
+			final String dataset,
+			final Consumer< IterableInterval< T > > blockNotFoundHandler ) throws IOException
 	{
 		final DatasetAttributes attributes = n5.getDatasetAttributes( dataset );
 		final long[] dimensions = attributes.getDimensions();
 		final int[] blockSize = attributes.getBlockSize();
 
-		final N5CellLoader< T > loader = new N5CellLoader<>( n5, dataset, blockSize );
+		final N5CellLoader< T > loader = new N5CellLoader<>( n5, dataset, blockSize, blockNotFoundHandler );
 
 		final CellGrid grid = new CellGrid( dimensions, blockSize );
 
@@ -352,7 +457,7 @@ public class N5Utils {
 			type = ( T )new UnsignedByteType();
 			cache = ( Cache )new SoftRefLoaderCache< Long, Cell< ByteArray > >()
 					.withLoader( LoadedCellCacheLoader.get( grid, loader, type ) );
-			img = new CachedCellImg( grid,type, cache, ArrayDataAccessFactory.get( BYTE ) );
+			img = new CachedCellImg( grid, type, cache, ArrayDataAccessFactory.get( BYTE ) );
 			break;
 		case INT16:
 			type = ( T )new ShortType();
@@ -414,19 +519,21 @@ public class N5Utils {
 	 *
 	 * @param n5
 	 * @param dataset
+	 * @param blockNotFoundHandler
 	 * @return
 	 * @throws IOException
 	 */
 	@SuppressWarnings( { "unchecked", "rawtypes" } )
 	public static final < T extends NativeType< T > > RandomAccessibleInterval< T > openVolatile(
 			final N5Reader n5,
-			final String dataset ) throws IOException
+			final String dataset,
+			final Consumer< IterableInterval< T > > blockNotFoundHandler ) throws IOException
 	{
 		final DatasetAttributes attributes = n5.getDatasetAttributes( dataset );
 		final long[] dimensions = attributes.getDimensions();
 		final int[] blockSize = attributes.getBlockSize();
 
-		final N5CellLoader< T > loader = new N5CellLoader<>( n5, dataset, blockSize );
+		final N5CellLoader< T > loader = new N5CellLoader<>( n5, dataset, blockSize, blockNotFoundHandler );
 
 		final CellGrid grid = new CellGrid( dimensions, blockSize );
 
@@ -446,7 +553,7 @@ public class N5Utils {
 			type = ( T )new UnsignedByteType();
 			cache = ( Cache )new SoftRefLoaderCache< Long, Cell< VolatileByteArray > >()
 					.withLoader( LoadedCellCacheLoader.get( grid, loader, type, VOLATILE ) );
-			img = new CachedCellImg( grid,type, cache, ArrayDataAccessFactory.get( BYTE, VOLATILE ) );
+			img = new CachedCellImg( grid, type, cache, ArrayDataAccessFactory.get( BYTE, VOLATILE ) );
 			break;
 		case INT16:
 			type = ( T )new ShortType();
@@ -510,14 +617,16 @@ public class N5Utils {
 	 * @param n5
 	 * @param group
 	 * @param useVolatileAccess
+	 * @param blockNotFoundHandlerSupplier
 	 *
 	 * @return
 	 * @throws IOException
 	 */
-	public static final < T extends NativeType< T > > Pair< RandomAccessibleInterval< T >[], double[][] >  openMipmaps(
+	public static final < T extends NativeType< T > > Pair< RandomAccessibleInterval< T >[], double[][] > openMipmapsWithHandler(
 			final N5Reader n5,
 			final String group,
-			final boolean useVolatileAccess ) throws IOException
+			final boolean useVolatileAccess,
+			final IntFunction< Consumer< IterableInterval< T > > > blockNotFoundHandlerSupplier ) throws IOException
 	{
 		final int numScales = n5.list( group ).length;
 		final RandomAccessibleInterval< T >[] mipmaps = ( RandomAccessibleInterval< T >[] )new RandomAccessibleInterval[ numScales ];
@@ -541,9 +650,9 @@ public class N5Utils {
 
 			final RandomAccessibleInterval< T > source;
 			if ( useVolatileAccess )
-				source = N5Utils.open( n5, datasetName );
+				source = N5Utils.open( n5, datasetName, blockNotFoundHandlerSupplier.apply( s ) );
 			else
-				source = N5Utils.openVolatile(n5, datasetName );
+				source = N5Utils.openVolatile( n5, datasetName, blockNotFoundHandlerSupplier.apply( s ) );
 
 			mipmaps[ s ] = source;
 			scales[ s ] = scale;
@@ -553,25 +662,79 @@ public class N5Utils {
 	}
 
 	/**
+	 * Open an N5 mipmap (multi-scale) group as memory cached
+	 * {@link LazyCellImg}s, optionally backed by {@link VolatileAccess}.
+	 *
+	 * @param n5
+	 * @param group
+	 * @param useVolatileAccess
+	 * @param defaultValueSupplier
+	 *
+	 * @return
+	 * @throws IOException
+	 */
+	public static final < T extends NativeType< T > > Pair< RandomAccessibleInterval< T >[], double[][] > openMipmaps(
+			final N5Reader n5,
+			final String group,
+			final boolean useVolatileAccess,
+			final IntFunction< T > defaultValueSupplier ) throws IOException
+	{
+		return openMipmapsWithHandler(
+				n5,
+				group,
+				useVolatileAccess,
+				s -> {
+					return N5CellLoader.setToDefaultValue(defaultValueSupplier.apply(s));
+				});
+	}
+
+	/**
+	 * Open an N5 mipmap (multi-scale) group as memory cached
+	 * {@link LazyCellImg}s, optionally backed by {@link VolatileAccess}.
+	 *
+	 * @param n5
+	 * @param group
+	 * @param useVolatileAccess
+	 *
+	 * @return
+	 * @throws IOException
+	 */
+	public static final < T extends NativeType< T > > Pair< RandomAccessibleInterval< T >[], double[][] > openMipmaps(
+			final N5Reader n5,
+			final String group,
+			final boolean useVolatileAccess ) throws IOException
+	{
+		return openMipmapsWithHandler(
+				n5,
+				group,
+				useVolatileAccess,
+				s -> t -> {} );
+	}
+
+
+
+	/**
 	 * Open an N5 dataset as a disk-cached {@link LazyCellImg}.  Note that this
 	 * requires that al part of the the N5 dataset that will be accessed fit
 	 * into /tmp.
 	 *
 	 * @param n5
 	 * @param dataset
+	 * @param blockNotFoundHandler
 	 * @return
 	 * @throws IOException
 	 */
 	@SuppressWarnings( { "unchecked", "rawtypes" } )
 	public static final < T extends NativeType< T > > RandomAccessibleInterval< T > openWithDiskCache(
 			final N5Reader n5,
-			final String dataset ) throws IOException
+			final String dataset,
+			final Consumer< IterableInterval< T > > blockNotFoundHandler ) throws IOException
 	{
 		final DatasetAttributes attributes = n5.getDatasetAttributes( dataset );
 		final long[] dimensions = attributes.getDimensions();
 		final int[] blockSize = attributes.getBlockSize();
 
-		final N5CellLoader< ? > loader = new N5CellLoader<>( n5, dataset, blockSize );
+		final N5CellLoader< ? > loader = new N5CellLoader<>( n5, dataset, blockSize, blockNotFoundHandler );
 
 		final DiskCachedCellImgOptions options = DiskCachedCellImgOptions
 				.options()

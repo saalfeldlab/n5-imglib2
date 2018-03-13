@@ -3,6 +3,7 @@ package org.janelia.saalfeldlab.n5.imglib2;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 import org.janelia.saalfeldlab.n5.DataBlock;
 import org.janelia.saalfeldlab.n5.DataType;
@@ -10,10 +11,10 @@ import org.janelia.saalfeldlab.n5.DatasetAttributes;
 import org.janelia.saalfeldlab.n5.N5Reader;
 
 import net.imglib2.Cursor;
+import net.imglib2.IterableInterval;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.cache.img.CellLoader;
 import net.imglib2.cache.img.SingleCellArrayImg;
-import net.imglib2.img.Img;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.Type;
 import net.imglib2.type.numeric.integer.GenericByteType;
@@ -34,9 +35,37 @@ public class N5CellLoader< T extends NativeType< T > > implements CellLoader< T 
 
 	private final DatasetAttributes attributes;
 
-	private final BiConsumer< Img< T >, DataBlock< ? > > copyFromBlock;
+	private final BiConsumer< IterableInterval< T >, DataBlock< ? > > copyFromBlock;
 
+	private final Consumer< IterableInterval< T > > blockNotFoundHandler;
+
+	/**
+	 *
+	 * Calls
+	 * {@link N5CellLoader#N5CellLoader(N5Reader, String, int[], Consumer)} with
+	 * {@code blockNotFoundHandler} defaulting to no action ({@code img -> {}})
+	 *
+	 * @param n5
+	 * @param dataset
+	 * @param cellDimensions
+	 * @throws IOException
+	 */
 	public N5CellLoader( final N5Reader n5, final String dataset, final int[] cellDimensions ) throws IOException
+	{
+		this( n5, dataset, cellDimensions, img -> {} );
+	}
+
+	/**
+	 *
+	 * @param n5
+	 * @param dataset
+	 * @param cellDimensions
+	 * @param blockNotFoundHandler
+	 *            Sets block contents if the appropriate {@link N5Reader}
+	 *            returns {@code null} for that block.
+	 * @throws IOException
+	 */
+	public N5CellLoader( final N5Reader n5, final String dataset, final int[] cellDimensions, final Consumer< IterableInterval< T > > blockNotFoundHandler ) throws IOException
 	{
 		super();
 		this.n5 = n5;
@@ -44,6 +73,7 @@ public class N5CellLoader< T extends NativeType< T > > implements CellLoader< T 
 		this.cellDimensions = cellDimensions;
 		this.attributes = n5.getDatasetAttributes( dataset );
 		this.copyFromBlock = createCopy( attributes.getDataType() );
+		this.blockNotFoundHandler = blockNotFoundHandler;
 		if ( ! Arrays.equals( this.cellDimensions, attributes.getBlockSize() ) )
 			throw new RuntimeException( "Cell dimensions inconsistent! " + " " + Arrays.toString( cellDimensions ) + " " + Arrays.toString( attributes.getBlockSize() ) );
 	}
@@ -64,8 +94,11 @@ public class N5CellLoader< T extends NativeType< T > > implements CellLoader< T 
 			throw new RuntimeException( e );
 		}
 
-		if ( block != null )
+		if ( block == null )
+			blockNotFoundHandler.accept( cell );
+		else
 			copyFromBlock.accept( cell, block );
+
 	}
 
 	public static < T extends Type< T > > void burnIn( final RandomAccessibleInterval< T > source, final RandomAccessibleInterval< T > target )
@@ -75,8 +108,8 @@ public class N5CellLoader< T extends NativeType< T > > implements CellLoader< T 
 	}
 
 	/**
-	 * Copies data from source into target and tests whether all values equal
-	 * a reference value.
+	 * Copies data from source into target and tests whether all values equal a
+	 * reference value.
 	 *
 	 * @param source
 	 * @param target
@@ -98,7 +131,7 @@ public class N5CellLoader< T extends NativeType< T > > implements CellLoader< T 
 		return equal;
 	}
 
-	public static < T extends NativeType< T > > BiConsumer< Img< T >, DataBlock< ? > > createCopy( final DataType dataType )
+	public static < T extends NativeType< T > > BiConsumer< IterableInterval< T >, DataBlock< ? > > createCopy( final DataType dataType )
 	{
 		switch ( dataType )
 		{
@@ -157,5 +190,16 @@ public class N5CellLoader< T extends NativeType< T > > implements CellLoader< T 
 		default:
 			throw new IllegalArgumentException( "Type " + dataType.name() + " not supported!" );
 		}
+	}
+
+	/**
+	 *
+	 * @param defaultValue
+	 * @return {@link Consumer} that sets all values of its argument to
+	 *         {@code defaultValue}.
+	 */
+	public static < T extends Type< T >, I extends IterableInterval< T > > Consumer< I > setToDefaultValue( final T defaultValue )
+	{
+		return rai -> rai.forEach( pixel -> pixel.set( defaultValue ) );
 	}
 }
