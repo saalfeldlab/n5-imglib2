@@ -66,7 +66,9 @@ import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.type.numeric.real.DoubleType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Intervals;
+import net.imglib2.util.Pair;
 import net.imglib2.util.Util;
+import net.imglib2.util.ValuePair;
 import net.imglib2.view.Views;
 
 /**
@@ -144,8 +146,7 @@ public class N5Utils {
 			N5CellLoader.burnIn( ( RandomAccessibleInterval< IntType > )source, ArrayImgs.ints( ( int[] )dataBlock.getData(), longBlockSize ) );
 			break;
 		case UINT64:
-			/* TODO missing factory method in ArrayImgs, replace when ImgLib2 updated */
-			N5CellLoader.burnIn( ( RandomAccessibleInterval< UnsignedLongType > )source, ArrayImgs.unsignedLongs( new LongArray( ( long[] )dataBlock.getData() ), longBlockSize ) );
+			N5CellLoader.burnIn( ( RandomAccessibleInterval< UnsignedLongType > )source, ArrayImgs.unsignedLongs( ( long[] )dataBlock.getData(), longBlockSize ) );
 			break;
 		case INT64:
 			N5CellLoader.burnIn( ( RandomAccessibleInterval< LongType > )source, ArrayImgs.longs( ( long[] )dataBlock.getData(), longBlockSize ) );
@@ -225,10 +226,9 @@ public class N5Utils {
 					( IntType )defaultValue );
 			break;
 		case UINT64:
-			/* TODO missing factory method in ArrayImgs, replace when ImgLib2 updated */
 			isEmpty = N5CellLoader.burnInTestAllEqual(
 					( RandomAccessibleInterval< UnsignedLongType > )source,
-					ArrayImgs.unsignedLongs( new LongArray( ( long[] )dataBlock.getData() ), longBlockSize ),
+					ArrayImgs.unsignedLongs( ( long[] )dataBlock.getData(), longBlockSize ),
 					( UnsignedLongType )defaultValue );
 			break;
 		case INT64:
@@ -610,8 +610,57 @@ public class N5Utils {
 	}
 
 	/**
-	 * Open an N5 dataset as a disk-cached {@link LazyCellImg}. Note that this
-	 * requires that all parts of the the N5 dataset that will be accessed fit
+	 * Open an N5 mipmap (multi-scale) group as memory cached
+	 * {@link LazyCellImg}s, optionally backed by {@link VolatileAccess}.
+	 *
+	 * @param n5
+	 * @param group
+	 * @param useVolatileAccess
+	 *
+	 * @return
+	 * @throws IOException
+	 */
+	public static final < T extends NativeType< T > > Pair< RandomAccessibleInterval< T >[], double[][] >  openMipmaps(
+			final N5Reader n5,
+			final String group,
+			final boolean useVolatileAccess ) throws IOException
+	{
+		final int numScales = n5.list( group ).length;
+		final RandomAccessibleInterval< T >[] mipmaps = ( RandomAccessibleInterval< T >[] )new RandomAccessibleInterval[ numScales ];
+		final double[][] scales = new double[ numScales ][];
+
+		for ( int s = 0; s < numScales; ++s )
+		{
+			final String datasetName = group + "/s" + s;
+			final long[] dimensions = n5.getAttribute( datasetName, "dimensions", long[].class );
+			final long[] downsamplingFactors = n5.getAttribute( datasetName, "downsamplingFactors", long[].class );
+			final double[] scale = new double[ dimensions.length ];
+			if ( downsamplingFactors == null ) {
+				final int si = 1 << s;
+				for ( int i = 0; i < scale.length; ++i )
+					scale[ i ] = si;
+			}
+			else {
+				for ( int i = 0; i < scale.length; ++i )
+					scale[ i ] = downsamplingFactors[ i ];
+			}
+
+			final RandomAccessibleInterval< T > source;
+			if ( useVolatileAccess )
+				source = N5Utils.open( n5, datasetName );
+			else
+				source = N5Utils.openVolatile(n5, datasetName );
+
+			mipmaps[ s ] = source;
+			scales[ s ] = scale;
+		}
+
+		return new ValuePair< RandomAccessibleInterval< T >[], double[][] >( mipmaps, scales );
+	}
+
+	/**
+	 * Open an N5 dataset as a disk-cached {@link LazyCellImg}.  Note that this
+	 * requires that al part of the the N5 dataset that will be accessed fit
 	 * into /tmp.
 	 *
 	 * @param n5
