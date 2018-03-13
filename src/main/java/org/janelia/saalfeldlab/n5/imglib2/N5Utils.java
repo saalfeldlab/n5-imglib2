@@ -80,27 +80,27 @@ public class N5Utils {
 
 	private N5Utils() {}
 
-	public static final < T extends NativeType< T > > DataType dataType( final T type )
-	{
-		if ( DoubleType.class.isInstance( type ) )
+	public static final <T extends NativeType<T>> DataType dataType(final T type) {
+
+		if (DoubleType.class.isInstance(type))
 			return DataType.FLOAT64;
-		if ( FloatType.class.isInstance( type ) )
+		if (FloatType.class.isInstance(type))
 			return DataType.FLOAT32;
-		if ( LongType.class.isInstance( type ) )
+		if (LongType.class.isInstance(type))
 			return DataType.INT64;
-		if ( UnsignedLongType.class.isInstance( type ) )
+		if (UnsignedLongType.class.isInstance(type))
 			return DataType.UINT64;
-		if ( IntType.class.isInstance( type ) )
+		if (IntType.class.isInstance(type))
 			return DataType.INT32;
-		if ( UnsignedIntType.class.isInstance( type ) )
+		if (UnsignedIntType.class.isInstance(type))
 			return DataType.UINT32;
-		if ( ShortType.class.isInstance( type ) )
+		if (ShortType.class.isInstance(type))
 			return DataType.INT16;
-		if ( UnsignedShortType.class.isInstance( type ) )
+		if (UnsignedShortType.class.isInstance(type))
 			return DataType.UINT16;
-		if ( ByteType.class.isInstance( type ) )
+		if (ByteType.class.isInstance(type))
 			return DataType.INT8;
-		if ( UnsignedByteType.class.isInstance( type ) )
+		if (UnsignedByteType.class.isInstance(type))
 			return DataType.UINT8;
 		else
 			return null;
@@ -108,7 +108,7 @@ public class N5Utils {
 
 	/**
 	 * Creates a {@link DataBlock} of matching type and copies the content of
-	 * source into it.  This is a helper method with redundant parameters.
+	 * source into it. This is a helper method with redundant parameters.
 	 *
 	 * @param source
 	 * @param dataType
@@ -117,49 +117,48 @@ public class N5Utils {
 	 * @param gridPosition
 	 * @return
 	 */
-	@SuppressWarnings( "unchecked" )
-	private static final DataBlock< ? > createDataBlock(
-			final RandomAccessibleInterval< ? > source,
+	@SuppressWarnings("unchecked")
+	private static final DataBlock<?> createDataBlock(
+			final RandomAccessibleInterval<?> source,
 			final DataType dataType,
 			final int[] intBlockSize,
 			final long[] longBlockSize,
-			final long[] gridPosition )
-	{
-		final DataBlock< ? > dataBlock = dataType.createDataBlock( intBlockSize, gridPosition );
-		switch ( dataType )
-		{
+			final long[] gridPosition) {
+
+		final DataBlock<?> dataBlock = dataType.createDataBlock(intBlockSize, gridPosition);
+		switch (dataType) {
 		case UINT8:
-			N5CellLoader.burnIn( ( RandomAccessibleInterval< UnsignedByteType > )source, ArrayImgs.unsignedBytes( ( byte[] )dataBlock.getData(), longBlockSize ) );
+			N5CellLoader.burnIn((RandomAccessibleInterval<UnsignedByteType>)source, ArrayImgs.unsignedBytes((byte[])dataBlock.getData(), longBlockSize));
 			break;
 		case INT8:
-			N5CellLoader.burnIn( ( RandomAccessibleInterval< ByteType > )source, ArrayImgs.bytes( ( byte[] )dataBlock.getData(), longBlockSize ) );
+			N5CellLoader.burnIn((RandomAccessibleInterval<ByteType>)source, ArrayImgs.bytes((byte[])dataBlock.getData(), longBlockSize));
 			break;
 		case UINT16:
-			N5CellLoader.burnIn( ( RandomAccessibleInterval< UnsignedShortType > )source, ArrayImgs.unsignedShorts( ( short[] )dataBlock.getData(), longBlockSize ) );
+			N5CellLoader.burnIn((RandomAccessibleInterval<UnsignedShortType>)source, ArrayImgs.unsignedShorts((short[])dataBlock.getData(), longBlockSize));
 			break;
 		case INT16:
-			N5CellLoader.burnIn( ( RandomAccessibleInterval< ShortType > )source, ArrayImgs.shorts( ( short[] )dataBlock.getData(), longBlockSize ) );
+			N5CellLoader.burnIn((RandomAccessibleInterval<ShortType>)source, ArrayImgs.shorts((short[])dataBlock.getData(), longBlockSize));
 			break;
 		case UINT32:
-			N5CellLoader.burnIn( ( RandomAccessibleInterval< UnsignedIntType > )source, ArrayImgs.unsignedInts( ( int[] )dataBlock.getData(), longBlockSize ) );
+			N5CellLoader.burnIn((RandomAccessibleInterval<UnsignedIntType>)source, ArrayImgs.unsignedInts((int[])dataBlock.getData(), longBlockSize));
 			break;
 		case INT32:
-			N5CellLoader.burnIn( ( RandomAccessibleInterval< IntType > )source, ArrayImgs.ints( ( int[] )dataBlock.getData(), longBlockSize ) );
+			N5CellLoader.burnIn((RandomAccessibleInterval<IntType>)source, ArrayImgs.ints((int[])dataBlock.getData(), longBlockSize));
 			break;
 		case UINT64:
-			N5CellLoader.burnIn( ( RandomAccessibleInterval< UnsignedLongType > )source, ArrayImgs.unsignedLongs( ( long[] )dataBlock.getData(), longBlockSize ) );
+			N5CellLoader.burnIn((RandomAccessibleInterval<UnsignedLongType>)source, ArrayImgs.unsignedLongs((long[])dataBlock.getData(), longBlockSize));
 			break;
 		case INT64:
-			N5CellLoader.burnIn( ( RandomAccessibleInterval< LongType > )source, ArrayImgs.longs( ( long[] )dataBlock.getData(), longBlockSize ) );
+			N5CellLoader.burnIn((RandomAccessibleInterval<LongType>)source, ArrayImgs.longs((long[])dataBlock.getData(), longBlockSize));
 			break;
 		case FLOAT32:
-			N5CellLoader.burnIn( ( RandomAccessibleInterval< FloatType > )source, ArrayImgs.floats( ( float[] )dataBlock.getData(), longBlockSize ) );
+			N5CellLoader.burnIn((RandomAccessibleInterval<FloatType>)source, ArrayImgs.floats((float[])dataBlock.getData(), longBlockSize));
 			break;
 		case FLOAT64:
-			N5CellLoader.burnIn( ( RandomAccessibleInterval< DoubleType > )source, ArrayImgs.doubles( ( double[] )dataBlock.getData(), longBlockSize ) );
+			N5CellLoader.burnIn((RandomAccessibleInterval<DoubleType>)source, ArrayImgs.doubles((double[])dataBlock.getData(), longBlockSize));
 			break;
 		default:
-			throw new IllegalArgumentException( "Type " + dataType.name() + " not supported!" );
+			throw new IllegalArgumentException("Type " + dataType.name() + " not supported!");
 		}
 
 		return dataBlock;
@@ -167,7 +166,7 @@ public class N5Utils {
 
 	/**
 	 * Creates a {@link DataBlock} of matching type and copies the content of
-	 * source into it.  This is a helper method with redundant parameters.
+	 * source into it. This is a helper method with redundant parameters.
 	 *
 	 * @param source
 	 * @param dataType
@@ -177,91 +176,90 @@ public class N5Utils {
 	 * @param defaultValue
 	 * @return
 	 */
-	@SuppressWarnings( "unchecked" )
-	private static final < T extends Type< T > > DataBlock< ? > createNonEmptyDataBlock(
-			final RandomAccessibleInterval< ? > source,
+	@SuppressWarnings("unchecked")
+	private static final <T extends Type<T>> DataBlock<?> createNonEmptyDataBlock(
+			final RandomAccessibleInterval<?> source,
 			final DataType dataType,
 			final int[] intBlockSize,
 			final long[] longBlockSize,
 			final long[] gridPosition,
-			final T defaultValue )
-	{
-		final DataBlock< ? > dataBlock = dataType.createDataBlock( intBlockSize, gridPosition );
+			final T defaultValue) {
+
+		final DataBlock<?> dataBlock = dataType.createDataBlock(intBlockSize, gridPosition);
 		final boolean isEmpty;
-		switch ( dataType )
-		{
+		switch (dataType) {
 		case UINT8:
 			isEmpty = N5CellLoader.burnInTestAllEqual(
-					( RandomAccessibleInterval< UnsignedByteType > )source,
-					ArrayImgs.unsignedBytes( ( byte[] )dataBlock.getData(), longBlockSize ),
-					( UnsignedByteType )defaultValue );
+					(RandomAccessibleInterval<UnsignedByteType>)source,
+					ArrayImgs.unsignedBytes((byte[])dataBlock.getData(), longBlockSize),
+					(UnsignedByteType)defaultValue);
 			break;
 		case INT8:
 			isEmpty = N5CellLoader.burnInTestAllEqual(
-					( RandomAccessibleInterval< ByteType > )source,
-					ArrayImgs.bytes( ( byte[] )dataBlock.getData(), longBlockSize ),
-					( ByteType )defaultValue );
+					(RandomAccessibleInterval<ByteType>)source,
+					ArrayImgs.bytes((byte[])dataBlock.getData(), longBlockSize),
+					(ByteType)defaultValue);
 			break;
 		case UINT16:
 			isEmpty = N5CellLoader.burnInTestAllEqual(
-					( RandomAccessibleInterval< UnsignedShortType > )source,
-					ArrayImgs.unsignedShorts( ( short[] )dataBlock.getData(), longBlockSize ),
-					( UnsignedShortType )defaultValue );
+					(RandomAccessibleInterval<UnsignedShortType>)source,
+					ArrayImgs.unsignedShorts((short[])dataBlock.getData(), longBlockSize),
+					(UnsignedShortType)defaultValue);
 			break;
 		case INT16:
 			isEmpty = N5CellLoader.burnInTestAllEqual(
-					( RandomAccessibleInterval< ShortType > )source,
-					ArrayImgs.shorts( ( short[] )dataBlock.getData(), longBlockSize ),
-					( ShortType )defaultValue );
+					(RandomAccessibleInterval<ShortType>)source,
+					ArrayImgs.shorts((short[])dataBlock.getData(), longBlockSize),
+					(ShortType)defaultValue);
 			break;
 		case UINT32:
 			isEmpty = N5CellLoader.burnInTestAllEqual(
-					( RandomAccessibleInterval< UnsignedIntType > )source,
-					ArrayImgs.unsignedInts( ( int[] )dataBlock.getData(), longBlockSize ),
-					( UnsignedIntType )defaultValue );
+					(RandomAccessibleInterval<UnsignedIntType>)source,
+					ArrayImgs.unsignedInts((int[])dataBlock.getData(), longBlockSize),
+					(UnsignedIntType)defaultValue);
 			break;
 		case INT32:
 			isEmpty = N5CellLoader.burnInTestAllEqual(
-					( RandomAccessibleInterval< IntType > )source,
-					ArrayImgs.ints( ( int[] )dataBlock.getData(), longBlockSize ),
-					( IntType )defaultValue );
+					(RandomAccessibleInterval<IntType>)source,
+					ArrayImgs.ints((int[])dataBlock.getData(), longBlockSize),
+					(IntType)defaultValue);
 			break;
 		case UINT64:
 			isEmpty = N5CellLoader.burnInTestAllEqual(
-					( RandomAccessibleInterval< UnsignedLongType > )source,
-					ArrayImgs.unsignedLongs( ( long[] )dataBlock.getData(), longBlockSize ),
-					( UnsignedLongType )defaultValue );
+					(RandomAccessibleInterval<UnsignedLongType>)source,
+					ArrayImgs.unsignedLongs((long[])dataBlock.getData(), longBlockSize),
+					(UnsignedLongType)defaultValue);
 			break;
 		case INT64:
 			isEmpty = N5CellLoader.burnInTestAllEqual(
-					( RandomAccessibleInterval< LongType > )source,
-					ArrayImgs.longs( ( long[] )dataBlock.getData(), longBlockSize ),
-					( LongType )defaultValue );
+					(RandomAccessibleInterval<LongType>)source,
+					ArrayImgs.longs((long[])dataBlock.getData(), longBlockSize),
+					(LongType)defaultValue);
 			break;
 		case FLOAT32:
 			isEmpty = N5CellLoader.burnInTestAllEqual(
-					( RandomAccessibleInterval< FloatType > )source,
-					ArrayImgs.floats( ( float[] )dataBlock.getData(), longBlockSize ),
-					( FloatType )defaultValue );
+					(RandomAccessibleInterval<FloatType>)source,
+					ArrayImgs.floats((float[])dataBlock.getData(), longBlockSize),
+					(FloatType)defaultValue);
 			break;
 		case FLOAT64:
 			isEmpty = N5CellLoader.burnInTestAllEqual(
-					( RandomAccessibleInterval< DoubleType > )source,
-					ArrayImgs.doubles( ( double[] )dataBlock.getData(), longBlockSize ),
-					( DoubleType )defaultValue );
+					(RandomAccessibleInterval<DoubleType>)source,
+					ArrayImgs.doubles((double[])dataBlock.getData(), longBlockSize),
+					(DoubleType)defaultValue);
 			break;
 		default:
-			throw new IllegalArgumentException( "Type " + dataType.name() + " not supported!" );
+			throw new IllegalArgumentException("Type " + dataType.name() + " not supported!");
 		}
 
 		return isEmpty ? null : dataBlock;
 	}
 
 	/**
-	 * Crops the dimensions of a {@link DataBlock} at a given offset to fit
-	 * into and {@link Interval} of given dimensions.  Fills long and int
-	 * version of cropped block size.  Also calculates the grid raster position
-	 * assuming that the offset divisible by block size without remainder.
+	 * Crops the dimensions of a {@link DataBlock} at a given offset to fit into
+	 * and {@link Interval} of given dimensions. Fills long and int version of
+	 * cropped block size. Also calculates the grid raster position assuming
+	 * that the offset divisible by block size without remainder.
 	 *
 	 * @param max
 	 * @param offset
@@ -276,22 +274,21 @@ public class N5Utils {
 			final int[] blockDimensions,
 			final long[] croppedBlockDimensions,
 			final int[] intCroppedBlockDimensions,
-			final long[] gridPosition )
-	{
-		for ( int d = 0; d < max.length; ++d )
-		{
-			croppedBlockDimensions[ d ] = Math.min( blockDimensions[ d ], max[ d ] - offset[ d ] + 1 );
-			intCroppedBlockDimensions[ d ] = ( int )croppedBlockDimensions[ d ];
-			gridPosition[ d ] = offset[ d ] / blockDimensions[ d ];
+			final long[] gridPosition) {
+
+		for (int d = 0; d < max.length; ++d) {
+			croppedBlockDimensions[d] = Math.min(blockDimensions[d], max[d] - offset[d] + 1);
+			intCroppedBlockDimensions[d] = (int)croppedBlockDimensions[d];
+			gridPosition[d] = offset[d] / blockDimensions[d];
 		}
 	}
 
 	/**
-	 * Crops the dimensions of a {@link DataBlock} at a given offset to fit
-	 * into and {@link Interval} of given dimensions.  Fills long and int
-	 * version of cropped block size.  Also calculates the grid raster position
-	 * plus a grid offset assuming that the offset divisible by block size
-	 * without remainder.
+	 * Crops the dimensions of a {@link DataBlock} at a given offset to fit into
+	 * and {@link Interval} of given dimensions. Fills long and int version of
+	 * cropped block size. Also calculates the grid raster position plus a grid
+	 * offset assuming that the offset divisible by block size without
+	 * remainder.
 	 *
 	 * @param max
 	 * @param offset
@@ -308,13 +305,12 @@ public class N5Utils {
 			final int[] blockDimensions,
 			final long[] croppedBlockDimensions,
 			final int[] intCroppedBlockDimensions,
-			final long[] gridPosition )
-	{
-		for ( int d = 0; d < max.length; ++d )
-		{
-			croppedBlockDimensions[ d ] = Math.min( blockDimensions[ d ], max[ d ] - offset[ d ] + 1 );
-			intCroppedBlockDimensions[ d ] = ( int )croppedBlockDimensions[ d ];
-			gridPosition[ d ] = offset[ d ] / blockDimensions[ d ] + gridOffset[ d ];
+			final long[] gridPosition) {
+
+		for (int d = 0; d < max.length; ++d) {
+			croppedBlockDimensions[d] = Math.min(blockDimensions[d], max[d] - offset[d] + 1);
+			intCroppedBlockDimensions[d] = (int)croppedBlockDimensions[d];
+			gridPosition[d] = offset[d] / blockDimensions[d] + gridOffset[d];
 		}
 	}
 
@@ -326,26 +322,27 @@ public class N5Utils {
 	 * @return
 	 * @throws IOException
 	 */
-	public static final < T extends NativeType< T > > RandomAccessibleInterval< T > open(
+	public static final <T extends NativeType<T>> RandomAccessibleInterval<T> open(
 			final N5Reader n5,
-			final String dataset ) throws IOException
-	{
-		return open( n5, dataset, ( Consumer< IterableInterval< T > > ) img -> {} );
+			final String dataset) throws IOException {
+
+		return open(n5, dataset, (Consumer<IterableInterval<T>>)img -> {});
 	}
 
 	/**
-	 * Open an N5 dataset as a memory cached {@link LazyCellImg} using {@link VolatileAccess}.
+	 * Open an N5 dataset as a memory cached {@link LazyCellImg} using
+	 * {@link VolatileAccess}.
 	 *
 	 * @param n5
 	 * @param dataset
 	 * @return
 	 * @throws IOException
 	 */
-	public static final < T extends NativeType< T > > RandomAccessibleInterval< T > openVolatile(
+	public static final <T extends NativeType<T>> RandomAccessibleInterval<T> openVolatile(
 			final N5Reader n5,
-			final String dataset ) throws IOException
-	{
-		return openVolatile( n5, dataset, ( Consumer< IterableInterval< T > > ) img -> {} );
+			final String dataset) throws IOException {
+
+		return openVolatile(n5, dataset, (Consumer<IterableInterval<T>>)img -> {});
 	}
 
 	/**
@@ -358,11 +355,11 @@ public class N5Utils {
 	 * @return
 	 * @throws IOException
 	 */
-	public static final < T extends NativeType< T > > RandomAccessibleInterval< T > openWithDiskCache(
+	public static final <T extends NativeType<T>> RandomAccessibleInterval<T> openWithDiskCache(
 			final N5Reader n5,
-			final String dataset ) throws IOException
-	{
-		return openWithDiskCache( n5, dataset, ( Consumer< IterableInterval< T > > ) img -> {} );
+			final String dataset) throws IOException {
+
+		return openWithDiskCache(n5, dataset, (Consumer<IterableInterval<T>>)img -> {});
 	}
 
 	/**
@@ -374,16 +371,17 @@ public class N5Utils {
 	 * @return
 	 * @throws IOException
 	 */
-	public static final < T extends NativeType< T > > RandomAccessibleInterval< T > open(
+	public static final <T extends NativeType<T>> RandomAccessibleInterval<T> open(
 			final N5Reader n5,
 			final String dataset,
-			final T defaultValue ) throws IOException
-	{
-		return open( n5, dataset, N5CellLoader.setToDefaultValue( defaultValue ) );
+			final T defaultValue) throws IOException {
+
+		return open(n5, dataset, N5CellLoader.setToDefaultValue(defaultValue));
 	}
 
 	/**
-	 * Open an N5 dataset as a memory cached {@link LazyCellImg} using {@link VolatileAccess}.
+	 * Open an N5 dataset as a memory cached {@link LazyCellImg} using
+	 * {@link VolatileAccess}.
 	 *
 	 * @param n5
 	 * @param dataset
@@ -391,12 +389,12 @@ public class N5Utils {
 	 * @return
 	 * @throws IOException
 	 */
-	public static final < T extends NativeType< T > > RandomAccessibleInterval< T > openVolatile(
+	public static final <T extends NativeType<T>> RandomAccessibleInterval<T> openVolatile(
 			final N5Reader n5,
 			final String dataset,
-			final T defaultValue ) throws IOException
-	{
-		return openVolatile( n5, dataset, N5CellLoader.setToDefaultValue( defaultValue ) );
+			final T defaultValue) throws IOException {
+
+		return openVolatile(n5, dataset, N5CellLoader.setToDefaultValue(defaultValue));
 	}
 
 	/**
@@ -410,12 +408,12 @@ public class N5Utils {
 	 * @return
 	 * @throws IOException
 	 */
-	public static final < T extends NativeType< T > > RandomAccessibleInterval< T > openWithDiskCache(
+	public static final <T extends NativeType<T>> RandomAccessibleInterval<T> openWithDiskCache(
 			final N5Reader n5,
 			final String dataset,
-			final T defaultValue ) throws IOException
-	{
-		return openWithDiskCache( n5, dataset, N5CellLoader.setToDefaultValue( defaultValue ) );
+			final T defaultValue) throws IOException {
+
+		return openWithDiskCache(n5, dataset, N5CellLoader.setToDefaultValue(defaultValue));
 	}
 
 	/**
@@ -427,85 +425,84 @@ public class N5Utils {
 	 * @return
 	 * @throws IOException
 	 */
-	@SuppressWarnings( { "unchecked", "rawtypes" } )
-	public static final < T extends NativeType< T > > RandomAccessibleInterval< T > open(
+	@SuppressWarnings({"unchecked", "rawtypes"})
+	public static final <T extends NativeType<T>> RandomAccessibleInterval<T> open(
 			final N5Reader n5,
 			final String dataset,
-			final Consumer< IterableInterval< T > > blockNotFoundHandler ) throws IOException
-	{
-		final DatasetAttributes attributes = n5.getDatasetAttributes( dataset );
+			final Consumer<IterableInterval<T>> blockNotFoundHandler) throws IOException {
+
+		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
 		final long[] dimensions = attributes.getDimensions();
 		final int[] blockSize = attributes.getBlockSize();
 
-		final N5CellLoader< T > loader = new N5CellLoader<>( n5, dataset, blockSize, blockNotFoundHandler );
+		final N5CellLoader<T> loader = new N5CellLoader<>(n5, dataset, blockSize, blockNotFoundHandler);
 
-		final CellGrid grid = new CellGrid( dimensions, blockSize );
+		final CellGrid grid = new CellGrid(dimensions, blockSize);
 
-		final CachedCellImg< T, ? > img;
+		final CachedCellImg<T, ?> img;
 		final T type;
-		final Cache< Long, Cell< ? > > cache;
+		final Cache<Long, Cell<?>> cache;
 
-		switch ( attributes.getDataType() )
-		{
+		switch (attributes.getDataType()) {
 		case INT8:
-			type = ( T )new ByteType();
-			cache = ( Cache )new SoftRefLoaderCache< Long, Cell< ByteArray > >()
-					.withLoader( LoadedCellCacheLoader.get( grid, loader, type ) );
-			img = new CachedCellImg( grid, type, cache, ArrayDataAccessFactory.get( BYTE ) );
+			type = (T)new ByteType();
+			cache = (Cache)new SoftRefLoaderCache<Long, Cell<ByteArray>>()
+					.withLoader(LoadedCellCacheLoader.get(grid, loader, type));
+			img = new CachedCellImg(grid, type, cache, ArrayDataAccessFactory.get(BYTE));
 			break;
 		case UINT8:
-			type = ( T )new UnsignedByteType();
-			cache = ( Cache )new SoftRefLoaderCache< Long, Cell< ByteArray > >()
-					.withLoader( LoadedCellCacheLoader.get( grid, loader, type ) );
-			img = new CachedCellImg( grid, type, cache, ArrayDataAccessFactory.get( BYTE ) );
+			type = (T)new UnsignedByteType();
+			cache = (Cache)new SoftRefLoaderCache<Long, Cell<ByteArray>>()
+					.withLoader(LoadedCellCacheLoader.get(grid, loader, type));
+			img = new CachedCellImg(grid, type, cache, ArrayDataAccessFactory.get(BYTE));
 			break;
 		case INT16:
-			type = ( T )new ShortType();
-			cache = ( Cache )new SoftRefLoaderCache< Long, Cell< ShortArray > >()
-					.withLoader( LoadedCellCacheLoader.get( grid, loader, type ) );
-			img = new CachedCellImg( grid, type, cache, ArrayDataAccessFactory.get( SHORT ) );
+			type = (T)new ShortType();
+			cache = (Cache)new SoftRefLoaderCache<Long, Cell<ShortArray>>()
+					.withLoader(LoadedCellCacheLoader.get(grid, loader, type));
+			img = new CachedCellImg(grid, type, cache, ArrayDataAccessFactory.get(SHORT));
 			break;
 		case UINT16:
-			type = ( T )new UnsignedShortType();
-			cache = ( Cache )new SoftRefLoaderCache< Long, Cell< ShortArray > >()
-					.withLoader( LoadedCellCacheLoader.get( grid, loader, type ) );
-			img = new CachedCellImg( grid, type, cache, ArrayDataAccessFactory.get( SHORT ) );
+			type = (T)new UnsignedShortType();
+			cache = (Cache)new SoftRefLoaderCache<Long, Cell<ShortArray>>()
+					.withLoader(LoadedCellCacheLoader.get(grid, loader, type));
+			img = new CachedCellImg(grid, type, cache, ArrayDataAccessFactory.get(SHORT));
 			break;
 		case INT32:
-			type = ( T )new IntType();
-			cache = ( Cache )new SoftRefLoaderCache< Long, Cell< IntArray > >()
-					.withLoader( LoadedCellCacheLoader.get( grid, loader, type ) );
-			img = new CachedCellImg( grid, type, cache, ArrayDataAccessFactory.get( INT ) );
+			type = (T)new IntType();
+			cache = (Cache)new SoftRefLoaderCache<Long, Cell<IntArray>>()
+					.withLoader(LoadedCellCacheLoader.get(grid, loader, type));
+			img = new CachedCellImg(grid, type, cache, ArrayDataAccessFactory.get(INT));
 			break;
 		case UINT32:
-			type = ( T )new UnsignedIntType();
-			cache = ( Cache )new SoftRefLoaderCache< Long, Cell< IntArray > >()
-					.withLoader( LoadedCellCacheLoader.get( grid, loader, type ) );
-			img = new CachedCellImg( grid, type, cache, ArrayDataAccessFactory.get( INT ) );
+			type = (T)new UnsignedIntType();
+			cache = (Cache)new SoftRefLoaderCache<Long, Cell<IntArray>>()
+					.withLoader(LoadedCellCacheLoader.get(grid, loader, type));
+			img = new CachedCellImg(grid, type, cache, ArrayDataAccessFactory.get(INT));
 			break;
 		case INT64:
-			type = ( T )new LongType();
-			cache = ( Cache )new SoftRefLoaderCache< Long, Cell< LongArray > >()
-					.withLoader( LoadedCellCacheLoader.get( grid, loader, type ) );
-			img = new CachedCellImg( grid, type, cache, ArrayDataAccessFactory.get( LONG ) );
+			type = (T)new LongType();
+			cache = (Cache)new SoftRefLoaderCache<Long, Cell<LongArray>>()
+					.withLoader(LoadedCellCacheLoader.get(grid, loader, type));
+			img = new CachedCellImg(grid, type, cache, ArrayDataAccessFactory.get(LONG));
 			break;
 		case UINT64:
-			type = ( T )new UnsignedLongType();
-			cache = ( Cache )new SoftRefLoaderCache< Long, Cell< LongArray > >()
-					.withLoader( LoadedCellCacheLoader.get( grid, loader, type ) );
-			img = new CachedCellImg( grid, type, cache, ArrayDataAccessFactory.get( LONG ) );
+			type = (T)new UnsignedLongType();
+			cache = (Cache)new SoftRefLoaderCache<Long, Cell<LongArray>>()
+					.withLoader(LoadedCellCacheLoader.get(grid, loader, type));
+			img = new CachedCellImg(grid, type, cache, ArrayDataAccessFactory.get(LONG));
 			break;
 		case FLOAT32:
-			type = ( T )new FloatType();
-			cache = ( Cache )new SoftRefLoaderCache< Long, Cell< FloatArray > >()
-					.withLoader( LoadedCellCacheLoader.get( grid, loader, type ) );
-			img = new CachedCellImg( grid, type, cache, ArrayDataAccessFactory.get( FLOAT ) );
+			type = (T)new FloatType();
+			cache = (Cache)new SoftRefLoaderCache<Long, Cell<FloatArray>>()
+					.withLoader(LoadedCellCacheLoader.get(grid, loader, type));
+			img = new CachedCellImg(grid, type, cache, ArrayDataAccessFactory.get(FLOAT));
 			break;
 		case FLOAT64:
-			type = ( T )new DoubleType();
-			cache = ( Cache )new SoftRefLoaderCache< Long, Cell< DoubleArray > >()
-					.withLoader( LoadedCellCacheLoader.get( grid, loader, type ) );
-			img = new CachedCellImg( grid, type, cache, ArrayDataAccessFactory.get( DOUBLE ) );
+			type = (T)new DoubleType();
+			cache = (Cache)new SoftRefLoaderCache<Long, Cell<DoubleArray>>()
+					.withLoader(LoadedCellCacheLoader.get(grid, loader, type));
+			img = new CachedCellImg(grid, type, cache, ArrayDataAccessFactory.get(DOUBLE));
 			break;
 		default:
 			img = null;
@@ -515,7 +512,8 @@ public class N5Utils {
 	}
 
 	/**
-	 * Open an N5 dataset as a memory cached {@link LazyCellImg} using {@link VolatileAccess}.
+	 * Open an N5 dataset as a memory cached {@link LazyCellImg} using
+	 * {@link VolatileAccess}.
 	 *
 	 * @param n5
 	 * @param dataset
@@ -523,85 +521,84 @@ public class N5Utils {
 	 * @return
 	 * @throws IOException
 	 */
-	@SuppressWarnings( { "unchecked", "rawtypes" } )
-	public static final < T extends NativeType< T > > RandomAccessibleInterval< T > openVolatile(
+	@SuppressWarnings({"unchecked", "rawtypes"})
+	public static final <T extends NativeType<T>> RandomAccessibleInterval<T> openVolatile(
 			final N5Reader n5,
 			final String dataset,
-			final Consumer< IterableInterval< T > > blockNotFoundHandler ) throws IOException
-	{
-		final DatasetAttributes attributes = n5.getDatasetAttributes( dataset );
+			final Consumer<IterableInterval<T>> blockNotFoundHandler) throws IOException {
+
+		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
 		final long[] dimensions = attributes.getDimensions();
 		final int[] blockSize = attributes.getBlockSize();
 
-		final N5CellLoader< T > loader = new N5CellLoader<>( n5, dataset, blockSize, blockNotFoundHandler );
+		final N5CellLoader<T> loader = new N5CellLoader<>(n5, dataset, blockSize, blockNotFoundHandler);
 
-		final CellGrid grid = new CellGrid( dimensions, blockSize );
+		final CellGrid grid = new CellGrid(dimensions, blockSize);
 
-		final CachedCellImg< T, ? > img;
+		final CachedCellImg<T, ?> img;
 		final T type;
-		final Cache< Long, Cell< ? > > cache;
+		final Cache<Long, Cell<?>> cache;
 
-		switch ( attributes.getDataType() )
-		{
+		switch (attributes.getDataType()) {
 		case INT8:
-			type = ( T )new ByteType();
-			cache = ( Cache )new SoftRefLoaderCache< Long, Cell< VolatileByteArray > >()
-					.withLoader( LoadedCellCacheLoader.get( grid, loader, type, VOLATILE ) );
-			img = new CachedCellImg( grid, type, cache, ArrayDataAccessFactory.get( BYTE, VOLATILE ) );
+			type = (T)new ByteType();
+			cache = (Cache)new SoftRefLoaderCache<Long, Cell<VolatileByteArray>>()
+					.withLoader(LoadedCellCacheLoader.get(grid, loader, type, VOLATILE));
+			img = new CachedCellImg(grid, type, cache, ArrayDataAccessFactory.get(BYTE, VOLATILE));
 			break;
 		case UINT8:
-			type = ( T )new UnsignedByteType();
-			cache = ( Cache )new SoftRefLoaderCache< Long, Cell< VolatileByteArray > >()
-					.withLoader( LoadedCellCacheLoader.get( grid, loader, type, VOLATILE ) );
-			img = new CachedCellImg( grid, type, cache, ArrayDataAccessFactory.get( BYTE, VOLATILE ) );
+			type = (T)new UnsignedByteType();
+			cache = (Cache)new SoftRefLoaderCache<Long, Cell<VolatileByteArray>>()
+					.withLoader(LoadedCellCacheLoader.get(grid, loader, type, VOLATILE));
+			img = new CachedCellImg(grid, type, cache, ArrayDataAccessFactory.get(BYTE, VOLATILE));
 			break;
 		case INT16:
-			type = ( T )new ShortType();
-			cache = ( Cache )new SoftRefLoaderCache< Long, Cell< VolatileShortArray > >()
-					.withLoader( LoadedCellCacheLoader.get( grid, loader, type, VOLATILE ) );
-			img = new CachedCellImg( grid, type, cache, ArrayDataAccessFactory.get( SHORT, VOLATILE ) );
+			type = (T)new ShortType();
+			cache = (Cache)new SoftRefLoaderCache<Long, Cell<VolatileShortArray>>()
+					.withLoader(LoadedCellCacheLoader.get(grid, loader, type, VOLATILE));
+			img = new CachedCellImg(grid, type, cache, ArrayDataAccessFactory.get(SHORT, VOLATILE));
 			break;
 		case UINT16:
-			type = ( T )new UnsignedShortType();
-			cache = ( Cache )new SoftRefLoaderCache< Long, Cell< VolatileShortArray > >()
-					.withLoader( LoadedCellCacheLoader.get( grid, loader, type, VOLATILE ) );
-			img = new CachedCellImg( grid, type, cache, ArrayDataAccessFactory.get( SHORT, VOLATILE ) );
+			type = (T)new UnsignedShortType();
+			cache = (Cache)new SoftRefLoaderCache<Long, Cell<VolatileShortArray>>()
+					.withLoader(LoadedCellCacheLoader.get(grid, loader, type, VOLATILE));
+			img = new CachedCellImg(grid, type, cache, ArrayDataAccessFactory.get(SHORT, VOLATILE));
 			break;
 		case INT32:
-			type = ( T )new IntType();
-			cache = ( Cache )new SoftRefLoaderCache< Long, Cell< VolatileIntArray > >()
-					.withLoader( LoadedCellCacheLoader.get( grid, loader, type, VOLATILE ) );
-			img = new CachedCellImg( grid, type, cache, ArrayDataAccessFactory.get( INT, VOLATILE ) );
+			type = (T)new IntType();
+			cache = (Cache)new SoftRefLoaderCache<Long, Cell<VolatileIntArray>>()
+					.withLoader(LoadedCellCacheLoader.get(grid, loader, type, VOLATILE));
+			img = new CachedCellImg(grid, type, cache, ArrayDataAccessFactory.get(INT, VOLATILE));
 			break;
 		case UINT32:
-			type = ( T )new UnsignedIntType();
-			cache = ( Cache )new SoftRefLoaderCache< Long, Cell< VolatileIntArray > >()
-					.withLoader( LoadedCellCacheLoader.get( grid, loader, type, VOLATILE ) );
-			img = new CachedCellImg( grid, type, cache, ArrayDataAccessFactory.get( INT, VOLATILE ) );
+			type = (T)new UnsignedIntType();
+			cache = (Cache)new SoftRefLoaderCache<Long, Cell<VolatileIntArray>>()
+					.withLoader(LoadedCellCacheLoader.get(grid, loader, type, VOLATILE));
+			img = new CachedCellImg(grid, type, cache, ArrayDataAccessFactory.get(INT, VOLATILE));
 			break;
 		case INT64:
-			type = ( T )new LongType();
-			cache = ( Cache )new SoftRefLoaderCache< Long, Cell< VolatileLongArray > >()
-					.withLoader( LoadedCellCacheLoader.get( grid, loader, type, VOLATILE ) );
-			img = new CachedCellImg( grid, type, cache, ArrayDataAccessFactory.get( LONG, VOLATILE ) );
+			type = (T)new LongType();
+			cache = (Cache)new SoftRefLoaderCache<Long, Cell<VolatileLongArray>>()
+					.withLoader(LoadedCellCacheLoader.get(grid, loader, type, VOLATILE));
+			img = new CachedCellImg(grid, type, cache, ArrayDataAccessFactory.get(LONG, VOLATILE));
 			break;
 		case UINT64:
-			type = ( T )new UnsignedLongType();
-			cache = ( Cache )new SoftRefLoaderCache< Long, Cell< VolatileLongArray > >()
-					.withLoader( LoadedCellCacheLoader.get( grid, loader, type, VOLATILE ) );
-			img = new CachedCellImg( grid, type, cache, ArrayDataAccessFactory.get( LONG, VOLATILE ) );
+			type = (T)new UnsignedLongType();
+			cache = (Cache)new SoftRefLoaderCache<Long, Cell<VolatileLongArray>>()
+					.withLoader(LoadedCellCacheLoader.get(grid, loader, type, VOLATILE));
+			img = new CachedCellImg(grid, type, cache, ArrayDataAccessFactory.get(LONG, VOLATILE));
 			break;
 		case FLOAT32:
-			type = ( T )new FloatType();
-			cache = ( Cache )new SoftRefLoaderCache< Long, Cell< VolatileFloatArray > >()
-					.withLoader( LoadedCellCacheLoader.get( grid, loader, type, VOLATILE ) );
-			img = new CachedCellImg( grid, type, cache, ArrayDataAccessFactory.get( FLOAT, VOLATILE ) );
+			type = (T)new FloatType();
+			cache = (Cache)new SoftRefLoaderCache<Long, Cell<VolatileFloatArray>>()
+					.withLoader(LoadedCellCacheLoader.get(grid, loader, type, VOLATILE));
+			img = new CachedCellImg(grid, type, cache, ArrayDataAccessFactory.get(FLOAT, VOLATILE));
 			break;
 		case FLOAT64:
-			type = ( T )new DoubleType();
-			cache = ( Cache )new SoftRefLoaderCache< Long, Cell< VolatileDoubleArray > >()
-					.withLoader( LoadedCellCacheLoader.get( grid, loader, type, VOLATILE ) );
-			img = new CachedCellImg( grid, type, cache, ArrayDataAccessFactory.get( DOUBLE, VOLATILE ) );
+			type = (T)new DoubleType();
+			cache = (Cache)new SoftRefLoaderCache<Long, Cell<VolatileDoubleArray>>()
+					.withLoader(LoadedCellCacheLoader.get(grid, loader, type, VOLATILE));
+			img = new CachedCellImg(grid, type, cache, ArrayDataAccessFactory.get(DOUBLE, VOLATILE));
 			break;
 		default:
 			img = null;
@@ -622,43 +619,41 @@ public class N5Utils {
 	 * @return
 	 * @throws IOException
 	 */
-	public static final < T extends NativeType< T > > Pair< RandomAccessibleInterval< T >[], double[][] > openMipmapsWithHandler(
+	public static final <T extends NativeType<T>> Pair<RandomAccessibleInterval<T>[], double[][]> openMipmapsWithHandler(
 			final N5Reader n5,
 			final String group,
 			final boolean useVolatileAccess,
-			final IntFunction< Consumer< IterableInterval< T > > > blockNotFoundHandlerSupplier ) throws IOException
-	{
-		final int numScales = n5.list( group ).length;
-		final RandomAccessibleInterval< T >[] mipmaps = ( RandomAccessibleInterval< T >[] )new RandomAccessibleInterval[ numScales ];
-		final double[][] scales = new double[ numScales ][];
+			final IntFunction<Consumer<IterableInterval<T>>> blockNotFoundHandlerSupplier) throws IOException {
 
-		for ( int s = 0; s < numScales; ++s )
-		{
+		final int numScales = n5.list(group).length;
+		final RandomAccessibleInterval<T>[] mipmaps = (RandomAccessibleInterval<T>[])new RandomAccessibleInterval[numScales];
+		final double[][] scales = new double[numScales][];
+
+		for (int s = 0; s < numScales; ++s) {
 			final String datasetName = group + "/s" + s;
-			final long[] dimensions = n5.getAttribute( datasetName, "dimensions", long[].class );
-			final long[] downsamplingFactors = n5.getAttribute( datasetName, "downsamplingFactors", long[].class );
-			final double[] scale = new double[ dimensions.length ];
-			if ( downsamplingFactors == null ) {
+			final long[] dimensions = n5.getAttribute(datasetName, "dimensions", long[].class);
+			final long[] downsamplingFactors = n5.getAttribute(datasetName, "downsamplingFactors", long[].class);
+			final double[] scale = new double[dimensions.length];
+			if (downsamplingFactors == null) {
 				final int si = 1 << s;
-				for ( int i = 0; i < scale.length; ++i )
-					scale[ i ] = si;
-			}
-			else {
-				for ( int i = 0; i < scale.length; ++i )
-					scale[ i ] = downsamplingFactors[ i ];
+				for (int i = 0; i < scale.length; ++i)
+					scale[i] = si;
+			} else {
+				for (int i = 0; i < scale.length; ++i)
+					scale[i] = downsamplingFactors[i];
 			}
 
-			final RandomAccessibleInterval< T > source;
-			if ( useVolatileAccess )
-				source = N5Utils.open( n5, datasetName, blockNotFoundHandlerSupplier.apply( s ) );
+			final RandomAccessibleInterval<T> source;
+			if (useVolatileAccess)
+				source = N5Utils.open(n5, datasetName, blockNotFoundHandlerSupplier.apply(s));
 			else
-				source = N5Utils.openVolatile( n5, datasetName, blockNotFoundHandlerSupplier.apply( s ) );
+				source = N5Utils.openVolatile(n5, datasetName, blockNotFoundHandlerSupplier.apply(s));
 
-			mipmaps[ s ] = source;
-			scales[ s ] = scale;
+			mipmaps[s] = source;
+			scales[s] = scale;
 		}
 
-		return new ValuePair< RandomAccessibleInterval< T >[], double[][] >( mipmaps, scales );
+		return new ValuePair<RandomAccessibleInterval<T>[], double[][]>(mipmaps, scales);
 	}
 
 	/**
@@ -673,12 +668,12 @@ public class N5Utils {
 	 * @return
 	 * @throws IOException
 	 */
-	public static final < T extends NativeType< T > > Pair< RandomAccessibleInterval< T >[], double[][] > openMipmaps(
+	public static final <T extends NativeType<T>> Pair<RandomAccessibleInterval<T>[], double[][]> openMipmaps(
 			final N5Reader n5,
 			final String group,
 			final boolean useVolatileAccess,
-			final IntFunction< T > defaultValueSupplier ) throws IOException
-	{
+			final IntFunction<T> defaultValueSupplier) throws IOException {
+
 		return openMipmapsWithHandler(
 				n5,
 				group,
@@ -699,22 +694,20 @@ public class N5Utils {
 	 * @return
 	 * @throws IOException
 	 */
-	public static final < T extends NativeType< T > > Pair< RandomAccessibleInterval< T >[], double[][] > openMipmaps(
+	public static final <T extends NativeType<T>> Pair<RandomAccessibleInterval<T>[], double[][]> openMipmaps(
 			final N5Reader n5,
 			final String group,
-			final boolean useVolatileAccess ) throws IOException
-	{
+			final boolean useVolatileAccess) throws IOException {
+
 		return openMipmapsWithHandler(
 				n5,
 				group,
 				useVolatileAccess,
-				s -> t -> {} );
+				s -> t -> {});
 	}
 
-
-
 	/**
-	 * Open an N5 dataset as a disk-cached {@link LazyCellImg}.  Note that this
+	 * Open an N5 dataset as a disk-cached {@link LazyCellImg}. Note that this
 	 * requires that al part of the the N5 dataset that will be accessed fit
 	 * into /tmp.
 	 *
@@ -724,57 +717,56 @@ public class N5Utils {
 	 * @return
 	 * @throws IOException
 	 */
-	@SuppressWarnings( { "unchecked", "rawtypes" } )
-	public static final < T extends NativeType< T > > RandomAccessibleInterval< T > openWithDiskCache(
+	@SuppressWarnings({"unchecked", "rawtypes"})
+	public static final <T extends NativeType<T>> RandomAccessibleInterval<T> openWithDiskCache(
 			final N5Reader n5,
 			final String dataset,
-			final Consumer< IterableInterval< T > > blockNotFoundHandler ) throws IOException
-	{
-		final DatasetAttributes attributes = n5.getDatasetAttributes( dataset );
+			final Consumer<IterableInterval<T>> blockNotFoundHandler) throws IOException {
+
+		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
 		final long[] dimensions = attributes.getDimensions();
 		final int[] blockSize = attributes.getBlockSize();
 
-		final N5CellLoader< ? > loader = new N5CellLoader<>( n5, dataset, blockSize, blockNotFoundHandler );
+		final N5CellLoader<?> loader = new N5CellLoader<>(n5, dataset, blockSize, blockNotFoundHandler);
 
 		final DiskCachedCellImgOptions options = DiskCachedCellImgOptions
 				.options()
-				.cellDimensions( blockSize )
-				.dirtyAccesses( true )
-				.maxCacheSize( 100 );
+				.cellDimensions(blockSize)
+				.dirtyAccesses(true)
+				.maxCacheSize(100);
 
-		final DiskCachedCellImgFactory factory = new DiskCachedCellImgFactory<>( options );
-		final DiskCachedCellImg< T, ? > img;
-		switch ( attributes.getDataType() )
-		{
+		final DiskCachedCellImgFactory factory = new DiskCachedCellImgFactory<>(options);
+		final DiskCachedCellImg<T, ?> img;
+		switch (attributes.getDataType()) {
 		case INT8:
-			img = factory.create( dimensions, new ByteType(), loader );
+			img = factory.create(dimensions, new ByteType(), loader);
 			break;
 		case UINT8:
-			img = factory.create( dimensions, new UnsignedByteType(), loader );
+			img = factory.create(dimensions, new UnsignedByteType(), loader);
 			break;
 		case INT16:
-			img = factory.create( dimensions, new ShortType(), loader );
+			img = factory.create(dimensions, new ShortType(), loader);
 			break;
 		case UINT16:
-			img = factory.create( dimensions, new UnsignedShortType(), loader );
+			img = factory.create(dimensions, new UnsignedShortType(), loader);
 			break;
 		case INT32:
-			img = factory.create( dimensions, new IntType(), loader );
+			img = factory.create(dimensions, new IntType(), loader);
 			break;
 		case UINT32:
-			img = factory.create( dimensions, new UnsignedIntType(), loader );
+			img = factory.create(dimensions, new UnsignedIntType(), loader);
 			break;
 		case INT64:
-			img = factory.create( dimensions, new LongType(), loader );
+			img = factory.create(dimensions, new LongType(), loader);
 			break;
 		case UINT64:
-			img = factory.create( dimensions, new UnsignedLongType(), loader );
+			img = factory.create(dimensions, new UnsignedLongType(), loader);
 			break;
 		case FLOAT32:
-			img = factory.create( dimensions, new FloatType(), loader );
+			img = factory.create(dimensions, new FloatType(), loader);
 			break;
 		case FLOAT64:
-			img = factory.create( dimensions, new DoubleType(), loader );
+			img = factory.create(dimensions, new DoubleType(), loader);
 			break;
 		default:
 			img = null;
@@ -793,43 +785,41 @@ public class N5Utils {
 	 * @param gridOffset
 	 * @throws IOException
 	 */
-	public static final < T extends NativeType< T > > void saveBlock(
-			RandomAccessibleInterval< T > source,
+	public static final <T extends NativeType<T>> void saveBlock(
+			RandomAccessibleInterval<T> source,
 			final N5Writer n5,
 			final String dataset,
 			final DatasetAttributes attributes,
-			final long[] gridOffset ) throws IOException
-	{
-		source = Views.zeroMin( source );
-		final long[] dimensions = Intervals.dimensionsAsLongArray( source );
+			final long[] gridOffset) throws IOException {
+
+		source = Views.zeroMin(source);
+		final long[] dimensions = Intervals.dimensionsAsLongArray(source);
 
 		final int n = dimensions.length;
-		final long[] max = Intervals.maxAsLongArray( source );
-		final long[] offset = new long[ n ];
-		final long[] gridPosition = new long[ n ];
+		final long[] max = Intervals.maxAsLongArray(source);
+		final long[] offset = new long[n];
+		final long[] gridPosition = new long[n];
 		final int[] blockSize = attributes.getBlockSize();
-		final int[] intCroppedBlockSize = new int[ n ];
-		final long[] longCroppedBlockSize = new long[ n ];
-		for ( int d = 0; d < n; )
-		{
-			cropBlockDimensions( max, offset, gridOffset, blockSize, longCroppedBlockSize, intCroppedBlockSize, gridPosition );
-			final RandomAccessibleInterval< T > sourceBlock = Views.offsetInterval( source, offset, longCroppedBlockSize );
-			final DataBlock< ? > dataBlock = createDataBlock(
+		final int[] intCroppedBlockSize = new int[n];
+		final long[] longCroppedBlockSize = new long[n];
+		for (int d = 0; d < n;) {
+			cropBlockDimensions(max, offset, gridOffset, blockSize, longCroppedBlockSize, intCroppedBlockSize, gridPosition);
+			final RandomAccessibleInterval<T> sourceBlock = Views.offsetInterval(source, offset, longCroppedBlockSize);
+			final DataBlock<?> dataBlock = createDataBlock(
 					sourceBlock,
 					attributes.getDataType(),
 					intCroppedBlockSize,
 					longCroppedBlockSize,
-					gridPosition );
+					gridPosition);
 
-			n5.writeBlock( dataset, attributes, dataBlock );
+			n5.writeBlock(dataset, attributes, dataBlock);
 
-			for ( d = 0; d < n; ++d )
-			{
-				offset[ d ] += blockSize[ d ];
-				if ( offset[ d ] <= max[ d ] )
+			for (d = 0; d < n; ++d) {
+				offset[d] += blockSize[d];
+				if (offset[d] <= max[d])
 					break;
 				else
-					offset[ d ] = 0;
+					offset[d] = 0;
 			}
 		}
 	}
@@ -843,26 +833,22 @@ public class N5Utils {
 	 * @param gridOffset
 	 * @throws IOException
 	 */
-	public static final < T extends NativeType< T > > void saveBlock(
-			final RandomAccessibleInterval< T > source,
+	public static final <T extends NativeType<T>> void saveBlock(
+			final RandomAccessibleInterval<T> source,
 			final N5Writer n5,
 			final String dataset,
-			final long[] gridOffset ) throws IOException
-	{
-		final DatasetAttributes attributes = n5.getDatasetAttributes( dataset );
-		if ( attributes != null )
-		{
-			saveBlock( source, n5, dataset, attributes, gridOffset );
-		}
-		else
-		{
-			throw new IOException( "Dataset " + dataset + " does not exist." );
+			final long[] gridOffset) throws IOException {
+
+		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
+		if (attributes != null) {
+			saveBlock(source, n5, dataset, attributes, gridOffset);
+		} else {
+			throw new IOException("Dataset " + dataset + " does not exist.");
 		}
 	}
 
 	/**
-	 * Save a {@link RandomAccessibleInterval} as an N5 dataset,
-	 * multi-threaded.
+	 * Save a {@link RandomAccessibleInterval} as an N5 dataset, multi-threaded.
 	 *
 	 * @param source
 	 * @param n5
@@ -874,80 +860,72 @@ public class N5Utils {
 	 * @throws InterruptedException
 	 * @throws ExecutionException
 	 */
-	public static final < T extends NativeType< T > > void saveBlock(
-			final RandomAccessibleInterval< T > source,
+	public static final <T extends NativeType<T>> void saveBlock(
+			final RandomAccessibleInterval<T> source,
 			final N5Writer n5,
 			final String dataset,
 			final long[] gridOffset,
-			final ExecutorService exec ) throws IOException, InterruptedException, ExecutionException
-	{
-		final RandomAccessibleInterval< T > zeroMinSource = Views.zeroMin( source );
-		final long[] dimensions = Intervals.dimensionsAsLongArray( zeroMinSource );
-		final DatasetAttributes attributes = n5.getDatasetAttributes( dataset );
-		if ( attributes != null )
-		{
+			final ExecutorService exec) throws IOException, InterruptedException, ExecutionException {
+
+		final RandomAccessibleInterval<T> zeroMinSource = Views.zeroMin(source);
+		final long[] dimensions = Intervals.dimensionsAsLongArray(zeroMinSource);
+		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
+		if (attributes != null) {
 			final int n = dimensions.length;
-			final long[] max = Intervals.maxAsLongArray( zeroMinSource );
-			final long[] offset = new long[ n ];
+			final long[] max = Intervals.maxAsLongArray(zeroMinSource);
+			final long[] offset = new long[n];
 			final int[] blockSize = attributes.getBlockSize();
 
-			final ArrayList< Future< ? > > futures = new ArrayList<>();
-			for ( int d = 0; d < n; )
-			{
+			final ArrayList<Future<?>> futures = new ArrayList<>();
+			for (int d = 0; d < n;) {
 				final long[] fOffset = offset.clone();
 
 				futures.add(
 						exec.submit(
 								() -> {
 
-									final long[] gridPosition = new long[ n ];
-									final int[] intCroppedBlockSize = new int[ n ];
-									final long[] longCroppedBlockSize = new long[ n ];
+									final long[] gridPosition = new long[n];
+									final int[] intCroppedBlockSize = new int[n];
+									final long[] longCroppedBlockSize = new long[n];
 
-									cropBlockDimensions( max, fOffset, gridOffset, blockSize, longCroppedBlockSize, intCroppedBlockSize, gridPosition );
+									cropBlockDimensions(max, fOffset, gridOffset, blockSize, longCroppedBlockSize, intCroppedBlockSize, gridPosition);
 
-									final RandomAccessibleInterval< T > sourceBlock = Views.offsetInterval( zeroMinSource, fOffset, longCroppedBlockSize );
-									final DataBlock< ? > dataBlock = createDataBlock(
+									final RandomAccessibleInterval<T> sourceBlock = Views.offsetInterval(zeroMinSource, fOffset, longCroppedBlockSize);
+									final DataBlock<?> dataBlock = createDataBlock(
 											sourceBlock,
 											attributes.getDataType(),
 											intCroppedBlockSize,
 											longCroppedBlockSize,
-											gridPosition );
+											gridPosition);
 
-									try
-									{
-										n5.writeBlock( dataset, attributes, dataBlock );
-									}
-									catch ( final IOException e )
-									{
+									try {
+										n5.writeBlock(dataset, attributes, dataBlock);
+									} catch (final IOException e) {
 										e.printStackTrace();
 									}
-								} ) );
+								}));
 
-				for ( d = 0; d < n; ++d )
-				{
-					offset[ d ] += blockSize[ d ];
-					if ( offset[ d ] <= max[ d ] )
+				for (d = 0; d < n; ++d) {
+					offset[d] += blockSize[d];
+					if (offset[d] <= max[d])
 						break;
 					else
-						offset[ d ] = 0;
+						offset[d] = 0;
 				}
 			}
-			for ( final Future< ? > f : futures )
+			for (final Future<?> f : futures)
 				f.get();
-		}
-		else
-		{
-			throw new IOException( "Dataset " + dataset + " does not exist." );
+		} else {
+			throw new IOException("Dataset " + dataset + " does not exist.");
 		}
 	}
 
 	/**
 	 * Save a {@link RandomAccessibleInterval} into an N5 dataset at a given
-	 * offset.  The offset is given in {@link DataBlock} grid coordinates and
-	 * the source is assumed to align with the {@link DataBlock} grid of the
-	 * dataset.  Only {@link DataBlock DataBlocks} that contain values other
-	 * than a given default value are stored.
+	 * offset. The offset is given in {@link DataBlock} grid coordinates and the
+	 * source is assumed to align with the {@link DataBlock} grid of the
+	 * dataset. Only {@link DataBlock DataBlocks} that contain values other than
+	 * a given default value are stored.
 	 *
 	 * @param source
 	 * @param n5
@@ -957,56 +935,54 @@ public class N5Utils {
 	 * @param defaultValue
 	 * @throws IOException
 	 */
-	public static final < T extends NativeType< T > > void saveNonEmptyBlock(
-			RandomAccessibleInterval< T > source,
+	public static final <T extends NativeType<T>> void saveNonEmptyBlock(
+			RandomAccessibleInterval<T> source,
 			final N5Writer n5,
 			final String dataset,
 			final DatasetAttributes attributes,
 			final long[] gridOffset,
-			final T defaultValue ) throws IOException
-	{
-		source = Views.zeroMin( source );
-		final long[] dimensions = Intervals.dimensionsAsLongArray( source );
+			final T defaultValue) throws IOException {
+
+		source = Views.zeroMin(source);
+		final long[] dimensions = Intervals.dimensionsAsLongArray(source);
 
 		final int n = dimensions.length;
-		final long[] max = Intervals.maxAsLongArray( source );
-		final long[] offset = new long[ n ];
-		final long[] gridPosition = new long[ n ];
+		final long[] max = Intervals.maxAsLongArray(source);
+		final long[] offset = new long[n];
+		final long[] gridPosition = new long[n];
 		final int[] blockSize = attributes.getBlockSize();
-		final int[] intCroppedBlockSize = new int[ n ];
-		final long[] longCroppedBlockSize = new long[ n ];
-		for ( int d = 0; d < n; )
-		{
-			cropBlockDimensions( max, offset, gridOffset, blockSize, longCroppedBlockSize, intCroppedBlockSize, gridPosition );
-			final RandomAccessibleInterval< T > sourceBlock = Views.offsetInterval( source, offset, longCroppedBlockSize );
-			final DataBlock< ? > dataBlock = createNonEmptyDataBlock(
+		final int[] intCroppedBlockSize = new int[n];
+		final long[] longCroppedBlockSize = new long[n];
+		for (int d = 0; d < n;) {
+			cropBlockDimensions(max, offset, gridOffset, blockSize, longCroppedBlockSize, intCroppedBlockSize, gridPosition);
+			final RandomAccessibleInterval<T> sourceBlock = Views.offsetInterval(source, offset, longCroppedBlockSize);
+			final DataBlock<?> dataBlock = createNonEmptyDataBlock(
 					sourceBlock,
 					attributes.getDataType(),
 					intCroppedBlockSize,
 					longCroppedBlockSize,
 					gridPosition,
-					defaultValue );
+					defaultValue);
 
-			if ( dataBlock != null )
-				n5.writeBlock( dataset, attributes, dataBlock );
+			if (dataBlock != null)
+				n5.writeBlock(dataset, attributes, dataBlock);
 
-			for ( d = 0; d < n; ++d )
-			{
-				offset[ d ] += blockSize[ d ];
-				if ( offset[ d ] <= max[ d ] )
+			for (d = 0; d < n; ++d) {
+				offset[d] += blockSize[d];
+				if (offset[d] <= max[d])
 					break;
 				else
-					offset[ d ] = 0;
+					offset[d] = 0;
 			}
 		}
 	}
 
 	/**
 	 * Save a {@link RandomAccessibleInterval} into an N5 dataset at a given
-	 * offset.  The offset is given in {@link DataBlock} grid coordinates and
-	 * the source is assumed to align with the {@link DataBlock} grid of the
-	 * dataset.  Only {@link DataBlock DataBlocks} that contain values other
-	 * than a given default value are stored.
+	 * offset. The offset is given in {@link DataBlock} grid coordinates and the
+	 * source is assumed to align with the {@link DataBlock} grid of the
+	 * dataset. Only {@link DataBlock DataBlocks} that contain values other than
+	 * a given default value are stored.
 	 *
 	 * @param source
 	 * @param n5
@@ -1015,21 +991,18 @@ public class N5Utils {
 	 * @param defaultValue
 	 * @throws IOException
 	 */
-	public static final < T extends NativeType< T > > void saveNonEmptyBlock(
-			final RandomAccessibleInterval< T > source,
+	public static final <T extends NativeType<T>> void saveNonEmptyBlock(
+			final RandomAccessibleInterval<T> source,
 			final N5Writer n5,
 			final String dataset,
 			final long[] gridOffset,
-			final T defaultValue ) throws IOException
-	{
-		final DatasetAttributes attributes = n5.getDatasetAttributes( dataset );
-		if ( attributes != null )
-		{
-			saveNonEmptyBlock( source, n5, dataset, attributes, gridOffset, defaultValue );
-		}
-		else
-		{
-			throw new IOException( "Dataset " + dataset + " does not exist." );
+			final T defaultValue) throws IOException {
+
+		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
+		if (attributes != null) {
+			saveNonEmptyBlock(source, n5, dataset, attributes, gridOffset, defaultValue);
+		} else {
+			throw new IOException("Dataset " + dataset + " does not exist.");
 		}
 	}
 
@@ -1043,56 +1016,53 @@ public class N5Utils {
 	 * @param compressionType
 	 * @throws IOException
 	 */
-	public static final < T extends NativeType< T > > void save(
-			RandomAccessibleInterval< T > source,
+	public static final <T extends NativeType<T>> void save(
+			RandomAccessibleInterval<T> source,
 			final N5Writer n5,
 			final String dataset,
 			final int[] blockSize,
-			final Compression compression) throws IOException
-	{
-		source = Views.zeroMin( source );
-		final long[] dimensions = Intervals.dimensionsAsLongArray( source );
+			final Compression compression) throws IOException {
+
+		source = Views.zeroMin(source);
+		final long[] dimensions = Intervals.dimensionsAsLongArray(source);
 		final DatasetAttributes attributes = new DatasetAttributes(
 				dimensions,
 				blockSize,
-				dataType( Util.getTypeFromInterval( source ) ),
-				compression );
+				dataType(Util.getTypeFromInterval(source)),
+				compression);
 
-		n5.createDataset( dataset, attributes );
+		n5.createDataset(dataset, attributes);
 
 		final int n = dimensions.length;
-		final long[] max = Intervals.maxAsLongArray( source );
-		final long[] offset = new long[ n ];
-		final long[] gridPosition = new long[ n ];
-		final int[] intCroppedBlockSize = new int[ n ];
-		final long[] longCroppedBlockSize = new long[ n ];
-		for ( int d = 0; d < n; )
-		{
-			cropBlockDimensions( max, offset, blockSize, longCroppedBlockSize, intCroppedBlockSize, gridPosition );
-			final RandomAccessibleInterval< T > sourceBlock = Views.offsetInterval( source, offset, longCroppedBlockSize );
-			final DataBlock< ? > dataBlock = createDataBlock(
+		final long[] max = Intervals.maxAsLongArray(source);
+		final long[] offset = new long[n];
+		final long[] gridPosition = new long[n];
+		final int[] intCroppedBlockSize = new int[n];
+		final long[] longCroppedBlockSize = new long[n];
+		for (int d = 0; d < n;) {
+			cropBlockDimensions(max, offset, blockSize, longCroppedBlockSize, intCroppedBlockSize, gridPosition);
+			final RandomAccessibleInterval<T> sourceBlock = Views.offsetInterval(source, offset, longCroppedBlockSize);
+			final DataBlock<?> dataBlock = createDataBlock(
 					sourceBlock,
 					attributes.getDataType(),
 					intCroppedBlockSize,
 					longCroppedBlockSize,
-					gridPosition );
+					gridPosition);
 
-			n5.writeBlock( dataset, attributes, dataBlock );
+			n5.writeBlock(dataset, attributes, dataBlock);
 
-			for ( d = 0; d < n; ++d )
-			{
-				offset[ d ] += blockSize[ d ];
-				if ( offset[ d ] <= max[ d ] )
+			for (d = 0; d < n; ++d) {
+				offset[d] += blockSize[d];
+				if (offset[d] <= max[d])
 					break;
 				else
-					offset[ d ] = 0;
+					offset[d] = 0;
 			}
 		}
 	}
 
 	/**
-	 * Save a {@link RandomAccessibleInterval} as an N5 dataset,
-	 * multi-threaded.
+	 * Save a {@link RandomAccessibleInterval} as an N5 dataset, multi-threaded.
 	 *
 	 * @param source
 	 * @param n5
@@ -1104,71 +1074,66 @@ public class N5Utils {
 	 * @throws InterruptedException
 	 * @throws ExecutionException
 	 */
-	public static final < T extends NativeType< T > > void save(
-			final RandomAccessibleInterval< T > source,
+	public static final <T extends NativeType<T>> void save(
+			final RandomAccessibleInterval<T> source,
 			final N5Writer n5,
 			final String dataset,
 			final int[] blockSize,
 			final Compression compression,
-			final ExecutorService exec ) throws IOException, InterruptedException, ExecutionException
-	{
-		final RandomAccessibleInterval< T > zeroMinSource = Views.zeroMin( source );
-		final long[] dimensions = Intervals.dimensionsAsLongArray( zeroMinSource );
+			final ExecutorService exec) throws IOException, InterruptedException, ExecutionException {
+
+		final RandomAccessibleInterval<T> zeroMinSource = Views.zeroMin(source);
+		final long[] dimensions = Intervals.dimensionsAsLongArray(zeroMinSource);
 		final DatasetAttributes attributes = new DatasetAttributes(
 				dimensions,
 				blockSize,
-				dataType( Util.getTypeFromInterval( zeroMinSource ) ),
-				compression );
+				dataType(Util.getTypeFromInterval(zeroMinSource)),
+				compression);
 
-		n5.createDataset( dataset, attributes );
+		n5.createDataset(dataset, attributes);
 
 		final int n = dimensions.length;
-		final long[] max = Intervals.maxAsLongArray( zeroMinSource );
-		final long[] offset = new long[ n ];
+		final long[] max = Intervals.maxAsLongArray(zeroMinSource);
+		final long[] offset = new long[n];
 
-		final ArrayList< Future< ? > > futures = new ArrayList<>();
-		for ( int d = 0; d < n; )
-		{
+		final ArrayList<Future<?>> futures = new ArrayList<>();
+		for (int d = 0; d < n;) {
 			final long[] fOffset = offset.clone();
 
 			futures.add(
 					exec.submit(
 							() -> {
 
-								final long[] gridPosition = new long[ n ];
-								final int[] intCroppedBlockSize = new int[ n ];
-								final long[] longCroppedBlockSize = new long[ n ];
+								final long[] gridPosition = new long[n];
+								final int[] intCroppedBlockSize = new int[n];
+								final long[] longCroppedBlockSize = new long[n];
 
-								cropBlockDimensions( max, fOffset, blockSize, longCroppedBlockSize, intCroppedBlockSize, gridPosition );
+								cropBlockDimensions(max, fOffset, blockSize, longCroppedBlockSize, intCroppedBlockSize, gridPosition);
 
-								final RandomAccessibleInterval< T > sourceBlock = Views.offsetInterval( zeroMinSource, fOffset, longCroppedBlockSize );
-								final DataBlock< ? > dataBlock = createDataBlock(
+								final RandomAccessibleInterval<T> sourceBlock = Views.offsetInterval(zeroMinSource, fOffset, longCroppedBlockSize);
+								final DataBlock<?> dataBlock = createDataBlock(
 										sourceBlock,
 										attributes.getDataType(),
 										intCroppedBlockSize,
 										longCroppedBlockSize,
-										gridPosition );
+										gridPosition);
 
-								try
-								{
-									n5.writeBlock( dataset, attributes, dataBlock );
-								}
-								catch ( final IOException e )
-								{
+								try {
+									n5.writeBlock(dataset, attributes, dataBlock);
+								} catch (final IOException e) {
 									e.printStackTrace();
 								}
-							} ) );
+							}));
 
-			for ( d = 0; d < n; ++d )
-			{
-				offset[ d ] += blockSize[ d ];
-				if ( offset[ d ] <= max[ d ] )
+			for (d = 0; d < n; ++d) {
+				offset[d] += blockSize[d];
+				if (offset[d] <= max[d])
 					break;
 				else
-					offset[ d ] = 0;
+					offset[d] = 0;
 			}
 		}
-		for ( final Future< ? > f : futures )
+		for (final Future<?> f : futures)
 			f.get();
 	}
 }
