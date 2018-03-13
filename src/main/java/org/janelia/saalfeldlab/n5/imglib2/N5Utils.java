@@ -142,8 +142,7 @@ public class N5Utils {
 			N5CellLoader.burnIn( ( RandomAccessibleInterval< IntType > )source, ArrayImgs.ints( ( int[] )dataBlock.getData(), longBlockSize ) );
 			break;
 		case UINT64:
-			/* TODO missing factory method in ArrayImgs, replace when ImgLib2 updated */
-			N5CellLoader.burnIn( ( RandomAccessibleInterval< UnsignedLongType > )source, ArrayImgs.unsignedLongs( new LongArray( ( long[] )dataBlock.getData() ), longBlockSize ) );
+			N5CellLoader.burnIn( ( RandomAccessibleInterval< UnsignedLongType > )source, ArrayImgs.unsignedLongs( ( long[] )dataBlock.getData(), longBlockSize ) );
 			break;
 		case INT64:
 			N5CellLoader.burnIn( ( RandomAccessibleInterval< LongType > )source, ArrayImgs.longs( ( long[] )dataBlock.getData(), longBlockSize ) );
@@ -223,10 +222,9 @@ public class N5Utils {
 					( IntType )defaultValue );
 			break;
 		case UINT64:
-			/* TODO missing factory method in ArrayImgs, replace when ImgLib2 updated */
 			isEmpty = N5CellLoader.burnInTestAllEqual(
 					( RandomAccessibleInterval< UnsignedLongType > )source,
-					ArrayImgs.unsignedLongs( new LongArray( ( long[] )dataBlock.getData() ), longBlockSize ),
+					ArrayImgs.unsignedLongs( ( long[] )dataBlock.getData(), longBlockSize ),
 					( UnsignedLongType )defaultValue );
 			break;
 		case INT64:
