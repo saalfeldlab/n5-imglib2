@@ -17,6 +17,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
+import java.util.function.IntFunction;
 
 import org.janelia.saalfeldlab.n5.Compression;
 import org.janelia.saalfeldlab.n5.DataBlock;
@@ -616,14 +617,16 @@ public class N5Utils {
 	 * @param n5
 	 * @param group
 	 * @param useVolatileAccess
+	 * @param blockNotFoundHandlerSupplier
 	 *
 	 * @return
 	 * @throws IOException
 	 */
-	public static final < T extends NativeType< T > > Pair< RandomAccessibleInterval< T >[], double[][] >  openMipmaps(
+	public static final < T extends NativeType< T > > Pair< RandomAccessibleInterval< T >[], double[][] > openMipmapsWithHandler(
 			final N5Reader n5,
 			final String group,
-			final boolean useVolatileAccess ) throws IOException
+			final boolean useVolatileAccess,
+			final IntFunction< Consumer< IterableInterval< T > > > blockNotFoundHandlerSupplier ) throws IOException
 	{
 		final int numScales = n5.list( group ).length;
 		final RandomAccessibleInterval< T >[] mipmaps = ( RandomAccessibleInterval< T >[] )new RandomAccessibleInterval[ numScales ];
@@ -647,9 +650,9 @@ public class N5Utils {
 
 			final RandomAccessibleInterval< T > source;
 			if ( useVolatileAccess )
-				source = N5Utils.open( n5, datasetName );
+				source = N5Utils.open( n5, datasetName, blockNotFoundHandlerSupplier.apply( s ) );
 			else
-				source = N5Utils.openVolatile(n5, datasetName );
+				source = N5Utils.openVolatile( n5, datasetName, blockNotFoundHandlerSupplier.apply( s ) );
 
 			mipmaps[ s ] = source;
 			scales[ s ] = scale;
@@ -657,6 +660,58 @@ public class N5Utils {
 
 		return new ValuePair< RandomAccessibleInterval< T >[], double[][] >( mipmaps, scales );
 	}
+
+	/**
+	 * Open an N5 mipmap (multi-scale) group as memory cached
+	 * {@link LazyCellImg}s, optionally backed by {@link VolatileAccess}.
+	 *
+	 * @param n5
+	 * @param group
+	 * @param useVolatileAccess
+	 * @param defaultValueSupplier
+	 *
+	 * @return
+	 * @throws IOException
+	 */
+	public static final < T extends NativeType< T > > Pair< RandomAccessibleInterval< T >[], double[][] > openMipmaps(
+			final N5Reader n5,
+			final String group,
+			final boolean useVolatileAccess,
+			final IntFunction< T > defaultValueSupplier ) throws IOException
+	{
+		return openMipmapsWithHandler(
+				n5,
+				group,
+				useVolatileAccess,
+				s -> {
+					return N5CellLoader.setToDefaultValue(defaultValueSupplier.apply(s));
+				});
+	}
+
+	/**
+	 * Open an N5 mipmap (multi-scale) group as memory cached
+	 * {@link LazyCellImg}s, optionally backed by {@link VolatileAccess}.
+	 *
+	 * @param n5
+	 * @param group
+	 * @param useVolatileAccess
+	 *
+	 * @return
+	 * @throws IOException
+	 */
+	public static final < T extends NativeType< T > > Pair< RandomAccessibleInterval< T >[], double[][] > openMipmaps(
+			final N5Reader n5,
+			final String group,
+			final boolean useVolatileAccess ) throws IOException
+	{
+		return openMipmapsWithHandler(
+				n5,
+				group,
+				useVolatileAccess,
+				s -> t -> {} );
+	}
+
+
 
 	/**
 	 * Open an N5 dataset as a disk-cached {@link LazyCellImg}.  Note that this
