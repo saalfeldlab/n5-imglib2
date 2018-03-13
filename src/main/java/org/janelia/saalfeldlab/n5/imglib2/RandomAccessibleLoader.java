@@ -15,20 +15,20 @@ import net.imglib2.view.Views;
  * @author Philipp Hanslovsky
  * @author Stephan Saalfeld
  */
-public class RandomAccessibleLoader< T extends NativeType< T > > implements CellLoader< T >
-{
-	private final RandomAccessible< T > source;
+public class RandomAccessibleLoader<T extends NativeType<T>> implements CellLoader<T> {
 
-	public RandomAccessibleLoader( final RandomAccessible< T > source )
-	{
+	private final RandomAccessible<T> source;
+
+	public RandomAccessibleLoader(final RandomAccessible<T> source) {
+
 		super();
 		this.source = source;
 	}
 
 	@Override
-	public void load( final SingleCellArrayImg< T, ? > cell )
-	{
-		for ( Cursor< T > s = Views.flatIterable( Views.interval( source, cell ) ).cursor(), t = cell.cursor(); s.hasNext(); )
-			t.next().set( s.next() );
+	public void load(final SingleCellArrayImg<T, ?> cell) {
+
+		for (Cursor<T> s = Views.flatIterable(Views.interval(source, cell)).cursor(), t = cell.cursor(); s.hasNext();)
+			t.next().set(s.next());
 	}
 }
