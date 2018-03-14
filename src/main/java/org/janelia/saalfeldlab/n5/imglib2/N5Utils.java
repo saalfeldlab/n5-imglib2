@@ -645,9 +645,9 @@ public class N5Utils {
 
 			final RandomAccessibleInterval<T> source;
 			if (useVolatileAccess)
-				source = N5Utils.open(n5, datasetName, blockNotFoundHandlerSupplier.apply(s));
-			else
 				source = N5Utils.openVolatile(n5, datasetName, blockNotFoundHandlerSupplier.apply(s));
+			else
+				source = N5Utils.open(n5, datasetName, blockNotFoundHandlerSupplier.apply(s));
 
 			mipmaps[s] = source;
 			scales[s] = scale;
