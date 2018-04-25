@@ -82,13 +82,15 @@ public class N5UtilsTest {
 		try {
 			N5Utils.save(img, n5, datasetName, blockSize, new RawCompression());
 			RandomAccessibleInterval<UnsignedShortType> loaded = N5Utils.open(n5, datasetName);
-			for (final Pair<UnsignedShortType, UnsignedShortType> pair : Views.flatIterable(Views.interval(Views.pair(img, loaded), img)))
+			for (final Pair<UnsignedShortType, UnsignedShortType> pair : Views
+					.flatIterable(Views.interval(Views.pair(img, loaded), img)))
 				Assert.assertEquals(pair.getA().get(), pair.getB().get());
 
 			final ExecutorService exec = Executors.newFixedThreadPool(4);
 			N5Utils.save(img, n5, datasetName, blockSize, new RawCompression(), exec);
 			loaded = N5Utils.open(n5, datasetName);
-			for (final Pair<UnsignedShortType, UnsignedShortType> pair : Views.flatIterable(Views.interval(Views.pair(img, loaded), img)))
+			for (final Pair<UnsignedShortType, UnsignedShortType> pair : Views
+					.flatIterable(Views.interval(Views.pair(img, loaded), img)))
 				Assert.assertEquals(pair.getA().get(), pair.getB().get());
 			exec.shutdown();
 

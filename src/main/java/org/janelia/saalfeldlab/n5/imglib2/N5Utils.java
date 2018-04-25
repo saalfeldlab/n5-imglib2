@@ -123,34 +123,54 @@ public class N5Utils {
 		final DataBlock<?> dataBlock = dataType.createDataBlock(intBlockSize, gridPosition);
 		switch (dataType) {
 		case UINT8:
-			N5CellLoader.burnIn((RandomAccessibleInterval<UnsignedByteType>)source, ArrayImgs.unsignedBytes((byte[])dataBlock.getData(), longBlockSize));
+			N5CellLoader.burnIn(
+					(RandomAccessibleInterval<UnsignedByteType>)source,
+					ArrayImgs.unsignedBytes((byte[])dataBlock.getData(), longBlockSize));
 			break;
 		case INT8:
-			N5CellLoader.burnIn((RandomAccessibleInterval<ByteType>)source, ArrayImgs.bytes((byte[])dataBlock.getData(), longBlockSize));
+			N5CellLoader.burnIn(
+					(RandomAccessibleInterval<ByteType>)source,
+					ArrayImgs.bytes((byte[])dataBlock.getData(), longBlockSize));
 			break;
 		case UINT16:
-			N5CellLoader.burnIn((RandomAccessibleInterval<UnsignedShortType>)source, ArrayImgs.unsignedShorts((short[])dataBlock.getData(), longBlockSize));
+			N5CellLoader.burnIn(
+					(RandomAccessibleInterval<UnsignedShortType>)source,
+					ArrayImgs.unsignedShorts((short[])dataBlock.getData(), longBlockSize));
 			break;
 		case INT16:
-			N5CellLoader.burnIn((RandomAccessibleInterval<ShortType>)source, ArrayImgs.shorts((short[])dataBlock.getData(), longBlockSize));
+			N5CellLoader.burnIn(
+					(RandomAccessibleInterval<ShortType>)source,
+					ArrayImgs.shorts((short[])dataBlock.getData(), longBlockSize));
 			break;
 		case UINT32:
-			N5CellLoader.burnIn((RandomAccessibleInterval<UnsignedIntType>)source, ArrayImgs.unsignedInts((int[])dataBlock.getData(), longBlockSize));
+			N5CellLoader.burnIn(
+					(RandomAccessibleInterval<UnsignedIntType>)source,
+					ArrayImgs.unsignedInts((int[])dataBlock.getData(), longBlockSize));
 			break;
 		case INT32:
-			N5CellLoader.burnIn((RandomAccessibleInterval<IntType>)source, ArrayImgs.ints((int[])dataBlock.getData(), longBlockSize));
+			N5CellLoader.burnIn(
+					(RandomAccessibleInterval<IntType>)source,
+					ArrayImgs.ints((int[])dataBlock.getData(), longBlockSize));
 			break;
 		case UINT64:
-			N5CellLoader.burnIn((RandomAccessibleInterval<UnsignedLongType>)source, ArrayImgs.unsignedLongs((long[])dataBlock.getData(), longBlockSize));
+			N5CellLoader.burnIn(
+					(RandomAccessibleInterval<UnsignedLongType>)source,
+					ArrayImgs.unsignedLongs((long[])dataBlock.getData(), longBlockSize));
 			break;
 		case INT64:
-			N5CellLoader.burnIn((RandomAccessibleInterval<LongType>)source, ArrayImgs.longs((long[])dataBlock.getData(), longBlockSize));
+			N5CellLoader.burnIn(
+					(RandomAccessibleInterval<LongType>)source,
+					ArrayImgs.longs((long[])dataBlock.getData(), longBlockSize));
 			break;
 		case FLOAT32:
-			N5CellLoader.burnIn((RandomAccessibleInterval<FloatType>)source, ArrayImgs.floats((float[])dataBlock.getData(), longBlockSize));
+			N5CellLoader.burnIn(
+					(RandomAccessibleInterval<FloatType>)source,
+					ArrayImgs.floats((float[])dataBlock.getData(), longBlockSize));
 			break;
 		case FLOAT64:
-			N5CellLoader.burnIn((RandomAccessibleInterval<DoubleType>)source, ArrayImgs.doubles((double[])dataBlock.getData(), longBlockSize));
+			N5CellLoader.burnIn(
+					(RandomAccessibleInterval<DoubleType>)source,
+					ArrayImgs.doubles((double[])dataBlock.getData(), longBlockSize));
 			break;
 		default:
 			throw new IllegalArgumentException("Type " + dataType.name() + " not supported!");
@@ -624,7 +644,7 @@ public class N5Utils {
 
 		final int numScales = n5.list(group).length;
 		@SuppressWarnings("unchecked")
-		final RandomAccessibleInterval<T>[] mipmaps = (RandomAccessibleInterval<T>[])new RandomAccessibleInterval[numScales];
+		final RandomAccessibleInterval<T>[] mipmaps = new RandomAccessibleInterval[numScales];
 		final double[][] scales = new double[numScales][];
 
 		for (int s = 0; s < numScales; ++s) {
@@ -732,7 +752,9 @@ public class N5Utils {
 				.dirtyAccesses(true)
 				.maxCacheSize(100);
 
-		final DiskCachedCellImgFactory<T> factory = new DiskCachedCellImgFactory<T>(forDataType(attributes.getDataType()), options);
+		final DiskCachedCellImgFactory<T> factory = new DiskCachedCellImgFactory<T>(
+				forDataType(attributes.getDataType()),
+				options);
 
 		return factory.create(dimensions, loader);
 	}
@@ -765,7 +787,14 @@ public class N5Utils {
 		final int[] intCroppedBlockSize = new int[n];
 		final long[] longCroppedBlockSize = new long[n];
 		for (int d = 0; d < n;) {
-			cropBlockDimensions(max, offset, gridOffset, blockSize, longCroppedBlockSize, intCroppedBlockSize, gridPosition);
+			cropBlockDimensions(
+					max,
+					offset,
+					gridOffset,
+					blockSize,
+					longCroppedBlockSize,
+					intCroppedBlockSize,
+					gridPosition);
 			final RandomAccessibleInterval<T> sourceBlock = Views.offsetInterval(source, offset, longCroppedBlockSize);
 			final DataBlock<?> dataBlock = createDataBlock(
 					sourceBlock,
@@ -850,9 +879,17 @@ public class N5Utils {
 									final int[] intCroppedBlockSize = new int[n];
 									final long[] longCroppedBlockSize = new long[n];
 
-									cropBlockDimensions(max, fOffset, gridOffset, blockSize, longCroppedBlockSize, intCroppedBlockSize, gridPosition);
+									cropBlockDimensions(
+											max,
+											fOffset,
+											gridOffset,
+											blockSize,
+											longCroppedBlockSize,
+											intCroppedBlockSize,
+											gridPosition);
 
-									final RandomAccessibleInterval<T> sourceBlock = Views.offsetInterval(zeroMinSource, fOffset, longCroppedBlockSize);
+									final RandomAccessibleInterval<T> sourceBlock = Views
+											.offsetInterval(zeroMinSource, fOffset, longCroppedBlockSize);
 									final DataBlock<?> dataBlock = createDataBlock(
 											sourceBlock,
 											attributes.getDataType(),
@@ -916,7 +953,14 @@ public class N5Utils {
 		final int[] intCroppedBlockSize = new int[n];
 		final long[] longCroppedBlockSize = new long[n];
 		for (int d = 0; d < n;) {
-			cropBlockDimensions(max, offset, gridOffset, blockSize, longCroppedBlockSize, intCroppedBlockSize, gridPosition);
+			cropBlockDimensions(
+					max,
+					offset,
+					gridOffset,
+					blockSize,
+					longCroppedBlockSize,
+					intCroppedBlockSize,
+					gridPosition);
 			final RandomAccessibleInterval<T> sourceBlock = Views.offsetInterval(source, offset, longCroppedBlockSize);
 			final DataBlock<?> dataBlock = createNonEmptyDataBlock(
 					sourceBlock,
@@ -1070,9 +1114,16 @@ public class N5Utils {
 								final int[] intCroppedBlockSize = new int[n];
 								final long[] longCroppedBlockSize = new long[n];
 
-								cropBlockDimensions(max, fOffset, blockSize, longCroppedBlockSize, intCroppedBlockSize, gridPosition);
+								cropBlockDimensions(
+										max,
+										fOffset,
+										blockSize,
+										longCroppedBlockSize,
+										intCroppedBlockSize,
+										gridPosition);
 
-								final RandomAccessibleInterval<T> sourceBlock = Views.offsetInterval(zeroMinSource, fOffset, longCroppedBlockSize);
+								final RandomAccessibleInterval<T> sourceBlock = Views
+										.offsetInterval(zeroMinSource, fOffset, longCroppedBlockSize);
 								final DataBlock<?> dataBlock = createDataBlock(
 										sourceBlock,
 										attributes.getDataType(),
