@@ -18,10 +18,11 @@ import net.imglib2.cache.volatiles.CacheHints;
 import net.imglib2.cache.volatiles.LoadingStrategy;
 
 /**
+ * Simple
  * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
  *
  */
-public class N5DatasetViewer {
+public class N5DatasetViewerExample {
 
 	@SuppressWarnings("unchecked")
 	public static final void main(final String... args) throws IOException {
