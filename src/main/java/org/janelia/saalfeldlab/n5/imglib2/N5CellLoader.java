@@ -1,3 +1,29 @@
+/**
+ * Copyright (c) 2017-2018, Stephan Saalfeld, Philipp Hanslovsky, Igor Pisarev
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *
+ * Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
 package org.janelia.saalfeldlab.n5.imglib2;
 
 import java.io.IOException;
@@ -25,6 +51,14 @@ import net.imglib2.type.numeric.real.DoubleType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.view.Views;
 
+/**
+ * A {@link CellLoader} for N5 dataset blocks.  Supports all primitive types.
+ *
+ * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
+ * @author Philipp Hanslovsky &lt;hanslovskyp@janelia.hhmi.org&gt;
+ *
+ * @param <T>
+ */
 public class N5CellLoader<T extends NativeType<T>> implements CellLoader<T> {
 
 	private final N5Reader n5;
@@ -65,7 +99,11 @@ public class N5CellLoader<T extends NativeType<T>> implements CellLoader<T> {
 	 *            returns {@code null} for that block.
 	 * @throws IOException
 	 */
-	public N5CellLoader(final N5Reader n5, final String dataset, final int[] cellDimensions, final Consumer<IterableInterval<T>> blockNotFoundHandler)
+	public N5CellLoader(
+			final N5Reader n5,
+			final String dataset,
+			final int[] cellDimensions,
+			final Consumer<IterableInterval<T>> blockNotFoundHandler)
 			throws IOException {
 
 		super();
@@ -77,7 +115,8 @@ public class N5CellLoader<T extends NativeType<T>> implements CellLoader<T> {
 		this.blockNotFoundHandler = blockNotFoundHandler;
 		if (!Arrays.equals(this.cellDimensions, attributes.getBlockSize()))
 			throw new RuntimeException(
-					"Cell dimensions inconsistent! " + " " + Arrays.toString(cellDimensions) + " " + Arrays.toString(attributes.getBlockSize()));
+					"Cell dimensions inconsistent! " + " " + Arrays.toString(cellDimensions) + " "
+							+ Arrays.toString(attributes.getBlockSize()));
 	}
 
 	@Override
@@ -100,7 +139,9 @@ public class N5CellLoader<T extends NativeType<T>> implements CellLoader<T> {
 
 	}
 
-	public static <T extends Type<T>> void burnIn(final RandomAccessibleInterval<T> source, final RandomAccessibleInterval<T> target) {
+	public static <T extends Type<T>> void burnIn(
+			final RandomAccessibleInterval<T> source,
+			final RandomAccessibleInterval<T> target) {
 
 		for (Cursor<T> s = Views.flatIterable(source).cursor(), t = Views.flatIterable(target).cursor(); t.hasNext();)
 			t.next().set(s.next());
@@ -129,7 +170,8 @@ public class N5CellLoader<T extends NativeType<T>> implements CellLoader<T> {
 		return equal;
 	}
 
-	public static <T extends NativeType<T>> BiConsumer<IterableInterval<T>, DataBlock<?>> createCopy(final DataType dataType) {
+	public static <T extends NativeType<T>> BiConsumer<IterableInterval<T>, DataBlock<?>> createCopy(
+			final DataType dataType) {
 
 		switch (dataType) {
 		case INT8:
@@ -195,7 +237,8 @@ public class N5CellLoader<T extends NativeType<T>> implements CellLoader<T> {
 	 * @return {@link Consumer} that sets all values of its argument to
 	 *         {@code defaultValue}.
 	 */
-	public static <T extends Type<T>, I extends IterableInterval<T>> Consumer<I> setToDefaultValue(final T defaultValue) {
+	public static <T extends Type<T>, I extends IterableInterval<T>> Consumer<I> setToDefaultValue(
+			final T defaultValue) {
 
 		return rai -> rai.forEach(pixel -> pixel.set(defaultValue));
 	}
