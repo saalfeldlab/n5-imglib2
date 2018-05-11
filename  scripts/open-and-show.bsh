@@ -1,0 +1,9 @@
+import org.janelia.saalfeldlab.n5.*;
+import org.janelia.saalfeldlab.n5.imglib2.*;
+import net.imglib2.img.display.imagej.*;
+n5 = new N5FSReader ( "/nrs/saalfeld/lauritzen/02/workspace.n5" );
+pre = N5Utils.open(new N5FSReader("/nrs/saalfeld/lauritzen/02/workspace.n5"), "/predictions_it150000_pre_and_post-v0.1/pre_dist/s3");
+ImageJFunctions.show(pre);
+img = N5Utils.open(new N5FSReader("/nrs/saalfeld/lauritzen/02/workspace.n5"), "/predictions_it150000_pre_and_post-v0.1/post_dist/s3");
+ImageJFunctions.show(img);
+
