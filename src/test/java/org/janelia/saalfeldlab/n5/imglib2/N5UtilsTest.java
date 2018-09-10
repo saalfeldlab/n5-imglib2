@@ -34,8 +34,19 @@ import java.util.Random;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.BiFunction;
 
+import net.imglib2.cache.img.CachedCellImg;
+import net.imglib2.img.basictypeaccess.LongAccess;
+import net.imglib2.img.basictypeaccess.ShortAccess;
+import net.imglib2.img.basictypeaccess.volatiles.VolatileAccess;
+import net.imglib2.type.operators.ValueEquals;
+import net.imglib2.util.Util;
+import org.hamcrest.CoreMatchers;
+import org.hamcrest.MatcherAssert;
+import org.janelia.saalfeldlab.n5.GzipCompression;
 import org.janelia.saalfeldlab.n5.N5FSWriter;
+import org.janelia.saalfeldlab.n5.N5Reader;
 import org.janelia.saalfeldlab.n5.N5Writer;
 import org.janelia.saalfeldlab.n5.RawCompression;
 import org.junit.After;
@@ -66,6 +77,12 @@ public class N5UtilsTest {
 
 	static private N5Writer n5;
 
+	private static final int MAX_NUM_CACHE_ENTRIES = 10;
+
+	private static final String EMPTY_DATASET = "/test/group/empty-dataset";
+
+	private static final int EMPTY_BLOCK_VALUE = 123;
+
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
 
@@ -81,6 +98,8 @@ public class N5UtilsTest {
 		data = new short[(int)(dimensions[0] * dimensions[1] * dimensions[2])];
 		for (int i = 0; i < data.length; ++i)
 			data[i] = (short)rnd.nextInt();
+
+		n5.createDataset(EMPTY_DATASET, dimensions, blockSize, N5Utils.dataType(new UnsignedShortType()), new GzipCompression());
 	}
 
 	@AfterClass
@@ -117,6 +136,58 @@ public class N5UtilsTest {
 		} catch (final IOException e) {
 			fail("Failed by I/O exception.");
 			e.printStackTrace();
+		}
+	}
+
+	@Test
+	public void testOpenWithBoundedSoftRefCache() throws IOException {
+
+		// existing dataset
+		{
+			final ArrayImg<UnsignedShortType, ?> img = ArrayImgs.unsignedShorts(data, dimensions);
+			N5Utils.save(img, n5, datasetName, blockSize, new RawCompression());
+			RandomAccessibleInterval<UnsignedShortType> loaded =
+					N5Utils.openWithBoundedSoftRefCache(n5, datasetName, MAX_NUM_CACHE_ENTRIES);
+			for (final Pair<UnsignedShortType, UnsignedShortType> pair : Views
+					.flatIterable(Views.interval(Views.pair(img, loaded), img)))
+				Assert.assertEquals(pair.getA().get(), pair.getB().get());
+			MatcherAssert.assertThat(((CachedCellImg<UnsignedShortType, ?>)loaded).getAccessType(), CoreMatchers.instanceOf(ShortAccess.class));
+		}
+
+		// empty dataset with default value
+		{
+			RandomAccessibleInterval<UnsignedShortType> loaded =
+					N5Utils.openWithBoundedSoftRefCache(n5, EMPTY_DATASET, MAX_NUM_CACHE_ENTRIES, new UnsignedShortType(EMPTY_BLOCK_VALUE));
+			Views.iterable(loaded).forEach(val -> Assert.assertEquals(EMPTY_BLOCK_VALUE, val.get()));
+			MatcherAssert.assertThat(((CachedCellImg<UnsignedShortType, ?>)loaded).getAccessType(), CoreMatchers.instanceOf(ShortAccess.class));
+		}
+	}
+
+	@Test
+	public void testVolatileOpenWithBoundedSoftRefCache() throws IOException {
+
+		// existing dataset
+		{
+			final ArrayImg<UnsignedShortType, ?> img = ArrayImgs.unsignedShorts(data, dimensions);
+			N5Utils.save(img, n5, datasetName, blockSize, new RawCompression());
+			RandomAccessibleInterval<UnsignedShortType> loaded =
+					N5Utils.openVolatileWithBoundedSoftRefCache(n5, datasetName, MAX_NUM_CACHE_ENTRIES);
+			for (final Pair<UnsignedShortType, UnsignedShortType> pair : Views
+					.flatIterable(Views.interval(Views.pair(img, loaded), img)))
+				Assert.assertEquals(pair.getA().get(), pair.getB().get());
+			Assert.assertEquals(UnsignedShortType.class, Util.getTypeFromInterval(loaded).getClass());
+			MatcherAssert.assertThat(((CachedCellImg<UnsignedShortType, ?>)loaded).getAccessType(), CoreMatchers.instanceOf(VolatileAccess.class));
+			MatcherAssert.assertThat(((CachedCellImg<UnsignedShortType, ?>)loaded).getAccessType(), CoreMatchers.instanceOf(ShortAccess.class));
+		}
+
+		// empty dataset with default value
+		{
+			RandomAccessibleInterval<UnsignedShortType> loaded =
+					N5Utils.openVolatileWithBoundedSoftRefCache(n5, EMPTY_DATASET, MAX_NUM_CACHE_ENTRIES, new UnsignedShortType(EMPTY_BLOCK_VALUE));
+			Views.iterable(loaded).forEach(val -> Assert.assertEquals(EMPTY_BLOCK_VALUE, val.get()));
+			Assert.assertEquals(UnsignedShortType.class, Util.getTypeFromInterval(loaded).getClass());
+			MatcherAssert.assertThat(((CachedCellImg<UnsignedShortType, ?>)loaded).getAccessType(), CoreMatchers.instanceOf(VolatileAccess.class));
+			MatcherAssert.assertThat(((CachedCellImg<UnsignedShortType, ?>)loaded).getAccessType(), CoreMatchers.instanceOf(ShortAccess.class));
 		}
 	}
 }
