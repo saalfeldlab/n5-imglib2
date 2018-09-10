@@ -871,8 +871,7 @@ public class N5Utils {
 	 * @param source
 	 * @param n5
 	 * @param dataset
-	 * @param blockSize
-	 * @param compressionType
+	 * @param gridOffset
 	 * @param exec
 	 * @throws IOException
 	 * @throws InterruptedException
@@ -1046,7 +1045,7 @@ public class N5Utils {
 	 * @param n5
 	 * @param dataset
 	 * @param blockSize
-	 * @param compressionType
+	 * @param compression
 	 * @throws IOException
 	 */
 	public static final <T extends NativeType<T>> void save(
@@ -1101,7 +1100,7 @@ public class N5Utils {
 	 * @param n5
 	 * @param dataset
 	 * @param blockSize
-	 * @param compressionType
+	 * @param compression
 	 * @param exec
 	 * @throws IOException
 	 * @throws InterruptedException
