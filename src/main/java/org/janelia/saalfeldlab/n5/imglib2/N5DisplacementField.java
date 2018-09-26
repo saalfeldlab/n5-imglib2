@@ -1,6 +1,7 @@
 package org.janelia.saalfeldlab.n5.imglib2;
 
 import org.janelia.saalfeldlab.n5.Compression;
+import org.janelia.saalfeldlab.n5.DatasetAttributes;
 import org.janelia.saalfeldlab.n5.N5Reader;
 import org.janelia.saalfeldlab.n5.N5Writer;
 
@@ -12,6 +13,14 @@ import net.imglib2.converter.Converters;
 import net.imglib2.transform.integer.MixedTransform;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
+import net.imglib2.type.numeric.integer.ByteType;
+import net.imglib2.type.numeric.integer.IntType;
+import net.imglib2.type.numeric.integer.LongType;
+import net.imglib2.type.numeric.integer.ShortType;
+import net.imglib2.type.numeric.integer.UnsignedByteType;
+import net.imglib2.type.numeric.integer.UnsignedIntType;
+import net.imglib2.type.numeric.integer.UnsignedLongType;
+import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.util.Util;
 import net.imglib2.view.IntervalView;
 import net.imglib2.view.MixedTransformView;
@@ -38,8 +47,6 @@ public class N5DisplacementField
         // below maxError
 		double max = 2 * maxError * ( outputType.getMaxValue() - 1 );
 		double m = (outputType.getMaxValue() - 1) / max;
-		
-//		System.out.println( "m : " + m );
 
 		RandomAccessibleInterval< Q > source_quant = Converters.convert(
 				source_permuted, 
@@ -57,6 +64,44 @@ public class N5DisplacementField
 		n5Writer.setAttribute( dataset, MULTIPLIER_ATTR, 1 / m );
 	}
 	
+	@SuppressWarnings( "unchecked" )
+	public static final <T extends NativeType<T> & RealType<T>, Q extends NativeType<Q> & RealType<Q>> RandomAccessibleInterval< T > open( 
+			final N5Reader n5,
+			final String dataset,
+			final T defaultType ) throws Exception
+	{
+		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
+		switch (attributes.getDataType()) {
+		case INT8:
+			return openQuantized( n5, dataset, (Q)new ByteType(), defaultType );
+		case UINT8:
+			return openQuantized( n5, dataset, (Q)new UnsignedByteType(), defaultType );
+		case INT16:
+			return openQuantized( n5, dataset, (Q)new ShortType(), defaultType );
+		case UINT16:
+			return openQuantized( n5, dataset, (Q)new UnsignedShortType(), defaultType );
+		case INT32:
+			return openQuantized( n5, dataset, (Q)new IntType(), defaultType );
+		case UINT32:
+			return openQuantized( n5, dataset, (Q)new UnsignedIntType(), defaultType );
+		case INT64:
+			return openQuantized( n5, dataset, (Q)new LongType(), defaultType );
+		case UINT64:
+			return openQuantized( n5, dataset, (Q)new UnsignedLongType(), defaultType );
+		default:
+			return openRaw( n5, dataset, defaultType );
+		}
+	}
+
+	public static final < T extends RealType<T> & NativeType<T> > RandomAccessibleInterval< T > openRaw(
+			final N5Reader n5,
+			final String dataset,
+			final T defaultType ) throws Exception
+	{
+        RandomAccessibleInterval< T > src = N5Utils.open( n5, dataset, defaultType  );
+        return vectorAxisLast( src );
+	}
+
 	public static final <Q extends RealType<Q> & NativeType<Q>, T extends RealType<T>> RandomAccessibleInterval< T > openQuantized(
 			final N5Reader n5,
 			final String dataset,
