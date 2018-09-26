@@ -133,21 +133,6 @@ public class N5DisplacementField
         return src_converted;
 	}
 	
-	public static final < T extends RealType< T > > RandomAccessibleInterval< T > vectorAxisLast3( RandomAccessibleInterval< T > source ) throws Exception
-	{
-		final int n = source.numDimensions();
-
-		if ( source.dimension( n - 1 ) == (n - 1) )
-			return source;
-		else if ( source.dimension( 0 ) == (n - 1) )
-		{
-			Views.permute( Views.permute( Views.permute( source, 0, 3 ), 0, 1 ), 1, 2 );
-		}
-		throw new Exception( 
-				String.format( "Displacement fields must store vector components in the first or last dimension. " + 
-						"Found a %d-d volume; expect size [%d,...] or [...,%d]", n, ( n - 1 ), ( n - 1 ) ) );
-	}
-	
 	public static final < T extends RealType< T > > RandomAccessibleInterval< T > vectorAxisLast( RandomAccessibleInterval< T > source ) throws Exception
 	{
 		final int n = source.numDimensions();
@@ -162,21 +147,6 @@ public class N5DisplacementField
 				component[ i ] = i - 1;
 
 			return permute( source, component );
-		}
-
-		throw new Exception( 
-				String.format( "Displacement fields must store vector components in the first or last dimension. " + 
-						"Found a %d-d volume; expect size [%d,...] or [...,%d]", n, ( n - 1 ), ( n - 1 ) ) );
-	}
-	
-	public static final < T extends RealType< T > > RandomAccessibleInterval< T > vectorAxisFirst3( RandomAccessibleInterval< T > source ) throws Exception
-	{
-		final int n = source.numDimensions();
-		if ( source.dimension( 0 ) == (n - 1) )
-			return source;
-		else if ( source.dimension( n - 1 ) == (n - 1) )
-		{
-			Views.permute( Views.permute( Views.permute( source, 0, 3 ), 1, 3 ), 2, 3 );
 		}
 
 		throw new Exception( 
