@@ -96,7 +96,12 @@ public class N5DisplacementField
 			final Q outputType,
             final double maxError ) throws Exception
 	{
-		double m = 1 / (2 * maxError);
+		/* 
+		 * To keep the max vector error below maxError, 
+		 * the error per coordinate must be below m
+		 */
+		int nd = ( source.numDimensions() - 1 ); // vector field source has num dims + 1
+		double m = 2 * Math.sqrt( maxError * maxError / nd );
 
 		RandomAccessibleInterval< T > source_permuted = vectorAxisFirst( source );
 		RandomAccessibleInterval< Q > source_quant = Converters.convert(
@@ -106,18 +111,19 @@ public class N5DisplacementField
 					@Override
 					public void convert(T input, Q output)
 					{
-						output.setReal( Math.round( input.getRealDouble() * m ));
+						output.setReal( Math.round( input.getRealDouble() / m ));
 					}
 				}, 
 				outputType.copy());
 
         N5Utils.save( source_quant, n5Writer, dataset, blockSize, compression);
-		n5Writer.setAttribute( dataset, MULTIPLIER_ATTR, 1 / m );
+		n5Writer.setAttribute( dataset, MULTIPLIER_ATTR, m );
 	}
 	
 	public static final RealTransform open( 
 			final N5Reader n5,
-			final String dataset ) throws Exception
+			final String dataset,
+			final boolean inverse ) throws Exception
 	{
 		RandomAccessibleInterval< FloatType > dfieldRai = openField( n5, dataset, new FloatType() );
 		RandomAccessibleInterval< FloatType > dfieldRaiPerm = vectorAxisLast( dfieldRai );
@@ -144,8 +150,17 @@ public class N5DisplacementField
 		if( affine != null )
 		{
 			RealTransformSequence xfmSeq = new RealTransformSequence();
-			xfmSeq.add( dfield );
-			xfmSeq.add( affine );
+			if( inverse )
+			{
+				xfmSeq.add( affine );
+				xfmSeq.add( dfield );
+			}
+			else
+			{
+				xfmSeq.add( dfield );
+				xfmSeq.add( affine );
+			}
+
 			return xfmSeq;
 		}
 		else
@@ -260,7 +275,7 @@ public class N5DisplacementField
 			{
 				@Override
 				public void convert(Q input, T output) {
-					output.setReal( Math.round( input.getRealDouble() * m ));
+					output.setReal( input.getRealDouble() * m );
 				}
 			}, 
 			defaultType.copy());
