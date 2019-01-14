@@ -8,15 +8,24 @@ import org.janelia.saalfeldlab.n5.N5Reader;
 import org.janelia.saalfeldlab.n5.N5Writer;
 
 import net.imglib2.Cursor;
+import net.imglib2.FinalInterval;
+import net.imglib2.Interval;
 import net.imglib2.IterableInterval;
+import net.imglib2.RandomAccessible;
 import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.RealRandomAccessible;
 import net.imglib2.converter.Converter;
 import net.imglib2.converter.Converters;
+import net.imglib2.interpolation.InterpolatorFactory;
 import net.imglib2.interpolation.randomaccess.NLinearInterpolatorFactory;
 import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform;
+import net.imglib2.realtransform.AffineTransform2D;
+import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.realtransform.DeformationFieldTransform;
 import net.imglib2.realtransform.InverseRealTransform;
+import net.imglib2.realtransform.InvertibleRealTransform;
+import net.imglib2.realtransform.InvertibleRealTransformSequence;
 import net.imglib2.realtransform.RealTransform;
 import net.imglib2.realtransform.RealTransformRandomAccessible;
 import net.imglib2.realtransform.RealTransformSequence;
@@ -120,32 +129,18 @@ public class N5DisplacementField
 		n5Writer.setAttribute( dataset, MULTIPLIER_ATTR, m );
 	}
 	
-	public static final RealTransform open( 
+	public static final <T extends RealType<T> & NativeType<T>> RealTransform open( 
 			final N5Reader n5,
 			final String dataset,
-			final boolean inverse ) throws Exception
+			final boolean inverse,
+			final T defaultType,
+			final InterpolatorFactory< T, RandomAccessible<T> > interpolator ) throws Exception
 	{
-		RandomAccessibleInterval< FloatType > dfieldRai = openField( n5, dataset, new FloatType() );
-		RandomAccessibleInterval< FloatType > dfieldRaiPerm = vectorAxisLast( dfieldRai );
-		AffineGet affine = openAffine( n5, dataset );
-		
-		if( dfieldRai == null )
-			return null;
 
-		final DeformationFieldTransform< FloatType > dfield;
-		final AffineGet pix2Phys = openPixelToPhysical( n5, dataset );
-		if( pix2Phys != null )
-		{
-			RealTransformRandomAccessible< FloatType, InverseRealTransform > dfieldReal = RealViews.transform(
-					Views.interpolate( Views.extendZero( dfieldRaiPerm ), new NLinearInterpolatorFactory< FloatType >()),
-					pix2Phys);
-			
-			dfield = new DeformationFieldTransform<>( dfieldReal );
-		}
-		else
-		{
-			dfield = new DeformationFieldTransform<>( dfieldRai );
-		}
+		AffineGet affine = openAffine( n5, dataset );
+
+		DeformationFieldTransform< T > dfield = new DeformationFieldTransform<>(
+				openCalibratedField( n5, dataset, interpolator, defaultType ));
 		
 		if( affine != null )
 		{
@@ -160,7 +155,6 @@ public class N5DisplacementField
 				xfmSeq.add( dfield );
 				xfmSeq.add( affine );
 			}
-
 			return xfmSeq;
 		}
 		else
@@ -241,6 +235,34 @@ public class N5DisplacementField
 		default:
 			return openRaw( n5, dataset, defaultType );
 		}
+	}
+
+	public static < T extends NativeType< T > & RealType< T > > RealRandomAccessible< T > openCalibratedField(
+			final N5Reader n5, final String dataset,
+			final InterpolatorFactory< T, RandomAccessible< T > > interpolator, 
+			final T defaultType ) throws Exception
+	{
+		RandomAccessibleInterval< T > dfieldRai = openField( n5, dataset, defaultType );
+		RandomAccessibleInterval< T > dfieldRaiPerm = vectorAxisLast( dfieldRai );
+
+		if ( dfieldRai == null )
+		{
+			return null;
+		}
+
+		RealRandomAccessible< T > dfieldReal = Views.interpolate( Views.extendZero( dfieldRaiPerm ), interpolator );
+
+		final AffineGet pix2Phys = openPixelToPhysical( n5, dataset );
+		if ( pix2Phys != null )
+			return RealViews.affine( dfieldReal, pix2Phys );
+
+		return dfieldReal;
+	}
+
+	public static < T extends NativeType< T > & RealType< T > > RealTransform open(
+			final N5Reader n5, final String dataset, boolean inverse ) throws Exception
+	{
+		return open( n5, dataset, inverse, new FloatType(), new NLinearInterpolatorFactory<FloatType>());
 	}
 
 	public static final < T extends RealType<T> & NativeType<T> > RandomAccessibleInterval< T > openRaw(
