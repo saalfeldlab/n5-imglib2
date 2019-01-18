@@ -52,7 +52,35 @@ public class N5DisplacementField
 	public static final String MULTIPLIER_ATTR = "quantization_multiplier";
 	public static final String AFFINE_ATTR = "affine";
 	public static final String SPACING_ATTR = "spacing";
-//	public static final String FIELD_ATTR = "dfield";
+	public static final String FORWARD_ATTR = "dfield";
+	public static final String INVERSE_ATTR = "invdfield";
+
+
+    /**
+     * Saves forward and inverse deformation fields into the default n5 datasets.
+     *
+     * @param n5Writer
+     * @param affine
+     * @param forwardDfield
+     * @param fwdspacing the pixel spacing (resolution) of the forward deformation field
+     * @param inverseDfield
+     * @param invspacing the pixel spacing (resolution) of the inverse deformation field
+     * @param blockSize 
+     * @param compression
+     */ 
+	public static final <T extends NativeType<T> & RealType<T>> void save(
+			final N5Writer n5Writer,
+			final AffineGet affine,
+			final RandomAccessibleInterval< T > forwardDfield,
+			final double[] fwdspacing,
+			final RandomAccessibleInterval< T > inverseDfield,
+			final double[] invspacing,
+			final int[] blockSize,
+			final Compression compression ) throws IOException
+	{
+	    save( n5Writer, FORWARD_ATTR, affine, forwardDfield, fwdspacing, blockSize, compression );
+	    save( n5Writer, INVERSE_ATTR, affine.inverse(), inverseDfield, invspacing, blockSize, compression );
+	}
 
 	public static final <T extends NativeType<T> & RealType<T>> void save(
 			final AffineGet affine,
@@ -64,12 +92,15 @@ public class N5DisplacementField
 			final Compression compression ) throws IOException
 	{
 		N5Utils.save( dfield, n5Writer, dataset, blockSize, compression );
-		saveAffine( affine, n5Writer, dataset );
+
+        if( affine != null )
+            saveAffine( affine, n5Writer, dataset );
+
 		if( spacing != null )
 			n5Writer.setAttribute( dataset, SPACING_ATTR, spacing );
 	}
 
-	public static final <T extends NativeType<T> & RealType<T>, Q extends NativeType<Q> & RealType<Q>> void save(
+	public static final <T extends NativeType<T> & RealType<T>, Q extends NativeType<Q> & IntegerType<Q>> void save(
 			final AffineGet affine,
 			final RandomAccessibleInterval< T > dfield,
 			final double[] spacing,
@@ -96,10 +127,10 @@ public class N5DisplacementField
 			n5Writer.setAttribute( dataset, AFFINE_ATTR,  affine.getRowPackedCopy() );
 	}
 
-	public static final <T extends RealType<T>, Q extends NativeType<Q> & RealType<Q>> void saveQuantized(
-			RandomAccessibleInterval<T> source,
+	public static final <T extends RealType<T>, Q extends NativeType<Q> & IntegerType<Q>> void saveQuantized(
 			final N5Writer n5Writer,
 			final String dataset,
+			final RandomAccessibleInterval<T> source,
 			final int[] blockSize,
 			final Compression compression,
 			final Q outputType,
@@ -120,7 +151,7 @@ public class N5DisplacementField
 					@Override
 					public void convert(T input, Q output)
 					{
-						output.setReal( Math.round( input.getRealDouble() / m ));
+						output.setInteger( Math.round( input.getRealDouble() / m ));
 					}
 				}, 
 				outputType.copy());
@@ -209,7 +240,7 @@ public class N5DisplacementField
 	}
 
 	@SuppressWarnings( "unchecked" )
-	public static final <T extends NativeType<T> & RealType<T>, Q extends NativeType<Q> & RealType<Q>> RandomAccessibleInterval< T > openField( 
+	public static final <T extends NativeType<T> & RealType<T>, Q extends NativeType<Q> & IntegerType<Q>> RandomAccessibleInterval< T > openField( 
 			final N5Reader n5,
 			final String dataset,
 			final T defaultType ) throws Exception
