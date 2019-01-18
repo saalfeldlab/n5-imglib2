@@ -221,7 +221,25 @@ public class N5DisplacementField
         N5Utils.save( source_quant, n5Writer, dataset, blockSize, compression);
 		n5Writer.setAttribute( dataset, MULTIPLIER_ATTR, m );
 	}
-	
+
+    /**
+     * Opens an {@link InvertibleRealTransform} from an n5 object if
+     * possible.
+     *
+     * @param n5
+     * @param defaultType
+     * @param interpolator
+     * @return the invertible transformation
+     */
+	public static final <T extends RealType<T> & NativeType<T>> ExplicitInvertibleRealTransform openInvertible( 
+			final N5Reader n5,
+			final T defaultType,
+			final InterpolatorFactory< T, RandomAccessible<T> > interpolator ) throws Exception
+	{
+		return new ExplicitInvertibleRealTransform(
+                open( n5, FORWARD_ATTR, false, defaultType, interpolator),
+                open( n5, INVERSE_ATTR, true, defaultType, interpolator));
+	}
 
     /**
      * Opens a {@link RealTransform} from an n5 dataset as a
