@@ -22,6 +22,7 @@ import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform;
 import net.imglib2.realtransform.AffineTransform2D;
 import net.imglib2.realtransform.AffineTransform3D;
+import net.imglib2.realtransform.ExplicitInvertibleRealTransform;
 import net.imglib2.realtransform.DeformationFieldTransform;
 import net.imglib2.realtransform.InverseRealTransform;
 import net.imglib2.realtransform.InvertibleRealTransform;
