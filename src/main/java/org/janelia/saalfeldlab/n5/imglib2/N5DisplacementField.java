@@ -23,7 +23,6 @@ import net.imglib2.realtransform.AffineTransform;
 import net.imglib2.realtransform.AffineTransform2D;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.realtransform.DeformationFieldTransform;
-import net.imglib2.realtransform.ExplicitInvertibleRealTransform;
 import net.imglib2.realtransform.InverseRealTransform;
 import net.imglib2.realtransform.InvertibleRealTransform;
 import net.imglib2.realtransform.InvertibleRealTransformSequence;
@@ -150,7 +149,7 @@ public class N5DisplacementField
 			final double maxError ) throws Exception
 	{
 		
-		saveQuantized( dfield, n5Writer, dataset, blockSize, compression, outputType, maxError );
+		saveQuantized( n5Writer, dataset, dfield, blockSize, compression, outputType, maxError );
 		saveAffine( affine, n5Writer, dataset );
 		if( spacing != null )
 			n5Writer.setAttribute( dataset, SPACING_ATTR, spacing );
