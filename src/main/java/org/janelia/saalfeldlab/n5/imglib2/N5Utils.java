@@ -36,9 +36,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 
-import net.imglib2.cache.LoaderCache;
-import net.imglib2.cache.ref.BoundedSoftRefLoaderCache;
-import net.imglib2.img.basictypeaccess.array.ArrayDataAccess;
 import org.janelia.saalfeldlab.n5.Compression;
 import org.janelia.saalfeldlab.n5.DataBlock;
 import org.janelia.saalfeldlab.n5.DataType;
@@ -50,14 +47,17 @@ import net.imglib2.Interval;
 import net.imglib2.IterableInterval;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.cache.Cache;
+import net.imglib2.cache.LoaderCache;
 import net.imglib2.cache.img.CachedCellImg;
 import net.imglib2.cache.img.DiskCachedCellImgFactory;
 import net.imglib2.cache.img.DiskCachedCellImgOptions;
 import net.imglib2.cache.img.LoadedCellCacheLoader;
+import net.imglib2.cache.ref.BoundedSoftRefLoaderCache;
 import net.imglib2.cache.ref.SoftRefLoaderCache;
 import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.img.basictypeaccess.AccessFlags;
 import net.imglib2.img.basictypeaccess.ArrayDataAccessFactory;
+import net.imglib2.img.basictypeaccess.array.ArrayDataAccess;
 import net.imglib2.img.basictypeaccess.volatiles.VolatileAccess;
 import net.imglib2.img.cell.Cell;
 import net.imglib2.img.cell.CellGrid;
@@ -119,6 +119,7 @@ public class N5Utils {
 			return null;
 	}
 
+	@SuppressWarnings("unchecked")
 	public static final <T extends NativeType<T>> T type(final DataType dataType) {
 
 		switch (dataType) {
@@ -647,7 +648,7 @@ public class N5Utils {
 
 		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
 		final LoaderCache loaderCache = loaderCacheFactory.apply(attributes.getDataType());
-		T type = type(attributes.getDataType());
+		final T type = type(attributes.getDataType());
 		return type == null
 				? null
 				: open(n5, dataset, blockNotFoundHandler, loaderCache, accessFlags, type);
@@ -667,8 +668,8 @@ public class N5Utils {
 			final N5Reader n5,
 			final String dataset,
 			final Consumer<IterableInterval<T>> blockNotFoundHandler,
-			LoaderCache<Long, Cell<A>> loaderCache,
-			Set<AccessFlags> accessFlags,
+			final LoaderCache<Long, Cell<A>> loaderCache,
+			final Set<AccessFlags> accessFlags,
 			final T type) throws IOException {
 
 		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
@@ -679,7 +680,7 @@ public class N5Utils {
 
 		final CellGrid grid = new CellGrid(dimensions, blockSize);
 
-		Cache<Long, Cell<A>> cache = loaderCache.withLoader(LoadedCellCacheLoader.get(grid, loader, type, accessFlags));
+		final Cache<Long, Cell<A>> cache = loaderCache.withLoader(LoadedCellCacheLoader.get(grid, loader, type, accessFlags));
 		final CachedCellImg img = new CachedCellImg(grid, type, cache, ArrayDataAccessFactory.get(type, accessFlags));
 		return img;
 	}
