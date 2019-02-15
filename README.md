@@ -1,6 +1,8 @@
 # n5-imglib2
 
-ImgLib2 bindings for N5 containers.  The `N5Utils` class provides static convenience methods to open and save N5 datasets.  By Beanshell example (which is almost Java, but without types, let Eclipse auto-add them in Java code):
+ImgLib2 bindings for N5 containers.  The `N5Utils` class provides static convenience methods to open N5 datasets as cache backed `RandomAccessibleInterval`-s (n-dimensional images in ImgLib2 speech), and to save `RandomAccessibleInterval`-s as N5 datasets.  When opening datasets with block-sizes other than the grid raster, you will see the intersection of grid-cell and block filled with data.  Beyond other things, this makes it compatible with datasets stored by [Jan Funke's n5-bindings for Zarr](https://github.com/zarr-developers/zarr/pull/309), where trailing blocks are overhanging instead of cropped to size.  Datasets are saved with trailing blocks cropped to size.
+
+Beanshell example (which is almost Java, but without types, let Eclipse auto-add them in Java code):
 
 ```java
 import org.janelia.saalfeldlab.n5.*;

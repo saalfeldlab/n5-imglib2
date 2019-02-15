@@ -6,13 +6,13 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>21.0.0</version>
+		<version>25.0.0</version>
 		<relativePath />
 	</parent>
 
 	<groupId>org.janelia.saalfeldlab</groupId>
 	<artifactId>n5-imglib2</artifactId>
-	<version>3.0.1-SNAPSHOT</version>
+	<version>3.1.1-SNAPSHOT</version>
 
 	<name>N5 ImgLib2 Bindings</name>
 	<description>Open N5 datasets as ImgLib2 RandomAccessibles, and write ImgLib2 RandomAccessibles as/ into N5 datasets.</description>
@@ -130,7 +130,6 @@
 		<dependency>
 			<groupId>net.imglib2</groupId>
 			<artifactId>imglib2-realtransform</artifactId>
-			<version>2.1.1-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 

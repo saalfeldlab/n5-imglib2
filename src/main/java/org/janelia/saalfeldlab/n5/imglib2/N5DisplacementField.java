@@ -173,22 +173,22 @@ public class N5DisplacementField
 			n5Writer.setAttribute( dataset, AFFINE_ATTR,  affine.getRowPackedCopy() );
 	}
 
-    /**
-     * Saves an affine transform and quantized deformation field into a specified n5 dataset.
-     *
-     * The deformation field here is saved as an {@link IntegerType}
-     * which could compress better in some cases.  The multiplier from
-     * original values to compressed values is chosen as the smallest
-     * value that keeps the error (L2) between quantized and original vectors. 
-     *
-     * @param n5Writer
-     * @param dataset
-     * @param source
-     * @param blockSize
-     * @param compression
-     * @param outputType
-     * @param maxError
-     */
+	/**
+	 * Saves an affine transform and quantized deformation field into a specified n5 dataset.
+	 *
+	 * The deformation field here is saved as an {@link IntegerType}
+	 * which could compress better in some cases.  The multiplier from
+	 * original values to compressed values is chosen as the smallest
+	 * value that keeps the error (L2) between quantized and original vectors. 
+	 *
+	 * @param n5Writer
+	 * @param dataset
+	 * @param source
+	 * @param blockSize
+	 * @param compression
+	 * @param outputType
+	 * @param maxError
+	 */
 	public static final <T extends RealType<T>, Q extends NativeType<Q> & IntegerType<Q>> void saveQuantized(
 			final N5Writer n5Writer,
 			final String dataset,
@@ -222,15 +222,16 @@ public class N5DisplacementField
 		n5Writer.setAttribute( dataset, MULTIPLIER_ATTR, m );
 	}
 
-    /**
-     * Opens an {@link InvertibleRealTransform} from an n5 object if
-     * possible.
-     *
-     * @param n5
-     * @param defaultType
-     * @param interpolator
-     * @return the invertible transformation
-     */
+ 
+	/**
+	 * Opens an {@link InvertibleRealTransform} from an n5 object if
+	 * possible.
+	 *
+	 * @param n5
+	 * @param defaultType
+	 * @param interpolator
+	 * @return the invertible transformation
+	 */
 	public static final <T extends RealType<T> & NativeType<T>> ExplicitInvertibleRealTransform openInvertible( 
 			final N5Reader n5,
 			final T defaultType,
@@ -240,19 +241,19 @@ public class N5DisplacementField
                 open( n5, FORWARD_ATTR, false, defaultType, interpolator),
                 open( n5, INVERSE_ATTR, true, defaultType, interpolator));
 	}
-
-    /**
-     * Opens a {@link RealTransform} from an n5 dataset as a
-     * displacement field.  The resulting transform is the concatenation
-     * of an affine transform and a {@link DeformationFieldTransform}.
-     *
-     * @param n5
-     * @param dataset
-     * @param inverse
-     * @param defaultType
-     * @param interpolator
-     * @return the transformation
-     */
+	
+	/**
+	 * Opens a {@link RealTransform} from an n5 dataset as a
+	 * displacement field.  The resulting transform is the concatenation
+	 * of an affine transform and a {@link DeformationFieldTransform}.
+	 *
+	 * @param n5
+	 * @param dataset
+	 * @param inverse
+	 * @param defaultType
+	 * @param interpolator
+	 * @return the transformation
+	 */
 	public static final <T extends RealType<T> & NativeType<T>> RealTransform open( 
 			final N5Reader n5,
 			final String dataset,
@@ -287,15 +288,15 @@ public class N5DisplacementField
 		}
 	}
 
-    /**
-     * Returns an {@link AffineGet} transform from pixel space to
-     * physical space, for the given n5 dataset, if present, null
-     * otherwise.
-     *
-     * @param n5
-     * @param dataset
-     * @return the affine transform
-     */
+	/**
+	 * Returns an {@link AffineGet} transform from pixel space to
+	 * physical space, for the given n5 dataset, if present, null
+	 * otherwise.
+	 *
+	 * @param n5
+	 * @param dataset
+	 * @return the affine transform
+	 */
 	public static final AffineGet openPixelToPhysical( final N5Reader n5, final String dataset ) throws Exception
 	{
 		double[] spacing = n5.getAttribute( dataset, SPACING_ATTR, double[].class );
@@ -320,13 +321,13 @@ public class N5DisplacementField
 		return affineMtx;
 	}
 
-    /**
-     * Returns and affine transform stored as an attribute in an n5 dataset.
-     *
-     * @param n5
-     * @param dataset
-     * @return the affine
-     */
+	/**
+	 * Returns and affine transform stored as an attribute in an n5 dataset.
+	 *
+	 * @param n5
+	 * @param dataset
+	 * @return the affine
+	 */
 	public static final AffineGet openAffine( final N5Reader n5, final String dataset ) throws Exception
 	{
 		double[] affineMtxRow = n5.getAttribute( dataset, AFFINE_ATTR, double[].class );
@@ -348,18 +349,18 @@ public class N5DisplacementField
 		return affineMtx;
 	}
 
-    /**
-     * Returns a deformation field from the given n5 dataset.
-     *
-     * If the data is an {@link IntegerType}, returns an un-quantized
-     * view of the dataset, otherwise, returns the raw {@link
-     * RandomAccessibleInterval}.
-     *
-     * @param n5
-     * @param dataset
-     * @param defaultType
-     * @return the deformation field as a RandomAccessibleInterval
-     */
+	/**
+	 * Returns a deformation field from the given n5 dataset.
+	 *
+	 * If the data is an {@link IntegerType}, returns an un-quantized
+	 * view of the dataset, otherwise, returns the raw {@link
+	 * RandomAccessibleInterval}.
+	 *
+	 * @param n5
+	 * @param dataset
+	 * @param defaultType
+	 * @return the deformation field as a RandomAccessibleInterval
+	 */
 	@SuppressWarnings( "unchecked" )
 	public static final <T extends NativeType<T> & RealType<T>, Q extends NativeType<Q> & IntegerType<Q>> RandomAccessibleInterval< T > openField( 
 			final N5Reader n5,
@@ -389,22 +390,22 @@ public class N5DisplacementField
 		}
 	}
 
-    /**
-     * Returns a deformation field in physical coordinates as a {@link
-     * RealRandomAccessible} from an n5 dataset.
-     *
-     * Internally, opens the given n5 dataset as a {@link
-     * RandomAccessibleInterval}, un-quantizes if necessary, uses
-     * the input {@link InterpolatorFactory} for interpolation, and
-     * transforms to physical coordinates using the pixel spacing stored
-     * in the "spacing" attribute, if present.
-     *
-     * @param n5
-     * @param dataset
-     * @param interpolator
-     * @param defaultType
-     * @return the deformation field as a RealRandomAccessible
-     */
+	/**
+	 * Returns a deformation field in physical coordinates as a {@link
+	 * RealRandomAccessible} from an n5 dataset.
+	 *
+	 * Internally, opens the given n5 dataset as a {@link
+	 * RandomAccessibleInterval}, un-quantizes if necessary, uses
+	 * the input {@link InterpolatorFactory} for interpolation, and
+	 * transforms to physical coordinates using the pixel spacing stored
+	 * in the "spacing" attribute, if present.
+	 *
+	 * @param n5
+	 * @param dataset
+	 * @param interpolator
+	 * @param defaultType
+	 * @return the deformation field as a RealRandomAccessible
+	 */
 	public static < T extends NativeType< T > & RealType< T > > RealRandomAccessible< T > openCalibratedField(
 			final N5Reader n5, final String dataset,
 			final InterpolatorFactory< T, RandomAccessible< T > > interpolator, 
@@ -427,30 +428,30 @@ public class N5DisplacementField
 		return dfieldReal;
 	}
 
-    /**
-     * Opens a transform from an n5 dataset using linear interpolation
-     * for the deformation field.
-     *
-     * @param n5
-     * @param dataset
-     * @param inverse
-     * @return the transform
-     */
+	/**
+	 * Opens a transform from an n5 dataset using linear interpolation
+	 * for the deformation field.
+	 *
+	 * @param n5
+	 * @param dataset
+	 * @param inverse
+	 * @return the transform
+	 */
 	public static < T extends NativeType< T > & RealType< T > > RealTransform open(
 			final N5Reader n5, final String dataset, boolean inverse ) throws Exception
 	{
 		return open( n5, dataset, inverse, new FloatType(), new NLinearInterpolatorFactory<FloatType>());
 	}
 
-    /**
-     * Returns a deformation field as a {@link RandomAccessibleInterval}, ensuring that
-     * the vector is stored in the last dimension.
-     *
-     * @param n5
-     * @param dataset
-     * @param defaultType
-     * @return the deformation field
-     */
+	/**
+	 * Returns a deformation field as a {@link RandomAccessibleInterval}, ensuring that
+	 * the vector is stored in the last dimension.
+	 *
+	 * @param n5
+	 * @param dataset
+	 * @param defaultType
+	 * @return the deformation field
+	 */
 	public static final < T extends RealType<T> & NativeType<T> > RandomAccessibleInterval< T > openRaw(
 			final N5Reader n5,
 			final String dataset,
@@ -460,16 +461,16 @@ public class N5DisplacementField
         return vectorAxisLast( src );
 	}
 
-    /**
-     * Open a quantized (integer) {@link RandomAccessibleInterval} from an n5
-     * dataset.
-     *
-     * @param n5
-     * @param dataset
-     * @param defaultQuantizedType
-     * @param defaultType
-     * @return the un-quantized data
-     */
+	/**
+	 * Open a quantized (integer) {@link RandomAccessibleInterval} from an n5
+	 * dataset.
+	 *
+	 * @param n5
+	 * @param dataset
+	 * @param defaultQuantizedType
+	 * @param defaultType
+	 * @return the un-quantized data
+	 */
 	public static final <Q extends RealType<Q> & NativeType<Q>, T extends RealType<T>> RandomAccessibleInterval< T > openQuantized(
 			final N5Reader n5,
 			final String dataset,
@@ -501,14 +502,14 @@ public class N5DisplacementField
         return src_converted;
 	}
 
-    /**
-     * Returns a deformation field as a {@link RandomAccessibleInterval}
-     * with the vector stored in the last dimension.
-     *
-     * @param source
-     * @return the possibly permuted deformation field
-     * @throws Exception
-     */
+	/**
+	 * Returns a deformation field as a {@link RandomAccessibleInterval}
+	 * with the vector stored in the last dimension.
+	 *
+	 * @param source
+	 * @return the possibly permuted deformation field
+	 * @throws Exception
+	 */
 	public static final < T extends RealType< T > > RandomAccessibleInterval< T > vectorAxisLast( RandomAccessibleInterval< T > source ) throws Exception
 	{
 		final int n = source.numDimensions();
@@ -530,14 +531,14 @@ public class N5DisplacementField
 						"Found a %d-d volume; expect size [%d,...] or [...,%d]", n, ( n - 1 ), ( n - 1 ) ) );
 	}
 	
-    /**
-     * Returns a deformation field as a {@link RandomAccessibleInterval}
-     * with the vector stored in the first dimension.
-     *
-     * @param source
-     * @return the possibly permuted deformation field
-     * @throws Exception
-     */
+	/**
+	 * Returns a deformation field as a {@link RandomAccessibleInterval}
+	 * with the vector stored in the first dimension.
+	 *
+	 * @param source
+	 * @return the possibly permuted deformation field
+	 * @throws Exception
+	 */
 	public static final < T extends RealType< T > > RandomAccessibleInterval< T > vectorAxisFirst( RandomAccessibleInterval< T > source ) throws Exception
 	{
 		final int n = source.numDimensions();
@@ -561,15 +562,15 @@ public class N5DisplacementField
 						"Found a %d-d volume; expect size [%d,...] or [...,%d]", n, ( n - 1 ), ( n - 1 ) ) );
 	}
 
-    /**
-     * Permutes the dimensions of a {@link RandomAccessibleInterval}
-     * using the given permutation vector, where the ith value in p
-     * gives destination of the ith input dimension in the output. 
-     *
-     * @param source the source data
-     * @param p the permutation
-     * @return the permuted source
-     */
+	/**
+	 * Permutes the dimensions of a {@link RandomAccessibleInterval}
+	 * using the given permutation vector, where the ith value in p
+	 * gives destination of the ith input dimension in the output. 
+	 *
+	 * @param source the source data
+	 * @param p the permutation
+	 * @return the permuted source
+	 */
 	public static final < T > IntervalView< T > permute( RandomAccessibleInterval< T > source, int[] p )
 	{
 		final int n = source.numDimensions();
@@ -588,14 +589,14 @@ public class N5DisplacementField
 		return Views.interval( new MixedTransformView< T >( source, t ), min, max );
 	}
 
-    /**
-     * Returns a two element double array in which the first and second elements
-     * store the minimum and maximum values of the input {@link
-     * IterableInterval}, respectively.
-     *
-     * @param img the iterable interval
-     * @return the min and max values stored in a double array
-     */
+	/**
+	 * Returns a two element double array in which the first and second elements
+	 * store the minimum and maximum values of the input {@link
+	 * IterableInterval}, respectively.
+	 *
+	 * @param img the iterable interval
+	 * @return the min and max values stored in a double array
+	 */
 	public static <T extends RealType<T>> double[] getMinMax( IterableInterval<T> img )
 	{
 		double min = Double.MAX_VALUE;
