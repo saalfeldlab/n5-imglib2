@@ -22,6 +22,7 @@ import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform;
 import net.imglib2.realtransform.AffineTransform2D;
 import net.imglib2.realtransform.AffineTransform3D;
+import net.imglib2.realtransform.ExplicitInvertibleRealTransform;
 import net.imglib2.realtransform.DeformationFieldTransform;
 import net.imglib2.realtransform.InverseRealTransform;
 import net.imglib2.realtransform.InvertibleRealTransform;
@@ -42,6 +43,7 @@ import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.integer.UnsignedIntType;
 import net.imglib2.type.numeric.integer.UnsignedLongType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
+import net.imglib2.type.numeric.real.DoubleType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Util;
 import net.imglib2.view.IntervalView;
@@ -220,7 +222,73 @@ public class N5DisplacementField
         N5Utils.save( source_quant, n5Writer, dataset, blockSize, compression);
 		n5Writer.setAttribute( dataset, MULTIPLIER_ATTR, m );
 	}
-	
+
+    /**
+     * Opens an {@link InvertibleRealTransform} from an n5 object.  Uses the provided datasets as the forward and 
+     * inverse transformations.
+     *
+     * @param n5
+     * @param forwardDataset
+     * @param inverseDataset
+     * @param defaultType
+     * @param interpolator
+     * @return the invertible transformation
+     */
+	public static final <T extends RealType<T> & NativeType<T>> ExplicitInvertibleRealTransform openInvertible( 
+			final N5Reader n5,
+			final String forwardDataset,
+			final String inverseDataset,
+			final T defaultType,
+			final InterpolatorFactory< T, RandomAccessible<T> > interpolator ) throws Exception
+	{
+		return new ExplicitInvertibleRealTransform(
+                open( n5, forwardDataset, false, defaultType, interpolator),
+                open( n5, inverseDataset, true, defaultType, interpolator));
+	}
+
+    /**
+     * Opens an {@link InvertibleRealTransform} from an n5 object using default datasets and linear interpolation.
+     *
+     * @param n5
+     * @return the invertible transformation
+     */
+	public static final <T extends RealType<T> & NativeType<T>> ExplicitInvertibleRealTransform openInvertible( 
+			final N5Reader n5 ) throws Exception
+	{
+		return openInvertible( n5, FORWARD_ATTR, INVERSE_ATTR, new DoubleType(), new NLinearInterpolatorFactory<>()  );
+	}
+
+    /**
+     * Opens an {@link InvertibleRealTransform} from an multi-scale n5 object, at the specified level,
+     * using linear interpolation.
+     *
+     * @param n5
+     * @param level 
+     * @return the invertible transformation
+     */
+	public static final <T extends RealType<T> & NativeType<T>> ExplicitInvertibleRealTransform openInvertible( 
+			final N5Reader n5,
+			final int level ) throws Exception
+	{
+		return openInvertible( n5, "/"+level+"/"+FORWARD_ATTR, "/"+level+"/"+INVERSE_ATTR, new DoubleType(), new NLinearInterpolatorFactory<>()  );
+	}
+
+    /**
+     * Opens an {@link InvertibleRealTransform} from an n5 object if
+     * possible.
+     *
+     * @param n5
+     * @param defaultType
+     * @param interpolator
+     * @return the invertible transformation
+     */
+	public static final <T extends RealType<T> & NativeType<T>> ExplicitInvertibleRealTransform openInvertible( 
+			final N5Reader n5,
+			final T defaultType,
+			final InterpolatorFactory< T, RandomAccessible<T> > interpolator ) throws Exception
+	{
+		return openInvertible( n5, FORWARD_ATTR, INVERSE_ATTR, defaultType, interpolator );
+	}
 
     /**
      * Opens a {@link RealTransform} from an n5 dataset as a
