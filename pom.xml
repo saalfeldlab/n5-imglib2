@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
@@ -16,7 +17,7 @@
 
 	<name>N5 ImgLib2 Bindings</name>
 	<description>Open N5 datasets as ImgLib2 RandomAccessibles, and write ImgLib2 RandomAccessibles as/ into N5 datasets.</description>
-	<url></url>
+	<url>https://github.com/saalfeldlab/n5-imglib2</url>
 	<inceptionYear>2017</inceptionYear>
 	<organization>
 		<name>Saalfeld Lab</name>
@@ -36,6 +37,23 @@
 		</mailingList>
 	</mailingLists>
 
+	<scm>
+		<connection>scm:git:git://github.com/saalfedllab/n5-imglib2</connection>
+		<developerConnection>scm:git:git@github.com:saalfeldlab/n5-imglib2</developerConnection>
+		<tag>HEAD</tag>
+		<url>https://github.com/saalfeldlab/n5-imglib2</url>
+	</scm>
+
+	<issueManagement>
+		<system>GitHub</system>
+		<url>https://github.com/saalfedlab/n5-imglib2/issues</url>
+	</issueManagement>
+
+	<ciManagement>
+		<system>Travis CI</system>
+		<url>https://travis-ci.org/saalfeldlab/n5-imglib2</url>
+	</ciManagement>
+
 	<properties>
 		<package-name>org.janelia.saalfeldlab</package-name>
 
@@ -44,9 +62,9 @@
 		<license.organizationName>Saalfeld Lab</license.organizationName>
 		<license.copyrightOwners>Philipp Hanslovsky, Stephan Saalfeld</license.copyrightOwners>
 
-		<enforcer.skip>true</enforcer.skip>
+		<!-- ImgLib2 RealTransform - https://github.com/imglib/imglib2-realtransform -->
+		<imglib2-realtransform.version>2.2.0</imglib2-realtransform.version>
 	</properties>
-
 	<developers>
 		<developer>
 			<id>hanslovsky</id>
@@ -77,7 +95,27 @@
 			</roles>
 		</developer>
 	</developers>
-
+	<contributors>
+		<contributor>
+			<name>John Bogovic</name>
+			<url>https://imagej.net/User:Bogovic</url>
+			<properties>
+				<id>bogovicj</id>
+			</properties>
+		</contributor>
+		<contributor>
+			<name>Philipp Hanslovsky</name>
+			<properties>
+				<id>hanslovsky</id>
+			</properties>
+		</contributor>
+		<contributor>
+			<name>Stephan Saalfeld</name>
+			<properties>
+				<id>axtimwalde</id>
+			</properties>
+		</contributor>
+	</contributors>
 	<repositories>
 		<repository>
 			<id>saalfeld-lab-maven-repo</id>
