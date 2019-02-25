@@ -859,7 +859,9 @@ public class N5Utils {
 	}
 
 	/**
-	 * Save a {@link RandomAccessibleInterval} as an N5 dataset.
+	 * Save a {@link RandomAccessibleInterval} into an N5 dataset at a given
+	 * offset. The offset is given in {@link DataBlock} grid coordinates and the
+	 * source is assumed to align with the {@link DataBlock} grid of the dataset.
 	 *
 	 * @param source
 	 * @param n5
@@ -913,7 +915,10 @@ public class N5Utils {
 	}
 
 	/**
-	 * Save a {@link RandomAccessibleInterval} as an N5 dataset.
+	 * Save a {@link RandomAccessibleInterval} into an N5 dataset.
+	 * The block offset is determined by the source position, and the
+	 * source is assumed to align with the {@link DataBlock} grid
+	 * of the dataset.
 	 *
 	 * @param source
 	 * @param n5
@@ -934,7 +939,10 @@ public class N5Utils {
 	}
 
 	/**
-	 * Save a {@link RandomAccessibleInterval} as an N5 dataset.
+	 * Save a {@link RandomAccessibleInterval} into an N5 dataset.
+	 * The block offset is determined by the source position, and the
+	 * source is assumed to align with the {@link DataBlock} grid
+	 * of the dataset.
 	 *
 	 * @param source
 	 * @param n5
@@ -955,7 +963,9 @@ public class N5Utils {
 	}
 
 	/**
-	 * Save a {@link RandomAccessibleInterval} as an N5 dataset.
+	 * Save a {@link RandomAccessibleInterval} into an N5 dataset at a given
+	 * offset. The offset is given in {@link DataBlock} grid coordinates and the
+	 * source is assumed to align with the {@link DataBlock} grid of the dataset.
 	 *
 	 * @param source
 	 * @param n5
@@ -1120,11 +1130,11 @@ public class N5Utils {
 	}
 
 	/**
-	 * Save a {@link RandomAccessibleInterval} into an N5 dataset at a given
-	 * offset. The offset is given in {@link DataBlock} grid coordinates and the
-	 * source is assumed to align with the {@link DataBlock} grid of the
-	 * dataset. Only {@link DataBlock DataBlocks} that contain values other than
-	 * a given default value are stored.
+	 * Save a {@link RandomAccessibleInterval} into an N5 dataset.
+	 * The block offset is determined by the source position, and the
+	 * source is assumed to align with the {@link DataBlock} grid
+	 * of the dataset. Only {@link DataBlock DataBlocks} that contain
+	 * values other than a given default value are stored.
 	 *
 	 * @param source
 	 * @param n5
@@ -1147,11 +1157,11 @@ public class N5Utils {
 	}
 
 	/**
-	 * Save a {@link RandomAccessibleInterval} into an N5 dataset at a given
-	 * offset. The offset is given in {@link DataBlock} grid coordinates and the
-	 * source is assumed to align with the {@link DataBlock} grid of the
-	 * dataset. Only {@link DataBlock DataBlocks} that contain values other than
-	 * a given default value are stored.
+	 * Save a {@link RandomAccessibleInterval} into an N5 dataset.
+	 * The block offset is determined by the source position, and the
+	 * source is assumed to align with the {@link DataBlock} grid
+	 * of the dataset. Only {@link DataBlock DataBlocks} that contain
+	 * values other than a given default value are stored.
 	 *
 	 * @param source
 	 * @param n5
