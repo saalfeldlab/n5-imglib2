@@ -115,6 +115,9 @@ public class N5LabelMultisets {
 			final BiFunction<CellGrid, long[], byte[]> nullReplacement,
 			final LoaderCache<Long, Cell<VolatileLabelMultisetArray>> loaderCache) throws IOException {
 
+		if (!isLabelMultisetType(n5, dataset))
+			throw new IOException(dataset + " is not a label multiset dataset.");
+
 		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
 		final CellGrid grid = new CellGrid(attributes.getDimensions(), attributes.getBlockSize());
 
@@ -277,6 +280,9 @@ public class N5LabelMultisets {
 			final DatasetAttributes attributes,
 			final long[] gridOffset) throws IOException {
 
+		if (!isLabelMultisetType(n5, dataset))
+			throw new IOException(dataset + " is not a label multiset dataset.");
+
 		source = Views.zeroMin(source);
 		final long[] dimensions = Intervals.dimensionsAsLongArray(source);
 
@@ -352,6 +358,9 @@ public class N5LabelMultisets {
 			final String dataset,
 			final long[] gridOffset,
 			final ExecutorService exec) throws IOException, InterruptedException, ExecutionException {
+
+		if (!isLabelMultisetType(n5, dataset))
+			throw new IOException(dataset + " is not a label multiset dataset.");
 
 		final RandomAccessibleInterval<LabelMultisetType> zeroMinSource = Views.zeroMin(source);
 		final long[] dimensions = Intervals.dimensionsAsLongArray(zeroMinSource);
@@ -431,6 +440,9 @@ public class N5LabelMultisets {
 			final DatasetAttributes attributes,
 			final long[] gridOffset,
 			final long defaultLabelId) throws IOException {
+
+		if (!isLabelMultisetType(n5, dataset))
+			throw new IOException(dataset + " is not a label multiset dataset.");
 
 		source = Views.zeroMin(source);
 		final long[] dimensions = Intervals.dimensionsAsLongArray(source);
