@@ -851,7 +851,7 @@ public class N5Utils {
 				.maxCacheSize(100);
 
 		final DiskCachedCellImgFactory<T> factory = new DiskCachedCellImgFactory<T>(
-				forDataType(attributes.getDataType()),
+				type(attributes.getDataType()),
 				options);
 
 		return factory.create(dimensions, loader);
@@ -1245,40 +1245,5 @@ public class N5Utils {
 		}
 		for (final Future<?> f : futures)
 			f.get();
-	}
-
-	/**
-	 * Get the appropriate {@link NativeType} for {@link DataType}.
-	 *
-	 * @param dataType
-	 * @return
-	 */
-	@SuppressWarnings("unchecked")
-	public static <T extends NativeType<T>> T forDataType(final DataType dataType) {
-
-		switch (dataType) {
-		case INT8:
-			return (T)new ByteType();
-		case UINT8:
-			return (T)new UnsignedByteType();
-		case INT16:
-			return (T)new ShortType();
-		case UINT16:
-			return (T)new UnsignedShortType();
-		case INT32:
-			return (T)new IntType();
-		case UINT32:
-			return (T)new UnsignedIntType();
-		case INT64:
-			return (T)new LongType();
-		case UINT64:
-			return (T)new UnsignedLongType();
-		case FLOAT32:
-			return (T)new FloatType();
-		case FLOAT64:
-			return (T)new DoubleType();
-		default:
-			return null;
-		}
 	}
 }
