@@ -64,6 +64,7 @@ import net.imglib2.img.cell.CellGrid;
 import net.imglib2.img.cell.LazyCellImg;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.Type;
+import net.imglib2.type.label.LabelMultisetType;
 import net.imglib2.type.numeric.integer.ByteType;
 import net.imglib2.type.numeric.integer.IntType;
 import net.imglib2.type.numeric.integer.LongType;
@@ -378,17 +379,22 @@ public class N5Utils {
 
 	/**
 	 * Open an N5 dataset as a memory cached {@link LazyCellImg}.
+	 * Supports all primitive types and {@link LabelMultisetType}.
 	 *
 	 * @param n5
 	 * @param dataset
 	 * @return
 	 * @throws IOException
 	 */
+	@SuppressWarnings("unchecked")
 	public static final <T extends NativeType<T>> RandomAccessibleInterval<T> open(
 			final N5Reader n5,
 			final String dataset) throws IOException {
 
-		return open(n5, dataset, (Consumer<IterableInterval<T>>)img -> {});
+		if (N5LabelMultisets.isLabelMultisetType(n5, dataset))
+			return (RandomAccessibleInterval<T>) N5LabelMultisets.openLabelMultiset(n5, dataset);
+		else
+			return open(n5, dataset, (Consumer<IterableInterval<T>>)img -> {});
 	}
 
 
@@ -412,17 +418,22 @@ public class N5Utils {
 	/**
 	 * Open an N5 dataset as a memory cached {@link LazyCellImg} using
 	 * {@link VolatileAccess}.
+	 * Supports all primitive types and {@link LabelMultisetType}.
 	 *
 	 * @param n5
 	 * @param dataset
 	 * @return
 	 * @throws IOException
 	 */
+	@SuppressWarnings("unchecked")
 	public static final <T extends NativeType<T>> RandomAccessibleInterval<T> openVolatile(
 			final N5Reader n5,
 			final String dataset) throws IOException {
 
-		return openVolatile(n5, dataset, (Consumer<IterableInterval<T>>)img -> {});
+		if (N5LabelMultisets.isLabelMultisetType(n5, dataset))
+			return (RandomAccessibleInterval<T>) N5LabelMultisets.openLabelMultiset(n5, dataset);
+		else
+			return openVolatile(n5, dataset, (Consumer<IterableInterval<T>>)img -> {});
 	}
 
 
