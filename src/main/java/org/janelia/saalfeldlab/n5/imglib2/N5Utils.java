@@ -885,6 +885,13 @@ public class N5Utils {
 			final DatasetAttributes attributes,
 			final long[] gridOffset) throws IOException {
 
+		if (N5LabelMultisets.isLabelMultisetType(n5, dataset)) {
+			@SuppressWarnings("unchecked")
+			final RandomAccessibleInterval<LabelMultisetType> labelMultisetSource = (RandomAccessibleInterval<LabelMultisetType>) source;
+			N5LabelMultisets.saveLabelMultisetBlock(labelMultisetSource, n5, dataset, attributes, gridOffset);
+			return;
+		}
+
 		source = Views.zeroMin(source);
 		final long[] dimensions = Intervals.dimensionsAsLongArray(source);
 
@@ -965,6 +972,13 @@ public class N5Utils {
 			final String dataset,
 			final long[] gridOffset,
 			final ExecutorService exec) throws IOException, InterruptedException, ExecutionException {
+
+		if (N5LabelMultisets.isLabelMultisetType(n5, dataset)) {
+			@SuppressWarnings("unchecked")
+			final RandomAccessibleInterval<LabelMultisetType> labelMultisetSource = (RandomAccessibleInterval<LabelMultisetType>) source;
+			N5LabelMultisets.saveLabelMultisetBlock(labelMultisetSource, n5, dataset, gridOffset, exec);
+			return;
+		}
 
 		final RandomAccessibleInterval<T> zeroMinSource = Views.zeroMin(source);
 		final long[] dimensions = Intervals.dimensionsAsLongArray(zeroMinSource);
@@ -1137,6 +1151,13 @@ public class N5Utils {
 			final int[] blockSize,
 			final Compression compression) throws IOException {
 
+		if (Util.getTypeFromInterval(source) instanceof LabelMultisetType) {
+			@SuppressWarnings("unchecked")
+			final RandomAccessibleInterval<LabelMultisetType> labelMultisetSource = (RandomAccessibleInterval<LabelMultisetType>) source;
+			N5LabelMultisets.saveLabelMultiset(labelMultisetSource, n5, dataset, blockSize, compression);
+			return;
+		}
+
 		source = Views.zeroMin(source);
 		final long[] dimensions = Intervals.dimensionsAsLongArray(source);
 		final DatasetAttributes attributes = new DatasetAttributes(
@@ -1195,6 +1216,13 @@ public class N5Utils {
 			final int[] blockSize,
 			final Compression compression,
 			final ExecutorService exec) throws IOException, InterruptedException, ExecutionException {
+
+		if (Util.getTypeFromInterval(source) instanceof LabelMultisetType) {
+			@SuppressWarnings("unchecked")
+			final RandomAccessibleInterval<LabelMultisetType> labelMultisetSource = (RandomAccessibleInterval<LabelMultisetType>) source;
+			N5LabelMultisets.saveLabelMultiset(labelMultisetSource, n5, dataset, blockSize, compression, exec);
+			return;
+		}
 
 		final RandomAccessibleInterval<T> zeroMinSource = Views.zeroMin(source);
 		final long[] dimensions = Intervals.dimensionsAsLongArray(zeroMinSource);
