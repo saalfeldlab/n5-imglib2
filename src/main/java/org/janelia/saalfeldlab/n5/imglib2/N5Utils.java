@@ -331,7 +331,7 @@ public class N5Utils {
 	 * @param intCroppedBlockDimensions
 	 * @param gridPosition
 	 */
-	private static void cropBlockDimensions(
+	static void cropBlockDimensions(
 			final long[] max,
 			final long[] offset,
 			final int[] blockDimensions,
@@ -361,7 +361,7 @@ public class N5Utils {
 	 * @param intCroppedBlockDimensions
 	 * @param gridPosition
 	 */
-	private static void cropBlockDimensions(
+	static void cropBlockDimensions(
 			final long[] max,
 			final long[] offset,
 			final long[] gridOffset,
