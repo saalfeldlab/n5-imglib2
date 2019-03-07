@@ -28,6 +28,7 @@ package org.janelia.saalfeldlab.n5.imglib2;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -858,7 +859,9 @@ public class N5Utils {
 	}
 
 	/**
-	 * Save a {@link RandomAccessibleInterval} as an N5 dataset.
+	 * Save a {@link RandomAccessibleInterval} into an N5 dataset at a given
+	 * offset. The offset is given in {@link DataBlock} grid coordinates and the
+	 * source is assumed to align with the {@link DataBlock} grid of the dataset.
 	 *
 	 * @param source
 	 * @param n5
@@ -875,9 +878,7 @@ public class N5Utils {
 			final long[] gridOffset) throws IOException {
 
 		source = Views.zeroMin(source);
-		final long[] dimensions = Intervals.dimensionsAsLongArray(source);
-
-		final int n = dimensions.length;
+		final int n = source.numDimensions();
 		final long[] max = Intervals.maxAsLongArray(source);
 		final long[] offset = new long[n];
 		final long[] gridPosition = new long[n];
@@ -914,7 +915,57 @@ public class N5Utils {
 	}
 
 	/**
-	 * Save a {@link RandomAccessibleInterval} as an N5 dataset.
+	 * Save a {@link RandomAccessibleInterval} into an N5 dataset.
+	 * The block offset is determined by the source position, and the
+	 * source is assumed to align with the {@link DataBlock} grid
+	 * of the dataset.
+	 *
+	 * @param source
+	 * @param n5
+	 * @param dataset
+	 * @param attributes
+	 * @throws IOException
+	 */
+	public static final <T extends NativeType<T>> void saveBlock(
+			final RandomAccessibleInterval<T> source,
+			final N5Writer n5,
+			final String dataset,
+			final DatasetAttributes attributes) throws IOException {
+
+		final int[] blockSize = attributes.getBlockSize();
+		final long[] gridOffset = new long[blockSize.length];
+		Arrays.setAll(gridOffset, d -> source.min(d) / blockSize[d]);
+		saveBlock(source, n5, dataset, attributes, gridOffset);
+	}
+
+	/**
+	 * Save a {@link RandomAccessibleInterval} into an N5 dataset.
+	 * The block offset is determined by the source position, and the
+	 * source is assumed to align with the {@link DataBlock} grid
+	 * of the dataset.
+	 *
+	 * @param source
+	 * @param n5
+	 * @param dataset
+	 * @throws IOException
+	 */
+	public static final <T extends NativeType<T>> void saveBlock(
+			final RandomAccessibleInterval<T> source,
+			final N5Writer n5,
+			final String dataset) throws IOException {
+
+		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
+		if (attributes != null) {
+			saveBlock(source, n5, dataset, attributes);
+		} else {
+			throw new IOException("Dataset " + dataset + " does not exist.");
+		}
+	}
+
+	/**
+	 * Save a {@link RandomAccessibleInterval} into an N5 dataset at a given
+	 * offset. The offset is given in {@link DataBlock} grid coordinates and the
+	 * source is assumed to align with the {@link DataBlock} grid of the dataset.
 	 *
 	 * @param source
 	 * @param n5
@@ -1040,9 +1091,7 @@ public class N5Utils {
 			final T defaultValue) throws IOException {
 
 		source = Views.zeroMin(source);
-		final long[] dimensions = Intervals.dimensionsAsLongArray(source);
-
-		final int n = dimensions.length;
+		final int n = source.numDimensions();
 		final long[] max = Intervals.maxAsLongArray(source);
 		final long[] offset = new long[n];
 		final long[] gridPosition = new long[n];
@@ -1077,6 +1126,60 @@ public class N5Utils {
 				else
 					offset[d] = 0;
 			}
+		}
+	}
+
+	/**
+	 * Save a {@link RandomAccessibleInterval} into an N5 dataset.
+	 * The block offset is determined by the source position, and the
+	 * source is assumed to align with the {@link DataBlock} grid
+	 * of the dataset. Only {@link DataBlock DataBlocks} that contain
+	 * values other than a given default value are stored.
+	 *
+	 * @param source
+	 * @param n5
+	 * @param dataset
+	 * @param attributes
+	 * @param defaultValue
+	 * @throws IOException
+	 */
+	public static final <T extends NativeType<T>> void saveNonEmptyBlock(
+			final RandomAccessibleInterval<T> source,
+			final N5Writer n5,
+			final String dataset,
+			final DatasetAttributes attributes,
+			final T defaultValue) throws IOException {
+
+		final int[] blockSize = attributes.getBlockSize();
+		final long[] gridOffset = new long[blockSize.length];
+		Arrays.setAll(gridOffset, d -> source.min(d) / blockSize[d]);
+		saveNonEmptyBlock(source, n5, dataset, attributes, gridOffset, defaultValue);
+	}
+
+	/**
+	 * Save a {@link RandomAccessibleInterval} into an N5 dataset.
+	 * The block offset is determined by the source position, and the
+	 * source is assumed to align with the {@link DataBlock} grid
+	 * of the dataset. Only {@link DataBlock DataBlocks} that contain
+	 * values other than a given default value are stored.
+	 *
+	 * @param source
+	 * @param n5
+	 * @param dataset
+	 * @param defaultValue
+	 * @throws IOException
+	 */
+	public static final <T extends NativeType<T>> void saveNonEmptyBlock(
+			final RandomAccessibleInterval<T> source,
+			final N5Writer n5,
+			final String dataset,
+			final T defaultValue) throws IOException {
+
+		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
+		if (attributes != null) {
+			saveNonEmptyBlock(source, n5, dataset, attributes, defaultValue);
+		} else {
+			throw new IOException("Dataset " + dataset + " does not exist.");
 		}
 	}
 
