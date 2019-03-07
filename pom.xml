@@ -135,6 +135,11 @@
 			<version>2.0.2</version>
 		</dependency>
 
+		<dependency>
+			<groupId>net.imglib2</groupId>
+			<artifactId>imglib2-label-multisets</artifactId>
+			<version>0.5.0</version>
+		</dependency>
 
 		<dependency>
 			<groupId>net.imglib2</groupId>

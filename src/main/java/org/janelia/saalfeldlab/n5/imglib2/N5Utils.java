@@ -65,6 +65,7 @@ import net.imglib2.img.cell.CellGrid;
 import net.imglib2.img.cell.LazyCellImg;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.Type;
+import net.imglib2.type.label.LabelMultisetType;
 import net.imglib2.type.numeric.integer.ByteType;
 import net.imglib2.type.numeric.integer.IntType;
 import net.imglib2.type.numeric.integer.LongType;
@@ -331,7 +332,7 @@ public class N5Utils {
 	 * @param intCroppedBlockDimensions
 	 * @param gridPosition
 	 */
-	private static void cropBlockDimensions(
+	static void cropBlockDimensions(
 			final long[] max,
 			final long[] offset,
 			final int[] blockDimensions,
@@ -361,7 +362,7 @@ public class N5Utils {
 	 * @param intCroppedBlockDimensions
 	 * @param gridPosition
 	 */
-	private static void cropBlockDimensions(
+	static void cropBlockDimensions(
 			final long[] max,
 			final long[] offset,
 			final long[] gridOffset,
@@ -379,17 +380,22 @@ public class N5Utils {
 
 	/**
 	 * Open an N5 dataset as a memory cached {@link LazyCellImg}.
+	 * Supports all primitive types and {@link LabelMultisetType}.
 	 *
 	 * @param n5
 	 * @param dataset
 	 * @return
 	 * @throws IOException
 	 */
+	@SuppressWarnings("unchecked")
 	public static final <T extends NativeType<T>> RandomAccessibleInterval<T> open(
 			final N5Reader n5,
 			final String dataset) throws IOException {
 
-		return open(n5, dataset, (Consumer<IterableInterval<T>>)img -> {});
+		if (N5LabelMultisets.isLabelMultisetType(n5, dataset))
+			return (RandomAccessibleInterval<T>) N5LabelMultisets.openLabelMultiset(n5, dataset);
+		else
+			return open(n5, dataset, (Consumer<IterableInterval<T>>)img -> {});
 	}
 
 
@@ -413,17 +419,22 @@ public class N5Utils {
 	/**
 	 * Open an N5 dataset as a memory cached {@link LazyCellImg} using
 	 * {@link VolatileAccess}.
+	 * Supports all primitive types and {@link LabelMultisetType}.
 	 *
 	 * @param n5
 	 * @param dataset
 	 * @return
 	 * @throws IOException
 	 */
+	@SuppressWarnings("unchecked")
 	public static final <T extends NativeType<T>> RandomAccessibleInterval<T> openVolatile(
 			final N5Reader n5,
 			final String dataset) throws IOException {
 
-		return openVolatile(n5, dataset, (Consumer<IterableInterval<T>>)img -> {});
+		if (N5LabelMultisets.isLabelMultisetType(n5, dataset))
+			return (RandomAccessibleInterval<T>) N5LabelMultisets.openLabelMultiset(n5, dataset);
+		else
+			return openVolatile(n5, dataset, (Consumer<IterableInterval<T>>)img -> {});
 	}
 
 
@@ -877,6 +888,13 @@ public class N5Utils {
 			final DatasetAttributes attributes,
 			final long[] gridOffset) throws IOException {
 
+		if (N5LabelMultisets.isLabelMultisetType(n5, dataset)) {
+			@SuppressWarnings("unchecked")
+			final RandomAccessibleInterval<LabelMultisetType> labelMultisetSource = (RandomAccessibleInterval<LabelMultisetType>) source;
+			N5LabelMultisets.saveLabelMultisetBlock(labelMultisetSource, n5, dataset, attributes, gridOffset);
+			return;
+		}
+
 		source = Views.zeroMin(source);
 		final int n = source.numDimensions();
 		final long[] max = Intervals.maxAsLongArray(source);
@@ -1005,6 +1023,13 @@ public class N5Utils {
 			final String dataset,
 			final long[] gridOffset,
 			final ExecutorService exec) throws IOException, InterruptedException, ExecutionException {
+
+		if (N5LabelMultisets.isLabelMultisetType(n5, dataset)) {
+			@SuppressWarnings("unchecked")
+			final RandomAccessibleInterval<LabelMultisetType> labelMultisetSource = (RandomAccessibleInterval<LabelMultisetType>) source;
+			N5LabelMultisets.saveLabelMultisetBlock(labelMultisetSource, n5, dataset, gridOffset, exec);
+			return;
+		}
 
 		final RandomAccessibleInterval<T> zeroMinSource = Views.zeroMin(source);
 		final long[] dimensions = Intervals.dimensionsAsLongArray(zeroMinSource);
@@ -1229,6 +1254,13 @@ public class N5Utils {
 			final int[] blockSize,
 			final Compression compression) throws IOException {
 
+		if (Util.getTypeFromInterval(source) instanceof LabelMultisetType) {
+			@SuppressWarnings("unchecked")
+			final RandomAccessibleInterval<LabelMultisetType> labelMultisetSource = (RandomAccessibleInterval<LabelMultisetType>) source;
+			N5LabelMultisets.saveLabelMultiset(labelMultisetSource, n5, dataset, blockSize, compression);
+			return;
+		}
+
 		source = Views.zeroMin(source);
 		final long[] dimensions = Intervals.dimensionsAsLongArray(source);
 		final DatasetAttributes attributes = new DatasetAttributes(
@@ -1287,6 +1319,13 @@ public class N5Utils {
 			final int[] blockSize,
 			final Compression compression,
 			final ExecutorService exec) throws IOException, InterruptedException, ExecutionException {
+
+		if (Util.getTypeFromInterval(source) instanceof LabelMultisetType) {
+			@SuppressWarnings("unchecked")
+			final RandomAccessibleInterval<LabelMultisetType> labelMultisetSource = (RandomAccessibleInterval<LabelMultisetType>) source;
+			N5LabelMultisets.saveLabelMultiset(labelMultisetSource, n5, dataset, blockSize, compression, exec);
+			return;
+		}
 
 		final RandomAccessibleInterval<T> zeroMinSource = Views.zeroMin(source);
 		final long[] dimensions = Intervals.dimensionsAsLongArray(zeroMinSource);
