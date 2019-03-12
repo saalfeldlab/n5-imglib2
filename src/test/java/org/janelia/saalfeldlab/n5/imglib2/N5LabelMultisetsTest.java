@@ -99,7 +99,7 @@ public class N5LabelMultisetsTest {
 	@AfterClass
 	public static void rampDownAfterClass() throws Exception {
 
-		n5.remove("");
+		Assert.assertTrue(n5.remove(""));
 	}
 
 	@Test
@@ -111,14 +111,15 @@ public class N5LabelMultisetsTest {
 			assertEquals(loaded);
 
 			ExecutorService exec = Executors.newFixedThreadPool(4);
-			N5LabelMultisets.saveLabelMultiset(expectedImg, n5, datasetName, blockSize, new GzipCompression(), exec);
-			loaded = N5LabelMultisets.openLabelMultiset(n5, datasetName);
+			N5LabelMultisets.saveLabelMultiset(expectedImg, n5, datasetName + "-1", blockSize, new GzipCompression(), exec);
+			loaded = N5LabelMultisets.openLabelMultiset(n5, datasetName + "-1");
 			assertEquals(loaded);
 			exec.shutdown();
 
 			exec = Executors.newFixedThreadPool(8);
-			N5LabelMultisets.saveLabelMultiset(loaded, n5, datasetName, blockSize, new RawCompression(), exec);
-			loaded = N5LabelMultisets.openLabelMultiset(n5, datasetName);
+			final int[] differentBlockSize = {6, 10, 3};
+			N5LabelMultisets.saveLabelMultiset(loaded, n5, datasetName + "-2", differentBlockSize, new RawCompression(), exec);
+			loaded = N5LabelMultisets.openLabelMultiset(n5, datasetName + "-2");
 			assertEquals(loaded);
 			exec.shutdown();
 
