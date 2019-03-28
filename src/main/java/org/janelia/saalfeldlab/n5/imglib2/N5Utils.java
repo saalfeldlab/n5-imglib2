@@ -28,6 +28,7 @@ package org.janelia.saalfeldlab.n5.imglib2;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -64,6 +65,7 @@ import net.imglib2.img.cell.CellGrid;
 import net.imglib2.img.cell.LazyCellImg;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.Type;
+import net.imglib2.type.label.LabelMultisetType;
 import net.imglib2.type.numeric.integer.ByteType;
 import net.imglib2.type.numeric.integer.IntType;
 import net.imglib2.type.numeric.integer.LongType;
@@ -330,7 +332,7 @@ public class N5Utils {
 	 * @param intCroppedBlockDimensions
 	 * @param gridPosition
 	 */
-	private static void cropBlockDimensions(
+	static void cropBlockDimensions(
 			final long[] max,
 			final long[] offset,
 			final int[] blockDimensions,
@@ -360,7 +362,7 @@ public class N5Utils {
 	 * @param intCroppedBlockDimensions
 	 * @param gridPosition
 	 */
-	private static void cropBlockDimensions(
+	static void cropBlockDimensions(
 			final long[] max,
 			final long[] offset,
 			final long[] gridOffset,
@@ -378,17 +380,22 @@ public class N5Utils {
 
 	/**
 	 * Open an N5 dataset as a memory cached {@link LazyCellImg}.
+	 * Supports all primitive types and {@link LabelMultisetType}.
 	 *
 	 * @param n5
 	 * @param dataset
 	 * @return
 	 * @throws IOException
 	 */
+	@SuppressWarnings("unchecked")
 	public static final <T extends NativeType<T>> RandomAccessibleInterval<T> open(
 			final N5Reader n5,
 			final String dataset) throws IOException {
 
-		return open(n5, dataset, (Consumer<IterableInterval<T>>)img -> {});
+		if (N5LabelMultisets.isLabelMultisetType(n5, dataset))
+			return (RandomAccessibleInterval<T>) N5LabelMultisets.openLabelMultiset(n5, dataset);
+		else
+			return open(n5, dataset, (Consumer<IterableInterval<T>>)img -> {});
 	}
 
 
@@ -412,17 +419,22 @@ public class N5Utils {
 	/**
 	 * Open an N5 dataset as a memory cached {@link LazyCellImg} using
 	 * {@link VolatileAccess}.
+	 * Supports all primitive types and {@link LabelMultisetType}.
 	 *
 	 * @param n5
 	 * @param dataset
 	 * @return
 	 * @throws IOException
 	 */
+	@SuppressWarnings("unchecked")
 	public static final <T extends NativeType<T>> RandomAccessibleInterval<T> openVolatile(
 			final N5Reader n5,
 			final String dataset) throws IOException {
 
-		return openVolatile(n5, dataset, (Consumer<IterableInterval<T>>)img -> {});
+		if (N5LabelMultisets.isLabelMultisetType(n5, dataset))
+			return (RandomAccessibleInterval<T>) N5LabelMultisets.openLabelMultiset(n5, dataset);
+		else
+			return openVolatile(n5, dataset, (Consumer<IterableInterval<T>>)img -> {});
 	}
 
 
@@ -851,14 +863,16 @@ public class N5Utils {
 				.maxCacheSize(100);
 
 		final DiskCachedCellImgFactory<T> factory = new DiskCachedCellImgFactory<T>(
-				forDataType(attributes.getDataType()),
+				type(attributes.getDataType()),
 				options);
 
 		return factory.create(dimensions, loader);
 	}
 
 	/**
-	 * Save a {@link RandomAccessibleInterval} as an N5 dataset.
+	 * Save a {@link RandomAccessibleInterval} into an N5 dataset at a given
+	 * offset. The offset is given in {@link DataBlock} grid coordinates and the
+	 * source is assumed to align with the {@link DataBlock} grid of the dataset.
 	 *
 	 * @param source
 	 * @param n5
@@ -874,10 +888,15 @@ public class N5Utils {
 			final DatasetAttributes attributes,
 			final long[] gridOffset) throws IOException {
 
-		source = Views.zeroMin(source);
-		final long[] dimensions = Intervals.dimensionsAsLongArray(source);
+		if (N5LabelMultisets.isLabelMultisetType(n5, dataset)) {
+			@SuppressWarnings("unchecked")
+			final RandomAccessibleInterval<LabelMultisetType> labelMultisetSource = (RandomAccessibleInterval<LabelMultisetType>) source;
+			N5LabelMultisets.saveLabelMultisetBlock(labelMultisetSource, n5, dataset, attributes, gridOffset);
+			return;
+		}
 
-		final int n = dimensions.length;
+		source = Views.zeroMin(source);
+		final int n = source.numDimensions();
 		final long[] max = Intervals.maxAsLongArray(source);
 		final long[] offset = new long[n];
 		final long[] gridPosition = new long[n];
@@ -914,7 +933,57 @@ public class N5Utils {
 	}
 
 	/**
-	 * Save a {@link RandomAccessibleInterval} as an N5 dataset.
+	 * Save a {@link RandomAccessibleInterval} into an N5 dataset.
+	 * The block offset is determined by the source position, and the
+	 * source is assumed to align with the {@link DataBlock} grid
+	 * of the dataset.
+	 *
+	 * @param source
+	 * @param n5
+	 * @param dataset
+	 * @param attributes
+	 * @throws IOException
+	 */
+	public static final <T extends NativeType<T>> void saveBlock(
+			final RandomAccessibleInterval<T> source,
+			final N5Writer n5,
+			final String dataset,
+			final DatasetAttributes attributes) throws IOException {
+
+		final int[] blockSize = attributes.getBlockSize();
+		final long[] gridOffset = new long[blockSize.length];
+		Arrays.setAll(gridOffset, d -> source.min(d) / blockSize[d]);
+		saveBlock(source, n5, dataset, attributes, gridOffset);
+	}
+
+	/**
+	 * Save a {@link RandomAccessibleInterval} into an N5 dataset.
+	 * The block offset is determined by the source position, and the
+	 * source is assumed to align with the {@link DataBlock} grid
+	 * of the dataset.
+	 *
+	 * @param source
+	 * @param n5
+	 * @param dataset
+	 * @throws IOException
+	 */
+	public static final <T extends NativeType<T>> void saveBlock(
+			final RandomAccessibleInterval<T> source,
+			final N5Writer n5,
+			final String dataset) throws IOException {
+
+		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
+		if (attributes != null) {
+			saveBlock(source, n5, dataset, attributes);
+		} else {
+			throw new IOException("Dataset " + dataset + " does not exist.");
+		}
+	}
+
+	/**
+	 * Save a {@link RandomAccessibleInterval} into an N5 dataset at a given
+	 * offset. The offset is given in {@link DataBlock} grid coordinates and the
+	 * source is assumed to align with the {@link DataBlock} grid of the dataset.
 	 *
 	 * @param source
 	 * @param n5
@@ -954,6 +1023,13 @@ public class N5Utils {
 			final String dataset,
 			final long[] gridOffset,
 			final ExecutorService exec) throws IOException, InterruptedException, ExecutionException {
+
+		if (N5LabelMultisets.isLabelMultisetType(n5, dataset)) {
+			@SuppressWarnings("unchecked")
+			final RandomAccessibleInterval<LabelMultisetType> labelMultisetSource = (RandomAccessibleInterval<LabelMultisetType>) source;
+			N5LabelMultisets.saveLabelMultisetBlock(labelMultisetSource, n5, dataset, gridOffset, exec);
+			return;
+		}
 
 		final RandomAccessibleInterval<T> zeroMinSource = Views.zeroMin(source);
 		final long[] dimensions = Intervals.dimensionsAsLongArray(zeroMinSource);
@@ -1040,9 +1116,7 @@ public class N5Utils {
 			final T defaultValue) throws IOException {
 
 		source = Views.zeroMin(source);
-		final long[] dimensions = Intervals.dimensionsAsLongArray(source);
-
-		final int n = dimensions.length;
+		final int n = source.numDimensions();
 		final long[] max = Intervals.maxAsLongArray(source);
 		final long[] offset = new long[n];
 		final long[] gridPosition = new long[n];
@@ -1077,6 +1151,60 @@ public class N5Utils {
 				else
 					offset[d] = 0;
 			}
+		}
+	}
+
+	/**
+	 * Save a {@link RandomAccessibleInterval} into an N5 dataset.
+	 * The block offset is determined by the source position, and the
+	 * source is assumed to align with the {@link DataBlock} grid
+	 * of the dataset. Only {@link DataBlock DataBlocks} that contain
+	 * values other than a given default value are stored.
+	 *
+	 * @param source
+	 * @param n5
+	 * @param dataset
+	 * @param attributes
+	 * @param defaultValue
+	 * @throws IOException
+	 */
+	public static final <T extends NativeType<T>> void saveNonEmptyBlock(
+			final RandomAccessibleInterval<T> source,
+			final N5Writer n5,
+			final String dataset,
+			final DatasetAttributes attributes,
+			final T defaultValue) throws IOException {
+
+		final int[] blockSize = attributes.getBlockSize();
+		final long[] gridOffset = new long[blockSize.length];
+		Arrays.setAll(gridOffset, d -> source.min(d) / blockSize[d]);
+		saveNonEmptyBlock(source, n5, dataset, attributes, gridOffset, defaultValue);
+	}
+
+	/**
+	 * Save a {@link RandomAccessibleInterval} into an N5 dataset.
+	 * The block offset is determined by the source position, and the
+	 * source is assumed to align with the {@link DataBlock} grid
+	 * of the dataset. Only {@link DataBlock DataBlocks} that contain
+	 * values other than a given default value are stored.
+	 *
+	 * @param source
+	 * @param n5
+	 * @param dataset
+	 * @param defaultValue
+	 * @throws IOException
+	 */
+	public static final <T extends NativeType<T>> void saveNonEmptyBlock(
+			final RandomAccessibleInterval<T> source,
+			final N5Writer n5,
+			final String dataset,
+			final T defaultValue) throws IOException {
+
+		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
+		if (attributes != null) {
+			saveNonEmptyBlock(source, n5, dataset, attributes, defaultValue);
+		} else {
+			throw new IOException("Dataset " + dataset + " does not exist.");
 		}
 	}
 
@@ -1125,6 +1253,13 @@ public class N5Utils {
 			final String dataset,
 			final int[] blockSize,
 			final Compression compression) throws IOException {
+
+		if (Util.getTypeFromInterval(source) instanceof LabelMultisetType) {
+			@SuppressWarnings("unchecked")
+			final RandomAccessibleInterval<LabelMultisetType> labelMultisetSource = (RandomAccessibleInterval<LabelMultisetType>) source;
+			N5LabelMultisets.saveLabelMultiset(labelMultisetSource, n5, dataset, blockSize, compression);
+			return;
+		}
 
 		source = Views.zeroMin(source);
 		final long[] dimensions = Intervals.dimensionsAsLongArray(source);
@@ -1184,6 +1319,13 @@ public class N5Utils {
 			final int[] blockSize,
 			final Compression compression,
 			final ExecutorService exec) throws IOException, InterruptedException, ExecutionException {
+
+		if (Util.getTypeFromInterval(source) instanceof LabelMultisetType) {
+			@SuppressWarnings("unchecked")
+			final RandomAccessibleInterval<LabelMultisetType> labelMultisetSource = (RandomAccessibleInterval<LabelMultisetType>) source;
+			N5LabelMultisets.saveLabelMultiset(labelMultisetSource, n5, dataset, blockSize, compression, exec);
+			return;
+		}
 
 		final RandomAccessibleInterval<T> zeroMinSource = Views.zeroMin(source);
 		final long[] dimensions = Intervals.dimensionsAsLongArray(zeroMinSource);
@@ -1245,40 +1387,5 @@ public class N5Utils {
 		}
 		for (final Future<?> f : futures)
 			f.get();
-	}
-
-	/**
-	 * Get the appropriate {@link NativeType} for {@link DataType}.
-	 *
-	 * @param dataType
-	 * @return
-	 */
-	@SuppressWarnings("unchecked")
-	public static <T extends NativeType<T>> T forDataType(final DataType dataType) {
-
-		switch (dataType) {
-		case INT8:
-			return (T)new ByteType();
-		case UINT8:
-			return (T)new UnsignedByteType();
-		case INT16:
-			return (T)new ShortType();
-		case UINT16:
-			return (T)new UnsignedShortType();
-		case INT32:
-			return (T)new IntType();
-		case UINT32:
-			return (T)new UnsignedIntType();
-		case INT64:
-			return (T)new LongType();
-		case UINT64:
-			return (T)new UnsignedLongType();
-		case FLOAT32:
-			return (T)new FloatType();
-		case FLOAT64:
-			return (T)new DoubleType();
-		default:
-			return null;
-		}
 	}
 }
