@@ -2,6 +2,7 @@ package org.janelia.saalfeldlab.n5.imglib2;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -319,6 +320,54 @@ public class N5LabelMultisets {
 
 	/**
 	 * Save a {@link RandomAccessibleInterval} of type {@link LabelMultisetType} into an existing N5 dataset.
+	 * The block offset is determined by the source position, and the
+	 * source is assumed to align with the {@link DataBlock} grid
+	 * of the dataset.
+	 *
+	 * @param source
+	 * @param n5
+	 * @param dataset
+	 * @param attributes
+	 * @throws IOException
+	 */
+	public static final void saveLabelMultisetBlock(
+			final RandomAccessibleInterval<LabelMultisetType> source,
+			final N5Writer n5,
+			final String dataset,
+			final DatasetAttributes attributes) throws IOException {
+
+		final int[] blockSize = attributes.getBlockSize();
+		final long[] gridOffset = new long[blockSize.length];
+		Arrays.setAll(gridOffset, d -> source.min(d) / blockSize[d]);
+		saveLabelMultisetBlock(source, n5, dataset, attributes, gridOffset);
+	}
+
+	/**
+	 * Save a {@link RandomAccessibleInterval} of type {@link LabelMultisetType} into an existing N5 dataset.
+	 * The block offset is determined by the source position, and the
+	 * source is assumed to align with the {@link DataBlock} grid
+	 * of the dataset.
+	 *
+	 * @param source
+	 * @param n5
+	 * @param dataset
+	 * @throws IOException
+	 */
+	public static final void saveLabelMultisetBlock(
+			final RandomAccessibleInterval<LabelMultisetType> source,
+			final N5Writer n5,
+			final String dataset) throws IOException {
+
+		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
+		if (attributes != null) {
+			saveLabelMultisetBlock(source, n5, dataset, attributes);
+		} else {
+			throw new IOException("Dataset " + dataset + " does not exist.");
+		}
+	}
+
+	/**
+	 * Save a {@link RandomAccessibleInterval} of type {@link LabelMultisetType} into an existing N5 dataset.
 	 *
 	 * @param source
 	 * @param n5
@@ -477,6 +526,83 @@ public class N5LabelMultisets {
 					offset[d] = 0;
 			}
 		}
+	}
+
+	/**
+	 * Save a {@link RandomAccessibleInterval} of type {@link LabelMultisetType} into an N5 dataset.
+	 * The block offset is determined by the source position, and the
+	 * source is assumed to align with the {@link DataBlock} grid
+	 * of the dataset.
+	 * Only {@link DataBlock DataBlocks} that contain labels other than
+	 * a given default label are stored.
+	 *
+	 * @param source
+	 * @param n5
+	 * @param dataset
+	 * @param attributes
+	 * @param defaultLabelId
+	 * @throws IOException
+	 */
+	public static final void saveLabelMultisetNonEmptyBlock(
+			final RandomAccessibleInterval<LabelMultisetType> source,
+			final N5Writer n5,
+			final String dataset,
+			final DatasetAttributes attributes,
+			final long defaultLabelId) throws IOException {
+
+		final int[] blockSize = attributes.getBlockSize();
+		final long[] gridOffset = new long[blockSize.length];
+		Arrays.setAll(gridOffset, d -> source.min(d) / blockSize[d]);
+		saveLabelMultisetNonEmptyBlock(source, n5, dataset, attributes, gridOffset, defaultLabelId);
+	}
+
+	/**
+	 * Save a {@link RandomAccessibleInterval} of type {@link LabelMultisetType} into an N5 dataset.
+	 * The block offset is determined by the source position, and the
+	 * source is assumed to align with the {@link DataBlock} grid
+	 * of the dataset.
+	 * Only {@link DataBlock DataBlocks} that contain labels other than
+	 * a given default label are stored.
+	 *
+	 * @param source
+	 * @param n5
+	 * @param dataset
+	 * @param defaultLabelId
+	 * @throws IOException
+	 */
+	public static final void saveLabelMultisetNonEmptyBlock(
+			final RandomAccessibleInterval<LabelMultisetType> source,
+			final N5Writer n5,
+			final String dataset,
+			final long defaultLabelId) throws IOException {
+
+		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
+		if (attributes != null) {
+			saveLabelMultisetNonEmptyBlock(source, n5, dataset, attributes, defaultLabelId);
+		} else {
+			throw new IOException("Dataset " + dataset + " does not exist.");
+		}
+	}
+
+	/**
+	 * Save a {@link RandomAccessibleInterval} of type {@link LabelMultisetType} into an N5 dataset.
+	 * The block offset is determined by the source position, and the
+	 * source is assumed to align with the {@link DataBlock} grid
+	 * of the dataset.
+	 * Only {@link DataBlock DataBlocks} that contain labels other than
+	 * {@link Label#BACKGROUND} are stored.
+	 *
+	 * @param source
+	 * @param n5
+	 * @param dataset
+	 * @throws IOException
+	 */
+	public static final void saveLabelMultisetNonEmptyBlock(
+			final RandomAccessibleInterval<LabelMultisetType> source,
+			final N5Writer n5,
+			final String dataset) throws IOException {
+
+		saveLabelMultisetNonEmptyBlock(source, n5, dataset, Label.BACKGROUND);
 	}
 
 	/**
