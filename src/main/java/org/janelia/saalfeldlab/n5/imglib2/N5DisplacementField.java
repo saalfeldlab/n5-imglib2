@@ -64,6 +64,10 @@ public class N5DisplacementField
 	public static final String FORWARD_ATTR = "dfield";
 	public static final String INVERSE_ATTR = "invdfield";
 
+	public static final String EXTEND_ZERO = "ext_zero";
+	public static final String EXTEND_MIRROR = "ext_mirror";
+	public static final String EXTEND_BORDER = "ext_border";
+
 
     /**
      * Saves forward and inverse deformation fields into the default n5 datasets.
@@ -459,6 +463,32 @@ public class N5DisplacementField
 			final InterpolatorFactory< T, RandomAccessible< T > > interpolator, 
 			final T defaultType ) throws Exception
 	{
+		return openCalibratedField( n5, dataset, interpolator, EXTEND_BORDER, defaultType );
+	}
+
+    /**
+     * Returns a deformation field in physical coordinates as a {@link
+     * RealRandomAccessible} from an n5 dataset.
+     *
+     * Internally, opens the given n5 dataset as a {@link
+     * RandomAccessibleInterval}, un-quantizes if necessary, uses
+     * the input {@link InterpolatorFactory} for interpolation, and
+     * transforms to physical coordinates using the pixel spacing stored
+     * in the "spacing" attribute, if present.
+     *
+     * @param n5 the n5 reader
+     * @param dataset the n5 dataset
+     * @param interpolator the type of interpolation 
+     * @param extensionType the type of out-of-bounds extension
+     * @param defaultType the type
+     * @return the deformation field as a RealRandomAccessible
+     */
+	public static < T extends NativeType< T > & RealType< T > > RealRandomAccessible< T > openCalibratedField(
+			final N5Reader n5, final String dataset,
+			final InterpolatorFactory< T, RandomAccessible< T > > interpolator, 
+			final String extensionType,
+			final T defaultType ) throws Exception
+	{
 		RandomAccessibleInterval< T > dfieldRai = openField( n5, dataset, defaultType );
 		RandomAccessibleInterval< T > dfieldRaiPerm = vectorAxisLast( dfieldRai );
 
@@ -466,8 +496,16 @@ public class N5DisplacementField
 		{
 			return null;
 		}
-
-		RealRandomAccessible< T > dfieldReal = Views.interpolate( Views.extendZero( dfieldRaiPerm ), interpolator );
+		RealRandomAccessible< T > dfieldReal = null;
+		if( extensionType.equals( EXTEND_MIRROR )){
+			dfieldReal = Views.interpolate( Views.extendMirrorDouble( dfieldRaiPerm ), interpolator );
+		}
+		else if( extensionType.equals( EXTEND_BORDER )){
+			dfieldReal = Views.interpolate( Views.extendBorder( dfieldRaiPerm ), interpolator );
+		}
+		else {
+			dfieldReal = Views.interpolate( Views.extendZero( dfieldRaiPerm ), interpolator );
+		}
 
 		final AffineGet pix2Phys = openPixelToPhysical( n5, dataset );
 		if ( pix2Phys != null )
