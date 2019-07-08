@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
@@ -13,7 +11,7 @@
 
 	<groupId>org.janelia.saalfeldlab</groupId>
 	<artifactId>n5-imglib2</artifactId>
-	<version>3.3.1-SNAPSHOT</version>
+	<version>3.3.1</version>
 
 	<name>N5 ImgLib2 Bindings</name>
 	<description>Open N5 datasets as ImgLib2 RandomAccessibles, and write ImgLib2 RandomAccessibles as/ into N5 datasets.</description>
@@ -40,7 +38,7 @@
 	<scm>
 		<connection>scm:git:git://github.com/saalfedllab/n5-imglib2</connection>
 		<developerConnection>scm:git:git@github.com:saalfeldlab/n5-imglib2</developerConnection>
-		<tag>HEAD</tag>
+		<tag>n5-imglib2-3.3.1</tag>
 		<url>https://github.com/saalfeldlab/n5-imglib2</url>
 	</scm>
 
