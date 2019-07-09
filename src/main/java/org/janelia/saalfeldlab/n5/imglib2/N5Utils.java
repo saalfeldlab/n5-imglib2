@@ -388,12 +388,12 @@ public class N5Utils {
 	 * @throws IOException
 	 */
 	@SuppressWarnings("unchecked")
-	public static final <T extends NativeType<T>> RandomAccessibleInterval<T> open(
+	public static final <T extends NativeType<T>> CachedCellImg<T, ?> open(
 			final N5Reader n5,
 			final String dataset) throws IOException {
 
 		if (N5LabelMultisets.isLabelMultisetType(n5, dataset))
-			return (RandomAccessibleInterval<T>) N5LabelMultisets.openLabelMultiset(n5, dataset);
+			return (CachedCellImg<T, ?>) N5LabelMultisets.openLabelMultiset(n5, dataset);
 		else
 			return open(n5, dataset, (Consumer<IterableInterval<T>>)img -> {});
 	}
@@ -408,7 +408,7 @@ public class N5Utils {
 	 * @return
 	 * @throws IOException
 	 */
-	public static final <T extends NativeType<T>> RandomAccessibleInterval openWithBoundedSoftRefCache(
+	public static final <T extends NativeType<T>> CachedCellImg<T, ?> openWithBoundedSoftRefCache(
 			final N5Reader n5,
 			final String dataset,
 			final int maxNumCacheEntries) throws IOException
@@ -427,12 +427,12 @@ public class N5Utils {
 	 * @throws IOException
 	 */
 	@SuppressWarnings("unchecked")
-	public static final <T extends NativeType<T>> RandomAccessibleInterval<T> openVolatile(
+	public static final <T extends NativeType<T>> CachedCellImg<T, ?> openVolatile(
 			final N5Reader n5,
 			final String dataset) throws IOException {
 
 		if (N5LabelMultisets.isLabelMultisetType(n5, dataset))
-			return (RandomAccessibleInterval<T>) N5LabelMultisets.openLabelMultiset(n5, dataset);
+			return (CachedCellImg<T, ?>) N5LabelMultisets.openLabelMultiset(n5, dataset);
 		else
 			return openVolatile(n5, dataset, (Consumer<IterableInterval<T>>)img -> {});
 	}
@@ -448,7 +448,7 @@ public class N5Utils {
 	 * @return
 	 * @throws IOException
 	 */
-	public static final <T extends NativeType<T>> RandomAccessibleInterval openVolatileWithBoundedSoftRefCache(
+	public static final <T extends NativeType<T>> CachedCellImg<T, ?> openVolatileWithBoundedSoftRefCache(
 			final N5Reader n5,
 			final String dataset,
 			final int maxNumCacheEntries) throws IOException
@@ -466,7 +466,7 @@ public class N5Utils {
 	 * @return
 	 * @throws IOException
 	 */
-	public static final <T extends NativeType<T>> RandomAccessibleInterval<T> openWithDiskCache(
+	public static final <T extends NativeType<T>> CachedCellImg<T, ?> openWithDiskCache(
 			final N5Reader n5,
 			final String dataset) throws IOException {
 
@@ -482,7 +482,7 @@ public class N5Utils {
 	 * @return
 	 * @throws IOException
 	 */
-	public static final <T extends NativeType<T>> RandomAccessibleInterval<T> open(
+	public static final <T extends NativeType<T>> CachedCellImg<T, ?> open(
 			final N5Reader n5,
 			final String dataset,
 			final T defaultValue) throws IOException {
@@ -500,7 +500,7 @@ public class N5Utils {
 	 * @return
 	 * @throws IOException
 	 */
-	public static final <T extends NativeType<T>> RandomAccessibleInterval<T> openWithBoundedSoftRefCache(
+	public static final <T extends NativeType<T>> CachedCellImg<T, ?> openWithBoundedSoftRefCache(
 			final N5Reader n5,
 			final String dataset,
 			final int maxNumCacheEntries,
@@ -519,7 +519,7 @@ public class N5Utils {
 	 * @return
 	 * @throws IOException
 	 */
-	public static final <T extends NativeType<T>> RandomAccessibleInterval<T> openVolatile(
+	public static final <T extends NativeType<T>> CachedCellImg<T, ?> openVolatile(
 			final N5Reader n5,
 			final String dataset,
 			final T defaultValue) throws IOException {
@@ -538,7 +538,7 @@ public class N5Utils {
 	 * @return
 	 * @throws IOException
 	 */
-	public static final <T extends NativeType<T>> RandomAccessibleInterval<T> openVolatileWithBoundedSoftRefCache(
+	public static final <T extends NativeType<T>> CachedCellImg<T, ?> openVolatileWithBoundedSoftRefCache(
 			final N5Reader n5,
 			final String dataset,
 			final int maxNumCacheEntries,
@@ -558,7 +558,7 @@ public class N5Utils {
 	 * @return
 	 * @throws IOException
 	 */
-	public static final <T extends NativeType<T>> RandomAccessibleInterval<T> openWithDiskCache(
+	public static final <T extends NativeType<T>> CachedCellImg<T, ?> openWithDiskCache(
 			final N5Reader n5,
 			final String dataset,
 			final T defaultValue) throws IOException {
@@ -576,7 +576,7 @@ public class N5Utils {
 	 * @throws IOException
 	 */
 	@SuppressWarnings({"unchecked", "rawtypes"})
-	public static final <T extends NativeType<T>> RandomAccessibleInterval<T> open(
+	public static final <T extends NativeType<T>> CachedCellImg<T, ?> open(
 			final N5Reader n5,
 			final String dataset,
 			final Consumer<IterableInterval<T>> blockNotFoundHandler) throws IOException {
@@ -593,7 +593,7 @@ public class N5Utils {
 	 * @throws IOException
 	 */
 	@SuppressWarnings({"unchecked", "rawtypes"})
-	public static final <T extends NativeType<T>> RandomAccessibleInterval<T> open(
+	public static final <T extends NativeType<T>> CachedCellImg<T, ?> open(
 			final N5Reader n5,
 			final String dataset,
 			final Consumer<IterableInterval<T>> blockNotFoundHandler,
@@ -612,7 +612,7 @@ public class N5Utils {
 	 * @throws IOException
 	 */
 	@SuppressWarnings({"unchecked", "rawtypes"})
-	public static final <T extends NativeType<T>> RandomAccessibleInterval<T> openWithBoundedSoftRefCache(
+	public static final <T extends NativeType<T>> CachedCellImg<T, ?> openWithBoundedSoftRefCache(
 			final N5Reader n5,
 			final String dataset,
 			final Consumer<IterableInterval<T>> blockNotFoundHandler,
@@ -631,7 +631,7 @@ public class N5Utils {
 	 * @throws IOException
 	 */
 	@SuppressWarnings({"unchecked", "rawtypes"})
-	public static final <T extends NativeType<T>> RandomAccessibleInterval<T> openWithBoundedSoftRefCache(
+	public static final <T extends NativeType<T>> CachedCellImg<T, ?> openWithBoundedSoftRefCache(
 			final N5Reader n5,
 			final String dataset,
 			final Consumer<IterableInterval<T>> blockNotFoundHandler,
@@ -651,7 +651,7 @@ public class N5Utils {
 	 * @throws IOException
 	 */
 	@SuppressWarnings({"unchecked", "rawtypes"})
-	public static final <T extends NativeType<T>> RandomAccessibleInterval<T> open(
+	public static final <T extends NativeType<T>> CachedCellImg<T, ?> open(
 			final N5Reader n5,
 			final String dataset,
 			final Consumer<IterableInterval<T>> blockNotFoundHandler,
@@ -708,7 +708,7 @@ public class N5Utils {
 	 * @throws IOException
 	 */
 	@SuppressWarnings({"unchecked", "rawtypes"})
-	public static final <T extends NativeType<T>> RandomAccessibleInterval<T> openVolatile(
+	public static final <T extends NativeType<T>> CachedCellImg<T, ?> openVolatile(
 			final N5Reader n5,
 			final String dataset,
 			final Consumer<IterableInterval<T>> blockNotFoundHandler) throws IOException {
@@ -726,7 +726,7 @@ public class N5Utils {
 	 * @return
 	 * @throws IOException
 	 */
-	public static <T extends NativeType<T>> RandomAccessibleInterval<T> openVolatileWithBoundedSoftRefCache(
+	public static <T extends NativeType<T>> CachedCellImg<T, ?> openVolatileWithBoundedSoftRefCache(
 			final N5Reader n5,
 			final String dataset,
 			final Consumer<IterableInterval<T>> blockNotFoundHandler,
@@ -845,7 +845,7 @@ public class N5Utils {
 	 * @return
 	 * @throws IOException
 	 */
-	public static final <T extends NativeType<T>> RandomAccessibleInterval<T> openWithDiskCache(
+	public static final <T extends NativeType<T>> CachedCellImg<T, ?> openWithDiskCache(
 			final N5Reader n5,
 			final String dataset,
 			final Consumer<IterableInterval<T>> blockNotFoundHandler) throws IOException {
