@@ -59,7 +59,7 @@ public class N5LabelMultisets {
 	 * @return
 	 * @throws IOException
 	 */
-	public static final RandomAccessibleInterval<LabelMultisetType> openLabelMultiset(
+	public static final CachedCellImg<LabelMultisetType, VolatileLabelMultisetArray> openLabelMultiset(
 			final N5Reader n5,
 			final String dataset) throws IOException {
 
@@ -75,7 +75,7 @@ public class N5LabelMultisets {
 	 * @return
 	 * @throws IOException
 	 */
-	public static final RandomAccessibleInterval<LabelMultisetType> openLabelMultiset(
+	public static final CachedCellImg<LabelMultisetType, VolatileLabelMultisetArray> openLabelMultiset(
 			final N5Reader n5,
 			final String dataset,
 			final long defaultLabelId) throws IOException {
@@ -92,7 +92,7 @@ public class N5LabelMultisets {
 	 * @return
 	 * @throws IOException
 	 */
-	public static final RandomAccessibleInterval<LabelMultisetType> openLabelMultiset(
+	public static final CachedCellImg<LabelMultisetType, VolatileLabelMultisetArray> openLabelMultiset(
 			final N5Reader n5,
 			final String dataset,
 			final BiFunction<CellGrid, long[], byte[]> nullReplacement) throws IOException {
