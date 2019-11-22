@@ -27,6 +27,7 @@
  */
 package org.janelia.saalfeldlab.n5.imglib2;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -62,13 +63,14 @@ import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.img.basictypeaccess.ShortAccess;
 import net.imglib2.img.basictypeaccess.array.ShortArray;
 import net.imglib2.img.basictypeaccess.volatiles.VolatileAccess;
+import net.imglib2.type.numeric.integer.IntType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.util.Pair;
 import net.imglib2.util.Util;
 import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
 
-public class N5UtilsTest {
+public class N5Test {
 
 	static private String testDirPath = System.getProperty("user.home") + "/tmp/n5-imglib2-test";
 
@@ -110,7 +112,7 @@ public class N5UtilsTest {
 		for (int i = 0; i < excessData.length; ++i)
 			excessData[i] = (short)rnd.nextInt();
 
-		n5.createDataset(EMPTY_DATASET, dimensions, blockSize, N5Utils.dataType(new UnsignedShortType()), new GzipCompression());
+		n5.createDataset(EMPTY_DATASET, dimensions, blockSize, N5.dataType(new UnsignedShortType()), new GzipCompression());
 	}
 
 	@AfterClass
@@ -130,15 +132,15 @@ public class N5UtilsTest {
 
 		final ArrayImg<UnsignedShortType, ?> img = ArrayImgs.unsignedShorts(data, dimensions);
 		try {
-			N5Utils.save(img, n5, datasetName, blockSize, new RawCompression());
-			RandomAccessibleInterval<UnsignedShortType> loaded = N5Utils.open(n5, datasetName);
+			N5.save(img, n5, datasetName, blockSize, new RawCompression());
+			RandomAccessibleInterval<UnsignedShortType> loaded = N5.open(n5, datasetName);
 			for (final Pair<UnsignedShortType, UnsignedShortType> pair : Views
 					.flatIterable(Views.interval(Views.pair(img, loaded), img)))
 				Assert.assertEquals(pair.getA().get(), pair.getB().get());
 
 			final ExecutorService exec = Executors.newFixedThreadPool(4);
-			N5Utils.save(img, n5, datasetName, blockSize, new RawCompression(), exec);
-			loaded = N5Utils.open(n5, datasetName);
+			N5.save(img, n5, datasetName, blockSize, new RawCompression(), exec);
+			loaded = N5.open(n5, datasetName);
 			for (final Pair<UnsignedShortType, UnsignedShortType> pair : Views
 					.flatIterable(Views.interval(Views.pair(img, loaded), img)))
 				Assert.assertEquals(pair.getA().get(), pair.getB().get());
@@ -150,15 +152,16 @@ public class N5UtilsTest {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testOpenWithBoundedSoftRefCache() throws IOException {
 
 		// existing dataset
 		{
 			final ArrayImg<UnsignedShortType, ?> img = ArrayImgs.unsignedShorts(data, dimensions);
-			N5Utils.save(img, n5, datasetName, blockSize, new RawCompression());
+			N5.save(img, n5, datasetName, blockSize, new RawCompression());
 			final RandomAccessibleInterval<UnsignedShortType> loaded =
-					N5Utils.openWithBoundedSoftRefCache(n5, datasetName, MAX_NUM_CACHE_ENTRIES);
+					N5.openWithBoundedSoftRefCache(n5, datasetName, MAX_NUM_CACHE_ENTRIES);
 			for (final Pair<UnsignedShortType, UnsignedShortType> pair : Views
 					.flatIterable(Views.interval(Views.pair(img, loaded), img)))
 				Assert.assertEquals(pair.getA().get(), pair.getB().get());
@@ -168,21 +171,22 @@ public class N5UtilsTest {
 		// empty dataset with default value
 		{
 			final RandomAccessibleInterval<UnsignedShortType> loaded =
-					N5Utils.openWithBoundedSoftRefCache(n5, EMPTY_DATASET, MAX_NUM_CACHE_ENTRIES, new UnsignedShortType(EMPTY_BLOCK_VALUE));
+					N5.openWithBoundedSoftRefCache(n5, EMPTY_DATASET, MAX_NUM_CACHE_ENTRIES, new UnsignedShortType(EMPTY_BLOCK_VALUE));
 			Views.iterable(loaded).forEach(val -> Assert.assertEquals(EMPTY_BLOCK_VALUE, val.get()));
 			MatcherAssert.assertThat(((CachedCellImg<UnsignedShortType, ?>)loaded).getAccessType(), CoreMatchers.instanceOf(ShortAccess.class));
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testVolatileOpenWithBoundedSoftRefCache() throws IOException {
 
 		// existing dataset
 		{
 			final ArrayImg<UnsignedShortType, ?> img = ArrayImgs.unsignedShorts(data, dimensions);
-			N5Utils.save(img, n5, datasetName, blockSize, new RawCompression());
+			N5.save(img, n5, datasetName, blockSize, new RawCompression());
 			final RandomAccessibleInterval<UnsignedShortType> loaded =
-					N5Utils.openVolatileWithBoundedSoftRefCache(n5, datasetName, MAX_NUM_CACHE_ENTRIES);
+					N5.openVolatileWithBoundedSoftRefCache(n5, datasetName, MAX_NUM_CACHE_ENTRIES);
 			for (final Pair<UnsignedShortType, UnsignedShortType> pair : Views
 					.flatIterable(Views.interval(Views.pair(img, loaded), img)))
 				Assert.assertEquals(pair.getA().get(), pair.getB().get());
@@ -194,7 +198,7 @@ public class N5UtilsTest {
 		// empty dataset with default value
 		{
 			final RandomAccessibleInterval<UnsignedShortType> loaded =
-					N5Utils.openVolatileWithBoundedSoftRefCache(n5, EMPTY_DATASET, MAX_NUM_CACHE_ENTRIES, new UnsignedShortType(EMPTY_BLOCK_VALUE));
+					N5.openVolatileWithBoundedSoftRefCache(n5, EMPTY_DATASET, MAX_NUM_CACHE_ENTRIES, new UnsignedShortType(EMPTY_BLOCK_VALUE));
 			Views.iterable(loaded).forEach(val -> Assert.assertEquals(EMPTY_BLOCK_VALUE, val.get()));
 			Assert.assertEquals(UnsignedShortType.class, Util.getTypeFromInterval(loaded).getClass());
 			MatcherAssert.assertThat(((CachedCellImg<UnsignedShortType, ?>)loaded).getAccessType(), CoreMatchers.instanceOf(VolatileAccess.class));
@@ -224,7 +228,7 @@ public class N5UtilsTest {
 		final ShortArrayDataBlock block001 = new ShortArrayDataBlock(blockSize001, new long[]{0, 0, 1}, fillData(blockSize001));
 		n5.writeBlock(datasetName, datasetAttributes, block001);
 
-		final RandomAccessibleInterval<UnsignedShortType> img = N5Utils.open(n5, datasetName);
+		final RandomAccessibleInterval<UnsignedShortType> img = N5.open(n5, datasetName);
 
 		final IntervalView<UnsignedShortType> interval000 = Views.interval(
 				img,
@@ -254,5 +258,64 @@ public class N5UtilsTest {
 		final Cursor<UnsignedShortType> d = interval001.cursor();
 		while (c.hasNext())
 			assertTrue(c.next().valueEquals(d.next()));
+	}
+
+	@Test
+	public void testAxes() throws IOException {
+
+		final double[][] doubleVectors = new double[][] {
+			{5, 6},
+			{5, 6, 7},
+			{5, 6, 7, 8}
+		};
+		final long[][] longVectors = new long[][] {
+			{5, 6},
+			{5, 6, 7},
+			{5, 6, 7, 8}
+		};
+		final String[][] stringVectors = new String[][] {
+			{"x", "y"},
+			{"z", "y", "x"},
+			{"y", "t", "z", "x"}
+		};
+
+		final int[][] axes = new int[][] {
+			{0, 1},
+			{2, 1, 0},
+			{1, 3, 2, 0}
+		};
+		final int[][] arrays = new int[][] {
+				{-1, 0, 1, -1},
+				{-1, 2, 1, -1, 0, -1, -1, -1},
+				{-1, 1, 3, -1, 2, -1, -1, -1, 0, -1, -1, -1, -1, -1, -1, -1}
+		};
+
+		for (int i = 0; i < axes.length; ++i) {
+
+			final String axesName = "axes-test-" + i;
+			N5.setAxes(n5, axesName, axes[i]);
+
+			/* array */
+			final RandomAccessibleInterval<IntType> axesImg = N5.open(n5, N5.AXES_PREFIX + axesName);
+			int d = 0;
+			for (final IntType t : Views.flatIterable(axesImg)) {
+				if (t.get() != arrays[i][d])
+					throw new AssertionError("values not equal: expected " + arrays[i][d] + ", actual " + t.get());
+				++d;
+			}
+
+			/* get the axes permutation */
+			final int[] axes_test = N5.getAxes(n5, axesName);
+			assertArrayEquals(axes[i], axes_test);
+
+			/* write a vector */
+			n5.createGroup("vector-test");
+			N5.setVector(doubleVectors[i], n5, "vector-test", axesName + "-double", axes[i]);
+			N5.setVector(doubleVectors[i], n5, "vector-test", axesName + "-long", axes[i]);
+			N5.setVector(stringVectors[i], n5, "vector-test", axesName + "-string", axes[i]);
+			assertArrayEquals(doubleVectors[i], N5.getDoubleVector(n5, "vector-test", axesName + "-double", axes[i]), 0.01);
+			assertArrayEquals(longVectors[i], N5.getLongVector(n5, "vector-test", axesName + "-long", axes[i]));
+			assertArrayEquals(stringVectors[i], N5.getVector(n5, "vector-test", axesName + "-string", axes[i], String.class));
+		}
 	}
 }
