@@ -268,7 +268,27 @@ public class N5Test {
 			{5, 6, 7},
 			{5, 6, 7, 8}
 		};
+		final float[][] floatVectors = new float[][] {
+			{5, 6},
+			{5, 6, 7},
+			{5, 6, 7, 8}
+		};
 		final long[][] longVectors = new long[][] {
+			{5, 6},
+			{5, 6, 7},
+			{5, 6, 7, 8}
+		};
+		final int[][] intVectors = new int[][] {
+			{5, 6},
+			{5, 6, 7},
+			{5, 6, 7, 8}
+		};
+		final short[][] shortVectors = new short[][] {
+			{5, 6},
+			{5, 6, 7},
+			{5, 6, 7, 8}
+		};
+		final byte[][] byteVectors = new byte[][] {
 			{5, 6},
 			{5, 6, 7},
 			{5, 6, 7, 8}
@@ -310,12 +330,22 @@ public class N5Test {
 
 			/* write a vector */
 			n5.createGroup("vector-test");
+
 			N5.setVector(doubleVectors[i], n5, "vector-test", axesName + "-double", axes[i]);
-			N5.setVector(doubleVectors[i], n5, "vector-test", axesName + "-long", axes[i]);
+			N5.setVector(floatVectors[i], n5, "vector-test", axesName + "-float", axes[i]);
+			N5.setVector(longVectors[i], n5, "vector-test", axesName + "-long", axes[i]);
+			N5.setVector(intVectors[i], n5, "vector-test", axesName + "-int", axes[i]);
+			N5.setVector(shortVectors[i], n5, "vector-test", axesName + "-short", axes[i]);
+			N5.setVector(byteVectors[i], n5, "vector-test", axesName + "-byte", axes[i]);
 			N5.setVector(stringVectors[i], n5, "vector-test", axesName + "-string", axes[i]);
+
 			assertArrayEquals(doubleVectors[i], N5.getDoubleVector(n5, "vector-test", axesName + "-double", axes[i]), 0.01);
+			assertArrayEquals(floatVectors[i], N5.getFloatVector(n5, "vector-test", axesName + "-float", axes[i]), 0.01f);
 			assertArrayEquals(longVectors[i], N5.getLongVector(n5, "vector-test", axesName + "-long", axes[i]));
-			assertArrayEquals(stringVectors[i], N5.getVector(n5, "vector-test", axesName + "-string", axes[i], String.class));
+			assertArrayEquals(intVectors[i], N5.getIntVector(n5, "vector-test", axesName + "-int", axes[i]));
+			assertArrayEquals(shortVectors[i], N5.getShortVector(n5, "vector-test", axesName + "-short", axes[i]));
+			assertArrayEquals(byteVectors[i], N5.getByteVector(n5, "vector-test", axesName + "-byte", axes[i]));
+			assertArrayEquals(stringVectors[i], N5.getVector(n5, "vector-test", axesName + "-string", String.class, axes[i]));
 		}
 	}
 }

@@ -1398,7 +1398,33 @@ public class N5 {
 			f.get();
 	}
 
-	public static final void setAxes(final N5Writer n5, final String axesName, final int[] axes) throws IOException {
+	/**
+	 * Create an axes index lookup.
+	 *
+	 * Examples:
+	 *
+	 * <p>
+	 * <code>setAxes(n5, "bigcat3d", 2, 1, 0)</code>
+	 *
+	 * creates an axes index lookup for C-order 3D vectors.
+	 * </p>
+	 * <p>
+	 * <code>setAxes(n5, "imglib4d", 0, 1, 2, 3)</code>
+	 *
+	 * creates an axes index lookup for F-order 4D vectors.
+	 * </p>
+	 *
+	 * @param n5 writer
+	 * @param axesName name of the axes index lookup
+	 * @param axes axes index lookup
+	 * @throws IOException
+	 */
+	public static final void setAxes(final N5Writer n5, final String axesName, final int... axes) throws IOException {
+
+		if (axes == null) {
+			removeAxes(n5, axesName);
+			return;
+		}
 
 		final int n = axes.length;
 		final long[] dimensions = new long[n];
@@ -1420,6 +1446,28 @@ public class N5 {
 		save(axesLookup, n5, AXES_PREFIX + axesName, blockSize, new RawCompression());
 	}
 
+
+	/**
+	 * Remove an axes index lookup.
+	 *
+	 * @param n5 writer
+	 * @param axesName name of the axes index lookup
+	 * @throws IOException
+	 */
+	public static final void removeAxes(final N5Writer n5, final String axesName) throws IOException {
+
+		n5.remove(AXES_PREFIX + axesName);
+	}
+
+
+	/**
+	 * Read an axes index lookup.
+	 *
+	 * @param n5 reader
+	 * @param axesName name of the axes index lookup
+	 * @return axes index lookup
+	 * @throws IOException
+	 */
 	public static final int[] getAxes(final N5Reader n5, final String axesName) throws IOException {
 
 		final RandomAccessibleInterval<IntType> axesLookup = open(n5, AXES_PREFIX + axesName);
@@ -1437,11 +1485,37 @@ public class N5 {
 		return axes;
 	}
 
+
+	/**
+	 * Read a double vector attribute and permute the axes as specified by an
+	 * axes index lookup.
+	 *
+	 * Examples:
+	 * <p>
+	 * <code>getDoubleVector(n5, "/volumes/raw", "resolution", 2, 1, 0)</code>
+	 *
+	 * reads a 3D vector that is stored in C-order as `[3.3, 2.2, 1.1]` as
+	 * `[1.1, 2.2, 3.3]`.
+	 * </p>
+	 * <p>
+	 * <code>getDoubleVector(n5, "/image", "offset", 0, 1)</code>
+	 *
+	 * reads a 2D vector that is stored in F-order as `[1.1, 2.2]` as
+	 * `[1.1, 2.2]`.
+	 * </p>
+	 *
+	 * @param n5 reader
+	 * @param groupName
+	 * @param key
+	 * @param axes axes index lookup
+	 * @return
+	 * @throws IOException
+	 */
 	public static final double[] getDoubleVector(
 			  final N5Reader n5,
 			  final String groupName,
 			  final String key,
-			  final int[] axes) throws IOException {
+			  final int... axes) throws IOException {
 
 		final double[] vector = n5.getAttribute(groupName, key, double[].class);
 		final double[] copy = new double[vector.length];
@@ -1450,25 +1524,76 @@ public class N5 {
 		return copy;
 	}
 
-	public static final void setVector(
-			  final double[] vector,
-			  final N5Writer n5,
+
+	/**
+	 * Read a float vector attribute and permute the axes as specified by an
+	 * axes index lookup.
+	 *
+	 * Examples:
+	 * <p>
+	 * <code>getFloatVector(n5, "/volumes/raw", "resolution", 2, 1, 0)</code>
+	 *
+	 * reads a 3D vector that is stored in C-order as `[3.3, 2.2, 1.1]` as
+	 * `[1.1, 2.2, 3.3]`.
+	 * </p>
+	 * <p>
+	 * <code>getFloatVector(n5, "/image", "offset", 0, 1)</code>
+	 *
+	 * reads a 2D vector that is stored in F-order as `[1.1, 2.2]` as
+	 * `[1.1, 2.2]`.
+	 * </p>
+	 *
+	 * @param n5 reader
+	 * @param groupName
+	 * @param key
+	 * @param axes axes index lookup
+	 * @return
+	 * @throws IOException
+	 */
+	public static final float[] getFloatVector(
+			  final N5Reader n5,
 			  final String groupName,
 			  final String key,
-			  final int[] axes) throws IOException {
+			  final int... axes) throws IOException {
 
-		final double[] copy = new double[vector.length];
+		final float[] vector = n5.getAttribute(groupName, key, float[].class);
+		final float[] copy = new float[vector.length];
 		for (int d = 0; d < axes.length; ++d)
-			copy[axes[d]] = vector[d];
-
-		n5.setAttribute(groupName, key, copy);
+			copy[d] = vector[axes[d]];
+		return copy;
 	}
 
+
+	/**
+	 * Read an long vector attribute and permute the axes as specified by an
+	 * axes index lookup.
+	 *
+	 * Examples:
+	 * <p>
+	 * <code>getLongVector(n5, "/volumes/raw", "resolution", 2, 1, 0)</code>
+	 *
+	 * reads a 3D vector that is stored in C-order as `[30, 20, 10]` as
+	 * `[10, 20, 30]`.
+	 * </p>
+	 * <p>
+	 * <code>getLongVector(n5, "/image", "offset", 0, 1)</code>
+	 *
+	 * reads a 2D vector that is stored in F-order as `[10, 20]` as
+	 * `[10, 20]`.
+	 * </p>
+	 *
+	 * @param n5 reader
+	 * @param groupName
+	 * @param key
+	 * @param axes axes index lookup
+	 * @return
+	 * @throws IOException
+	 */
 	public static final long[] getLongVector(
 			  final N5Reader n5,
 			  final String groupName,
 			  final String key,
-			  final int[] axes) throws IOException {
+			  final int... axes) throws IOException {
 
 		final long[] vector = n5.getAttribute(groupName, key, long[].class);
 		final long[] copy = new long[vector.length];
@@ -1477,12 +1602,143 @@ public class N5 {
 		return copy;
 	}
 
+
+	/**
+	 * Read an int vector attribute and permute the axes as specified by an
+	 * axes index lookup.
+	 *
+	 * Examples:
+	 * <p>
+	 * <code>getIntVector(n5, "/volumes/raw", "offset", 2, 1, 0)</code>
+	 *
+	 * reads a 3D vector that is stored in C-order as `[30, 20, 10]` as
+	 * `[10, 20, 30]`.
+	 * </p>
+	 * <p>
+	 * <code>getIntVector(n5, "/image", "offset", 0, 1)</code>
+	 *
+	 * reads a 2D vector that is stored in F-order as `[10, 20]` as
+	 * `[10, 20]`.
+	 * </p>
+	 *
+	 * @param n5 reader
+	 * @param groupName
+	 * @param key
+	 * @param axes axes index lookup
+	 * @return
+	 * @throws IOException
+	 */
+	public static final int[] getIntVector(
+			  final N5Reader n5,
+			  final String groupName,
+			  final String key,
+			  final int... axes) throws IOException {
+
+		final int[] vector = n5.getAttribute(groupName, key, int[].class);
+		final int[] copy = new int[vector.length];
+		for (int d = 0; d < axes.length; ++d)
+			copy[d] = vector[axes[d]];
+		return copy;
+	}
+
+	/**
+	 * Read a short vector attribute and permute the axes as specified by an
+	 * axes index lookup.
+	 *
+	 * Examples:
+	 * <p>
+	 * <code>getShortVector(n5, "/volumes/labels", "background", 2, 1, 0)</code>
+	 *
+	 * reads a 3D vector that is stored in BGR-order as `[30, 20, 10]` as
+	 * RGB-ordered `[10, 20, 30]`.
+	 * </p>
+	 *
+	 * @param n5 reader
+	 * @param groupName
+	 * @param key
+	 * @param axes axes index lookup
+	 * @return
+	 * @throws IOException
+	 */
+	public static final short[] getShortVector(
+			  final N5Reader n5,
+			  final String groupName,
+			  final String key,
+			  final int... axes) throws IOException {
+
+		final short[] vector = n5.getAttribute(groupName, key, short[].class);
+		final short[] copy = new short[vector.length];
+		for (int d = 0; d < axes.length; ++d)
+			copy[d] = vector[axes[d]];
+		return copy;
+	}
+
+
+	/**
+	 * Read a byte vector attribute and permute the axes as specified by an
+	 * axes index lookup.
+	 *
+	 * Examples:
+	 * <p>
+	 * <code>getByteVector(n5, "/volumes/labels", "background", 2, 1, 0)</code>
+	 *
+	 * reads a 3D vector that is stored in BGR-order as `[30, 20, 10]` as
+	 * RGB-ordered `[10, 20, 30]`.
+	 * </p>
+	 *
+	 * @param n5 reader
+	 * @param groupName
+	 * @param key
+	 * @param axes axes index lookup
+	 * @return
+	 * @throws IOException
+	 */
+	public static final byte[] getByteVector(
+			  final N5Reader n5,
+			  final String groupName,
+			  final String key,
+			  final int... axes) throws IOException {
+
+		final byte[] vector = n5.getAttribute(groupName, key, byte[].class);
+		final byte[] copy = new byte[vector.length];
+		for (int d = 0; d < axes.length; ++d)
+			copy[d] = vector[axes[d]];
+		return copy;
+	}
+
+
+	/**
+	 * Read a vector of <code>T</code> attribute and permute the axes as
+	 * specified by an axes index lookup.
+	 *
+	 * Examples:
+	 * <p>
+	 * <code>getVector(n5, "/volumes/raw", "axesNames", 2, 1, 0)</code>
+	 *
+	 * reads a 3D vector that is stored in C-order as `["z", "y", "x"]` as
+	 * `["x", "y", "z"]`.
+	 * </p>
+	 * <p>
+	 * <code>getVector(n5, "/image", "axesNames", 0, 1)</code>
+	 *
+	 * reads a 2D vector that is stored in F-order as `["x", "y"]` as
+	 * `["x", "y"]`.
+	 * </p>
+	 *
+	 * @param T scalar type
+	 * @param n5 reader
+	 * @param groupName
+	 * @param key
+	 * @param axes axes index lookup
+	 * @return
+	 * @throws IOException
+	 */
 	public static final <T> T[] getVector(
 			  final N5Reader n5,
 			  final String groupName,
 			  final String key,
-			  final int[] axes,
-			  final Class<T> clazz) throws IOException {
+			  final Class<T> clazz,
+			  final int... axes) throws IOException {
 
 		@SuppressWarnings("unchecked")
 		final T[] vector = (T[])n5.getAttribute(groupName, key, Object[].class);
@@ -1492,12 +1748,36 @@ public class N5 {
 		return copy;
 	}
 
+
+	/**
+	 * Write a double vector attribute with its axes permuted as specified by
+	 * an axes index lookup.
+	 *
+	 * Examples:
+	 * <p>
+	 * <code>setVector(new double[]{1.1, 2.2, 3.3}, n5, "/volumes/raw", "resolution", 2, 1, 0)</code>
+	 *
+	 * stores a 3D vector `[1.1, 2.2, 3.3]` in C-order as `[3.3, 2.2, 1.1]`.
+	 * </p>
+	 * <p>
+	 * <code>setVector(new double[]{1.1, 2.2}, n5, "/image", "offset", 0, 1)</code>
+	 *
+	 * stores a 2D vector `[1.1, 2.2]` in F-order as `[1.1, 2.2]`.
+	 * </p>
+	 *
+	 * @param vector
+	 * @param n5
+	 * @param groupName
+	 * @param key
+	 * @param axes
+	 * @throws IOException
+	 */
 	public static final void setVector(
-			  final long[] vector,
+			  final double[] vector,
 			  final N5Writer n5,
 			  final String groupName,
 			  final String key,
-			  final int[] axes) throws IOException {
+			  final int... axes) throws IOException {
 
 		final double[] copy = new double[vector.length];
 		for (int d = 0; d < axes.length; ++d)
@@ -1506,12 +1786,216 @@ public class N5 {
 		n5.setAttribute(groupName, key, copy);
 	}
 
+
+	/**
+	 * Write a float vector attribute with its axes permuted as specified by
+	 * an axes index lookup.
+	 *
+	 * Examples:
+	 * <p>
+	 * <code>setVector(new float[]{1.1f, 2.2f, 3.3f}, n5, "/volumes/raw", "resolution", 2, 1, 0)</code>
+	 *
+	 * stores a 3D vector `[1.1, 2.2, 3.3]` in C-order as `[3.3, 2.2, 1.1]`.
+	 * </p>
+	 * <p>
+	 * <code>setVector(new float[]{1.1f, 2.2f}, n5, "/image", "offset", 0, 1)</code>
+	 *
+	 * stores a 2D vector `[1.1, 2.2]` in F-order as `[1.1, 2.2]`.
+	 * </p>
+	 *
+	 * @param vector
+	 * @param n5
+	 * @param groupName
+	 * @param key
+	 * @param axes
+	 * @throws IOException
+	 */
+	public static final void setVector(
+			  final float[] vector,
+			  final N5Writer n5,
+			  final String groupName,
+			  final String key,
+			  final int... axes) throws IOException {
+
+		final float[] copy = new float[vector.length];
+		for (int d = 0; d < axes.length; ++d)
+			copy[axes[d]] = vector[d];
+
+		n5.setAttribute(groupName, key, copy);
+	}
+
+
+	/**
+	 * Write a long vector attribute with its axes permuted as specified by
+	 * an axes index lookup.
+	 *
+	 * Examples:
+	 * <p>
+	 * <code>setVector(new long[]{10, 20, 30}, n5, "/volumes/raw", "offset", 2, 1, 0)</code>
+	 *
+	 * stores a 3D vector `[10, 20, 30]` in C-order as `[30, 20, 10]`.
+	 * </p>
+	 * <p>
+	 * <code>setVector(new long[]{10, 20}, n5, "/image", "offset", 0, 1)</code>
+	 *
+	 * stores a 2D vector `[10, 20]` in F-order as `[10, 20]`.
+	 * </p>
+	 *
+	 * @param vector
+	 * @param n5
+	 * @param groupName
+	 * @param key
+	 * @param axes
+	 * @throws IOException
+	 */
+	public static final void setVector(
+			  final long[] vector,
+			  final N5Writer n5,
+			  final String groupName,
+			  final String key,
+			  final int... axes) throws IOException {
+
+		final long[] copy = new long[vector.length];
+		for (int d = 0; d < axes.length; ++d)
+			copy[axes[d]] = vector[d];
+
+		n5.setAttribute(groupName, key, copy);
+	}
+
+
+	/**
+	 * Write an int vector attribute with its axes permuted as specified by
+	 * an axes index lookup.
+	 *
+	 * Examples:
+	 * <p>
+	 * <code>setVector(new int[]{10, 20, 30}, n5, "/volumes/raw", "offset", 2, 1, 0)</code>
+	 *
+	 * stores a 3D vector `[10, 20, 30]` in C-order as `[30, 20, 10]`.
+	 * </p>
+	 * <p>
+	 * <code>setVector(new int[]{10, 20}, n5, "/image", "offset", 0, 1)</code>
+	 *
+	 * stores a 2D vector `[10, 20]` in F-order as `[10, 20]`.
+	 * </p>
+	 *
+	 * @param vector
+	 * @param n5
+	 * @param groupName
+	 * @param key
+	 * @param axes
+	 * @throws IOException
+	 */
+	public static final void setVector(
+			  final int[] vector,
+			  final N5Writer n5,
+			  final String groupName,
+			  final String key,
+			  final int... axes) throws IOException {
+
+		final int[] copy = new int[vector.length];
+		for (int d = 0; d < axes.length; ++d)
+			copy[axes[d]] = vector[d];
+
+		n5.setAttribute(groupName, key, copy);
+	}
+
+
+	/**
+	 * Write a short vector attribute with its axes permuted as specified by
+	 * an axes index lookup.
+	 *
+	 * Examples:
+	 * <p>
+	 * <code>setVector(new short[]{10, 20, 30}, n5, "/volumes/labels", "background", 2, 1, 0)</code>
+	 *
+	 * stores an RGB vector `[10, 20, 30]` in BGR-order as `[30, 20, 10]`.
+	 * </p>
+	 *
+	 * @param vector
+	 * @param n5
+	 * @param groupName
+	 * @param key
+	 * @param axes
+	 * @throws IOException
+	 */
+	public static final void setVector(
+			  final short[] vector,
+			  final N5Writer n5,
+			  final String groupName,
+			  final String key,
+			  final int... axes) throws IOException {
+
+		final short[] copy = new short[vector.length];
+		for (int d = 0; d < axes.length; ++d)
+			copy[axes[d]] = vector[d];
+
+		n5.setAttribute(groupName, key, copy);
+	}
+
+
+	/**
+	 * Write a byte vector attribute with its axes permuted as specified by
+	 * an axes index lookup.
+	 *
+	 * Examples:
+	 * <p>
+	 * <code>setVector(new byte[]{10, 20, 30}, n5, "/volumes/labels", "background", 2, 1, 0)</code>
+	 *
+	 * stores an RGB vector `[10, 20, 30]` in BGR-order as `[30, 20, 10]`.
+	 * </p>
+	 *
+	 * @param vector
+	 * @param n5
+	 * @param groupName
+	 * @param key
+	 * @param axes
+	 * @throws IOException
+	 */
+	public static final void setVector(
+			  final byte[] vector,
+			  final N5Writer n5,
+			  final String groupName,
+			  final String key,
+			  final int... axes) throws IOException {
+
+		final byte[] copy = new byte[vector.length];
+		for (int d = 0; d < axes.length; ++d)
+			copy[axes[d]] = vector[d];
+
+		n5.setAttribute(groupName, key, copy);
+	}
+
+
+	/**
+	 * Write a vector of <code>T</code> attribute with its axes permuted as
+	 * specified by an axes index lookup.
+	 *
+	 * Examples:
+	 * <p>
+	 * <code>setVector(new String[]{"x", "y", "z"}, n5, "/volumes/raw", "axesNames", 2, 1, 0)</code>
+	 *
+	 * stores a 3D vector `["x", "y", "z"]` in C-order as `["z", "y", "x"]`.
+	 * </p>
+	 * <p>
+	 * <code>setVector(new String[]{"x", "y"}, n5, "/image", "axesNames", 0, 1)</code>
+	 *
+	 * stores a 2D vector `["x", "y"]` in F-order as `["x", "y"]`.
+	 * </p>
+	 *
+	 * @param vector
+	 * @param n5
+	 * @param groupName
+	 * @param key
+	 * @param axes
+	 * @throws IOException
+	 */
 	public static final <T> void setVector(
 			  final T[] vector,
 			  final N5Writer n5,
 			  final String groupName,
 			  final String key,
-			  final int[] axes) throws IOException {
+			  final int... axes) throws IOException {
 
 		final T[] copy = vector.clone();
 		for (int d = 0; d < axes.length; ++d)
