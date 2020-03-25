@@ -173,6 +173,7 @@
 		<dependency>
 			<groupId>net.imglib2</groupId>
 			<artifactId>imglib2-realtransform</artifactId>
+			<version>3.0.0</version>
 		</dependency>
 	</dependencies>
 
