@@ -37,6 +37,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import net.imglib2.FinalInterval;
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.MatcherAssert;
 import org.janelia.saalfeldlab.n5.DataType;
@@ -198,6 +199,29 @@ public class N5UtilsTest {
 			Assert.assertEquals(UnsignedShortType.class, Util.getTypeFromInterval(loaded).getClass());
 			MatcherAssert.assertThat(((CachedCellImg<UnsignedShortType, ?>)loaded).getAccessType(), CoreMatchers.instanceOf(VolatileAccess.class));
 			MatcherAssert.assertThat(((CachedCellImg<UnsignedShortType, ?>)loaded).getAccessType(), CoreMatchers.instanceOf(ShortAccess.class));
+		}
+	}
+
+	@Test
+	public void testDelete() {
+
+		final ArrayImg<UnsignedShortType, ?> img = ArrayImgs.unsignedShorts(data, dimensions);
+		try {
+			N5Utils.save(img, n5, datasetName, blockSize, new RawCompression());
+			RandomAccessibleInterval<UnsignedShortType> loaded = N5Utils.open(n5, datasetName);
+			for (final Pair<UnsignedShortType, UnsignedShortType> pair : Views
+					.flatIterable(Views.interval(Views.pair(img, loaded), img)))
+				Assert.assertEquals(pair.getA().get(), pair.getB().get());
+
+			N5Utils.deleteBlock(new FinalInterval(dimensions), n5, datasetName);
+
+			loaded = N5Utils.open(n5, datasetName);
+			for (final UnsignedShortType val : Views.iterable(loaded))
+				Assert.assertEquals(0, val.get());
+
+		} catch (final IOException e) {
+			fail("Failed by I/O exception.");
+			e.printStackTrace();
 		}
 	}
 
