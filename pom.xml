@@ -38,7 +38,7 @@
 	</mailingLists>
 
 	<scm>
-		<connection>scm:git:git://github.com/saalfedllab/n5-imglib2</connection>
+		<connection>scm:git:git://github.com/saalfeldlab/n5-imglib2</connection>
 		<developerConnection>scm:git:git@github.com:saalfeldlab/n5-imglib2</developerConnection>
 		<tag>HEAD</tag>
 		<url>https://github.com/saalfeldlab/n5-imglib2</url>
@@ -51,7 +51,7 @@
 
 	<ciManagement>
 		<system>Travis CI</system>
-		<url>https://travis-ci.org/saalfeldlab/n5-imglib2</url>
+		<url>https://travis-ci.com/saalfeldlab/n5-imglib2</url>
 	</ciManagement>
 
 	<properties>
@@ -64,6 +64,9 @@
 
 		<!-- ImgLib2 RealTransform - https://github.com/imglib/imglib2-realtransform -->
 		<imglib2-realtransform.version>2.2.0</imglib2-realtransform.version>
+
+		<!-- NB: Deploy releases to the SciJava Maven repository. -->
+		<releaseProfiles>deploy-to-scijava</releaseProfiles>
 	</properties>
 	<developers>
 		<developer>
@@ -118,11 +121,7 @@
 	</contributors>
 	<repositories>
 		<repository>
-			<id>saalfeld-lab-maven-repo</id>
-			<url>https://saalfeldlab.github.io/maven</url>
-		</repository>
-		<repository>
-			<id>imagej.public</id>
+			<id>scijava.public</id>
 			<url>https://maven.scijava.org/content/groups/public</url>
 		</repository>
 	</repositories>
@@ -187,23 +186,7 @@
 						<target>1.8</target>
 					</configuration>
 				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-deploy-plugin</artifactId>
-					<version>2.8.2</version>
-					<configuration>
-						<altDeploymentRepository>internal.repo::default::file://${deploy.path}</altDeploymentRepository>
-					</configuration>
-				</plugin>
 			</plugins>
 		</pluginManagement>
 	</build>
-
-	<distributionManagement>
-		<repository>
-			<id>local-maven-repo</id>
-			<name>Local Maven Repository</name>
-			<url>file://${deploy.path}</url>
-		</repository>
-	</distributionManagement>
 </project>
