@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
@@ -30,44 +28,6 @@
 		</license>
 	</licenses>
 
-	<mailingLists>
-		<mailingList>
-			<name>ImageJ Forum</name>
-			<archive>http://forum.imagej.net/</archive>
-		</mailingList>
-	</mailingLists>
-
-	<scm>
-		<connection>scm:git:git://github.com/saalfeldlab/n5-imglib2</connection>
-		<developerConnection>scm:git:git@github.com:saalfeldlab/n5-imglib2</developerConnection>
-		<tag>HEAD</tag>
-		<url>https://github.com/saalfeldlab/n5-imglib2</url>
-	</scm>
-
-	<issueManagement>
-		<system>GitHub</system>
-		<url>https://github.com/saalfedlab/n5-imglib2/issues</url>
-	</issueManagement>
-
-	<ciManagement>
-		<system>Travis CI</system>
-		<url>https://travis-ci.com/saalfeldlab/n5-imglib2</url>
-	</ciManagement>
-
-	<properties>
-		<package-name>org.janelia.saalfeldlab</package-name>
-
-		<license.licenseName>bsd_2</license.licenseName>
-		<license.projectName>N5 Cache Loader</license.projectName>
-		<license.organizationName>Saalfeld Lab</license.organizationName>
-		<license.copyrightOwners>Philipp Hanslovsky, Stephan Saalfeld</license.copyrightOwners>
-
-		<!-- ImgLib2 RealTransform - https://github.com/imglib/imglib2-realtransform -->
-		<imglib2-realtransform.version>2.2.0</imglib2-realtransform.version>
-
-		<!-- NB: Deploy releases to the SciJava Maven repository. -->
-		<releaseProfiles>deploy-to-scijava</releaseProfiles>
-	</properties>
 	<developers>
 		<developer>
 			<id>hanslovsky</id>
@@ -119,12 +79,43 @@
 			</properties>
 		</contributor>
 	</contributors>
-	<repositories>
-		<repository>
-			<id>scijava.public</id>
-			<url>https://maven.scijava.org/content/groups/public</url>
-		</repository>
-	</repositories>
+
+	<mailingLists>
+		<mailingList>
+			<name>ImageJ Forum</name>
+			<archive>http://forum.imagej.net/</archive>
+		</mailingList>
+	</mailingLists>
+
+	<scm>
+		<connection>scm:git:git://github.com/saalfeldlab/n5-imglib2</connection>
+		<developerConnection>scm:git:git@github.com:saalfeldlab/n5-imglib2</developerConnection>
+		<tag>HEAD</tag>
+		<url>https://github.com/saalfeldlab/n5-imglib2</url>
+	</scm>
+	<issueManagement>
+		<system>GitHub</system>
+		<url>https://github.com/saalfedlab/n5-imglib2/issues</url>
+	</issueManagement>
+	<ciManagement>
+		<system>Travis CI</system>
+		<url>https://travis-ci.com/saalfeldlab/n5-imglib2</url>
+	</ciManagement>
+
+	<properties>
+		<package-name>org.janelia.saalfeldlab</package-name>
+
+		<license.licenseName>bsd_2</license.licenseName>
+		<license.projectName>N5 Cache Loader</license.projectName>
+		<license.organizationName>Saalfeld Lab</license.organizationName>
+		<license.copyrightOwners>Philipp Hanslovsky, Stephan Saalfeld</license.copyrightOwners>
+
+		<!-- ImgLib2 RealTransform - https://github.com/imglib/imglib2-realtransform -->
+		<imglib2-realtransform.version>2.2.0</imglib2-realtransform.version>
+
+		<!-- NB: Deploy releases to the SciJava Maven repository. -->
+		<releaseProfiles>deploy-to-scijava</releaseProfiles>
+	</properties>
 
 	<dependencies>
 
@@ -174,6 +165,13 @@
 			<artifactId>imglib2-realtransform</artifactId>
 		</dependency>
 	</dependencies>
+
+	<repositories>
+		<repository>
+			<id>scijava.public</id>
+			<url>https://maven.scijava.org/content/groups/public</url>
+		</repository>
+	</repositories>
 
 	<build>
 		<pluginManagement>
