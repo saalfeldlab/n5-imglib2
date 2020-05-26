@@ -11,7 +11,7 @@
 
 	<groupId>org.janelia.saalfeldlab</groupId>
 	<artifactId>n5-imglib2</artifactId>
-	<version>3.5.1-SNAPSHOT</version>
+	<version>3.5.2-SNAPSHOT</version>
 
 	<name>N5 ImgLib2 Bindings</name>
 	<description>Open N5 datasets as ImgLib2 RandomAccessibles, and write ImgLib2 RandomAccessibles as/ into N5 datasets.</description>
