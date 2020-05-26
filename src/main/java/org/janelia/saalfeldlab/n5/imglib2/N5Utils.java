@@ -35,6 +35,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 
+import net.imglib2.FinalInterval;
 import org.janelia.saalfeldlab.n5.Compression;
 import org.janelia.saalfeldlab.n5.DataBlock;
 import org.janelia.saalfeldlab.n5.DataType;
@@ -744,5 +745,127 @@ public interface N5Utils {
 			final ExecutorService exec) throws IOException, InterruptedException, ExecutionException {
 
 		N5.save(source, n5, dataset, blockSize, compression, exec);
+	}
+
+	/**
+	 * Delete an {@link Interval} in an N5 dataset at a given
+	 * offset. The offset is given in {@link DataBlock} grid coordinates and the
+	 * interval is assumed to align with the {@link DataBlock} grid of the
+	 * dataset.
+	 *
+	 * @param interval
+	 * @param n5
+	 * @param dataset
+	 * @param attributes
+	 * @param gridOffset
+	 * @throws IOException
+	 */
+	public static final void deleteBlock(
+			final Interval interval,
+			final N5Writer n5,
+			final String dataset,
+			final DatasetAttributes attributes,
+			final long[] gridOffset) throws IOException {
+
+		final Interval zeroMinInterval = new FinalInterval(Intervals.dimensionsAsLongArray(interval));
+		final int n = zeroMinInterval.numDimensions();
+		final long[] max = Intervals.maxAsLongArray( zeroMinInterval );
+		final int[] blockSize = attributes.getBlockSize();
+		final long[] offset = new long[n];
+		final long[] gridPosition = new long[n];
+		final int[] intCroppedBlockSize = new int[n];
+		final long[] longCroppedBlockSize = new long[n];
+		for (int d = 0; d < n;) {
+			cropBlockDimensions(
+					max,
+					offset,
+					gridOffset,
+					blockSize,
+					longCroppedBlockSize,
+					intCroppedBlockSize,
+					gridPosition);
+			n5.deleteBlock(dataset, gridPosition);
+			for (d = 0; d < n; ++d) {
+				offset[d] += blockSize[d];
+				if (offset[d] <= max[d])
+					break;
+				else
+					offset[d] = 0;
+			}
+		}
+	}
+
+	/**
+	 * Delete an {@link Interval} in an N5 dataset.
+	 * The block offset is determined by the interval position, and the
+	 * interval is assumed to align with the {@link DataBlock} grid
+	 * of the dataset.
+	 *
+	 * @param interval
+	 * @param n5
+	 * @param dataset
+	 * @param attributes
+	 * @throws IOException
+	 */
+	public static final void deleteBlock(
+			final Interval interval,
+			final N5Writer n5,
+			final String dataset,
+			final DatasetAttributes attributes) throws IOException {
+
+		final int[] blockSize = attributes.getBlockSize();
+		final long[] gridOffset = new long[blockSize.length];
+		Arrays.setAll(gridOffset, d -> interval.min(d) / blockSize[d]);
+		deleteBlock(interval, n5, dataset, attributes, gridOffset);
+	}
+
+	/**
+	 * Delete an {@link Interval} in an N5 dataset.
+	 * The block offset is determined by the interval position, and the
+	 * interval is assumed to align with the {@link DataBlock} grid
+	 * of the dataset.
+	 *
+	 * @param interval
+	 * @param n5
+	 * @param dataset
+	 * @throws IOException
+	 */
+	public static final void deleteBlock(
+			final Interval interval,
+			final N5Writer n5,
+			final String dataset) throws IOException {
+
+		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
+		if (attributes != null) {
+			deleteBlock(interval, n5, dataset, attributes);
+		} else {
+			throw new IOException("Dataset " + dataset + " does not exist.");
+		}
+	}
+
+	/**
+	 * Delete an {@link Interval} in an N5 dataset at a given
+	 * offset. The offset is given in {@link DataBlock} grid coordinates and the
+	 * interval is assumed to align with the {@link DataBlock} grid of the
+	 * dataset.
+	 *
+	 * @param interval
+	 * @param n5
+	 * @param dataset
+	 * @param gridOffset
+	 * @throws IOException
+	 */
+	public static final void deleteBlock(
+			final Interval interval,
+			final N5Writer n5,
+			final String dataset,
+			final long[] gridOffset) throws IOException {
+
+		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
+		if (attributes != null) {
+			deleteBlock(interval, n5, dataset, attributes, gridOffset);
+		} else {
+			throw new IOException("Dataset " + dataset + " does not exist.");
+		}
 	}
 }
