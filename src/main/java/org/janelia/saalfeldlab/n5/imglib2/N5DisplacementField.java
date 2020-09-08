@@ -1,3 +1,30 @@
+/**
+ * Copyright (c) 2017-2019, Stephan Saalfeld, Philipp Hanslovsky, Igor Pisarev
+ * John Bogovic
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *
+ * Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
 package org.janelia.saalfeldlab.n5.imglib2;
 
 import java.io.IOException;
@@ -8,8 +35,6 @@ import org.janelia.saalfeldlab.n5.N5Reader;
 import org.janelia.saalfeldlab.n5.N5Writer;
 
 import net.imglib2.Cursor;
-import net.imglib2.FinalInterval;
-import net.imglib2.Interval;
 import net.imglib2.IterableInterval;
 import net.imglib2.RandomAccessible;
 import net.imglib2.RandomAccessibleInterval;
@@ -20,15 +45,10 @@ import net.imglib2.interpolation.InterpolatorFactory;
 import net.imglib2.interpolation.randomaccess.NLinearInterpolatorFactory;
 import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform;
-import net.imglib2.realtransform.AffineTransform2D;
-import net.imglib2.realtransform.AffineTransform3D;
-import net.imglib2.realtransform.ExplicitInvertibleRealTransform;
 import net.imglib2.realtransform.DeformationFieldTransform;
-import net.imglib2.realtransform.InverseRealTransform;
+import net.imglib2.realtransform.ExplicitInvertibleRealTransform;
 import net.imglib2.realtransform.InvertibleRealTransform;
-import net.imglib2.realtransform.InvertibleRealTransformSequence;
 import net.imglib2.realtransform.RealTransform;
-import net.imglib2.realtransform.RealTransformRandomAccessible;
 import net.imglib2.realtransform.RealTransformSequence;
 import net.imglib2.realtransform.RealViews;
 import net.imglib2.transform.integer.MixedTransform;
@@ -52,7 +72,7 @@ import net.imglib2.view.Views;
 
 /**
  * Class with helper methods for saving displacement field transformations as N5 datasets.
- * 
+ *
  * @author John Bogovic
  *
  */
@@ -78,9 +98,9 @@ public class N5DisplacementField
      * @param fwdspacing the pixel spacing (resolution) of the forward deformation field
      * @param inverseDfield
      * @param invspacing the pixel spacing (resolution) of the inverse deformation field
-     * @param blockSize 
+     * @param blockSize
      * @param compression
-     */ 
+     */
 	public static final <T extends NativeType<T> & RealType<T>> void save(
 			final N5Writer n5Writer,
 			final AffineGet affine,
@@ -131,7 +151,7 @@ public class N5DisplacementField
      * The deformation field here is saved as an {@link IntegerType}
      * which could compress better in some cases.  The multiplier from
      * original values to compressed values is chosen as the smallest
-     * value that keeps the error (L2) between quantized and original vectors. 
+     * value that keeps the error (L2) between quantized and original vectors.
      *
      * @param n5Writer
      * @param dataset
@@ -150,11 +170,11 @@ public class N5DisplacementField
 			final RandomAccessibleInterval< T > dfield,
 			final double[] spacing,
 			final int[] blockSize,
-			final Compression compression, 
-			final Q outputType, 
+			final Compression compression,
+			final Q outputType,
 			final double maxError ) throws Exception
 	{
-		
+
 		saveQuantized( n5Writer, dataset, dfield, blockSize, compression, outputType, maxError );
 		saveAffine( affine, n5Writer, dataset );
 		if( spacing != null )
@@ -184,7 +204,7 @@ public class N5DisplacementField
      * The deformation field here is saved as an {@link IntegerType}
      * which could compress better in some cases.  The multiplier from
      * original values to compressed values is chosen as the smallest
-     * value that keeps the error (L2) between quantized and original vectors. 
+     * value that keeps the error (L2) between quantized and original vectors.
      *
      * @param n5Writer
      * @param dataset
@@ -203,24 +223,24 @@ public class N5DisplacementField
 			final Q outputType,
             final double maxError ) throws Exception
 	{
-		/* 
-		 * To keep the max vector error below maxError, 
+		/*
+		 * To keep the max vector error below maxError,
 		 * the error per coordinate must be below m
 		 */
-		int nd = ( source.numDimensions() - 1 ); // vector field source has num dims + 1
-		double m = 2 * Math.sqrt( maxError * maxError / nd );
+		final int nd = ( source.numDimensions() - 1 ); // vector field source has num dims + 1
+		final double m = 2 * Math.sqrt( maxError * maxError / nd );
 
-		RandomAccessibleInterval< T > source_permuted = vectorAxisFirst( source );
-		RandomAccessibleInterval< Q > source_quant = Converters.convert(
-				source_permuted, 
+		final RandomAccessibleInterval< T > source_permuted = vectorAxisFirst( source );
+		final RandomAccessibleInterval< Q > source_quant = Converters.convert(
+				source_permuted,
 				new Converter<T, Q>()
 				{
 					@Override
-					public void convert(T input, Q output)
+					public void convert(final T input, final Q output)
 					{
 						output.setInteger( Math.round( input.getRealDouble() / m ));
 					}
-				}, 
+				},
 				outputType.copy());
 
         N5Utils.save( source_quant, n5Writer, dataset, blockSize, compression);
@@ -228,7 +248,7 @@ public class N5DisplacementField
 	}
 
     /**
-     * Opens an {@link InvertibleRealTransform} from an n5 object.  Uses the provided datasets as the forward and 
+     * Opens an {@link InvertibleRealTransform} from an n5 object.  Uses the provided datasets as the forward and
      * inverse transformations.
      *
      * @param n5
@@ -238,7 +258,7 @@ public class N5DisplacementField
      * @param interpolator
      * @return the invertible transformation
      */
-	public static final <T extends RealType<T> & NativeType<T>> ExplicitInvertibleRealTransform openInvertible( 
+	public static final <T extends RealType<T> & NativeType<T>> ExplicitInvertibleRealTransform openInvertible(
 			final N5Reader n5,
 			final String forwardDataset,
 			final String inverseDataset,
@@ -256,7 +276,7 @@ public class N5DisplacementField
      * @param n5
      * @return the invertible transformation
      */
-	public static final <T extends RealType<T> & NativeType<T>> ExplicitInvertibleRealTransform openInvertible( 
+	public static final <T extends RealType<T> & NativeType<T>> ExplicitInvertibleRealTransform openInvertible(
 			final N5Reader n5 ) throws Exception
 	{
 		return openInvertible( n5, FORWARD_ATTR, INVERSE_ATTR, new DoubleType(), new NLinearInterpolatorFactory<>()  );
@@ -267,10 +287,10 @@ public class N5DisplacementField
      * using linear interpolation.
      *
      * @param n5
-     * @param level 
+     * @param level
      * @return the invertible transformation
      */
-	public static final <T extends RealType<T> & NativeType<T>> ExplicitInvertibleRealTransform openInvertible( 
+	public static final <T extends RealType<T> & NativeType<T>> ExplicitInvertibleRealTransform openInvertible(
 			final N5Reader n5,
 			final int level ) throws Exception
 	{
@@ -286,7 +306,7 @@ public class N5DisplacementField
      * @param interpolator
      * @return the invertible transformation
      */
-	public static final <T extends RealType<T> & NativeType<T>> ExplicitInvertibleRealTransform openInvertible( 
+	public static final <T extends RealType<T> & NativeType<T>> ExplicitInvertibleRealTransform openInvertible(
 			final N5Reader n5,
 			final T defaultType,
 			final InterpolatorFactory< T, RandomAccessible<T> > interpolator ) throws Exception
@@ -306,7 +326,7 @@ public class N5DisplacementField
      * @param interpolator
      * @return the transformation
      */
-	public static final <T extends RealType<T> & NativeType<T>> RealTransform open( 
+	public static final <T extends RealType<T> & NativeType<T>> RealTransform open(
 			final N5Reader n5,
 			final String dataset,
 			final boolean inverse,
@@ -314,14 +334,14 @@ public class N5DisplacementField
 			final InterpolatorFactory< T, RandomAccessible<T> > interpolator ) throws Exception
 	{
 
-		AffineGet affine = openAffine( n5, dataset );
+		final AffineGet affine = openAffine( n5, dataset );
 
-		DeformationFieldTransform< T > dfield = new DeformationFieldTransform<>(
+		final DeformationFieldTransform< T > dfield = new DeformationFieldTransform<>(
 				openCalibratedField( n5, dataset, interpolator, defaultType ));
 
 		if( affine != null )
 		{
-			RealTransformSequence xfmSeq = new RealTransformSequence();
+			final RealTransformSequence xfmSeq = new RealTransformSequence();
 			if( inverse )
 			{
 				xfmSeq.add( affine );
@@ -351,12 +371,12 @@ public class N5DisplacementField
      */
 	public static final AffineGet openPixelToPhysical( final N5Reader n5, final String dataset ) throws Exception
 	{
-		double[] spacing = n5.getAttribute( dataset, SPACING_ATTR, double[].class );
+		final double[] spacing = n5.getAttribute( dataset, SPACING_ATTR, double[].class );
 		if ( spacing == null )
 			return null;
 
 		// have to bump the dimension up by one to apply it to the displacement field
-		int N = spacing.length;
+		final int N = spacing.length;
 		final AffineTransform affineMtx;
 		if ( N == 1 )
 			affineMtx = new AffineTransform( 2 );
@@ -382,11 +402,11 @@ public class N5DisplacementField
      */
 	public static final AffineGet openAffine( final N5Reader n5, final String dataset ) throws Exception
 	{
-		double[] affineMtxRow = n5.getAttribute( dataset, AFFINE_ATTR, double[].class );
+		final double[] affineMtxRow = n5.getAttribute( dataset, AFFINE_ATTR, double[].class );
 		if ( affineMtxRow == null )
 			return null;
 
-		int N = affineMtxRow.length;
+		final int N = affineMtxRow.length;
 		final AffineTransform affineMtx;
 		if ( N == 2 )
 			affineMtx = new AffineTransform( 1 );
@@ -414,7 +434,7 @@ public class N5DisplacementField
      * @return the deformation field as a RandomAccessibleInterval
      */
 	@SuppressWarnings( "unchecked" )
-	public static final <T extends NativeType<T> & RealType<T>, Q extends NativeType<Q> & IntegerType<Q>> RandomAccessibleInterval< T > openField( 
+	public static final <T extends NativeType<T> & RealType<T>, Q extends NativeType<Q> & IntegerType<Q>> RandomAccessibleInterval< T > openField(
 			final N5Reader n5,
 			final String dataset,
 			final T defaultType ) throws Exception
@@ -460,7 +480,7 @@ public class N5DisplacementField
      */
 	public static < T extends NativeType< T > & RealType< T > > RealRandomAccessible< T > openCalibratedField(
 			final N5Reader n5, final String dataset,
-			final InterpolatorFactory< T, RandomAccessible< T > > interpolator, 
+			final InterpolatorFactory< T, RandomAccessible< T > > interpolator,
 			final T defaultType ) throws Exception
 	{
 		return openCalibratedField( n5, dataset, interpolator, EXTEND_BORDER, defaultType );
@@ -478,19 +498,19 @@ public class N5DisplacementField
      *
      * @param n5 the n5 reader
      * @param dataset the n5 dataset
-     * @param interpolator the type of interpolation 
+     * @param interpolator the type of interpolation
      * @param extensionType the type of out-of-bounds extension
      * @param defaultType the type
      * @return the deformation field as a RealRandomAccessible
      */
 	public static < T extends NativeType< T > & RealType< T > > RealRandomAccessible< T > openCalibratedField(
 			final N5Reader n5, final String dataset,
-			final InterpolatorFactory< T, RandomAccessible< T > > interpolator, 
+			final InterpolatorFactory< T, RandomAccessible< T > > interpolator,
 			final String extensionType,
 			final T defaultType ) throws Exception
 	{
-		RandomAccessibleInterval< T > dfieldRai = openField( n5, dataset, defaultType );
-		RandomAccessibleInterval< T > dfieldRaiPerm = vectorAxisLast( dfieldRai );
+		final RandomAccessibleInterval< T > dfieldRai = openField( n5, dataset, defaultType );
+		final RandomAccessibleInterval< T > dfieldRaiPerm = vectorAxisLast( dfieldRai );
 
 		if ( dfieldRai == null )
 		{
@@ -524,7 +544,7 @@ public class N5DisplacementField
      * @return the transform
      */
 	public static < T extends NativeType< T > & RealType< T > > RealTransform open(
-			final N5Reader n5, final String dataset, boolean inverse ) throws Exception
+			final N5Reader n5, final String dataset, final boolean inverse ) throws Exception
 	{
 		return open( n5, dataset, inverse, new FloatType(), new NLinearInterpolatorFactory<FloatType>());
 	}
@@ -543,7 +563,7 @@ public class N5DisplacementField
 			final String dataset,
 			final T defaultType ) throws Exception
 	{
-        RandomAccessibleInterval< T > src = N5Utils.open( n5, dataset, defaultType  );
+        final RandomAccessibleInterval< T > src = N5Utils.open( n5, dataset, defaultType  );
         return vectorAxisLast( src );
 	}
 
@@ -563,28 +583,28 @@ public class N5DisplacementField
 			final Q defaultQuantizedType,
 			final T defaultType ) throws Exception
 	{
-        RandomAccessibleInterval< Q > src = N5Utils.open( n5, dataset, defaultQuantizedType  );
-        
+        final RandomAccessibleInterval< Q > src = N5Utils.open( n5, dataset, defaultQuantizedType  );
+
         // get the factor going from quantized to original values
-        Double mattr = n5.getAttribute( dataset, MULTIPLIER_ATTR, Double.TYPE );
+        final Double mattr = n5.getAttribute( dataset, MULTIPLIER_ATTR, Double.TYPE );
         final double m;
         if( mattr != null )
         	m = mattr.doubleValue();
         else
         	m = 1.0;
 
-        RandomAccessibleInterval< Q > src_perm = vectorAxisLast( src );
-        RandomAccessibleInterval< T > src_converted = Converters.convert(
-        	src_perm, 
+        final RandomAccessibleInterval< Q > src_perm = vectorAxisLast( src );
+        final RandomAccessibleInterval< T > src_converted = Converters.convert(
+        	src_perm,
 			new Converter<Q, T>()
 			{
 				@Override
-				public void convert(Q input, T output) {
+				public void convert(final Q input, final T output) {
 					output.setReal( input.getRealDouble() * m );
 				}
-			}, 
+			},
 			defaultType.copy());
- 
+
         return src_converted;
 	}
 
@@ -596,7 +616,7 @@ public class N5DisplacementField
      * @return the possibly permuted deformation field
      * @throws Exception
      */
-	public static final < T extends RealType< T > > RandomAccessibleInterval< T > vectorAxisLast( RandomAccessibleInterval< T > source ) throws Exception
+	public static final < T extends RealType< T > > RandomAccessibleInterval< T > vectorAxisLast( final RandomAccessibleInterval< T > source ) throws Exception
 	{
 		final int n = source.numDimensions();
 
@@ -612,11 +632,11 @@ public class N5DisplacementField
 			return permute( source, component );
 		}
 
-		throw new Exception( 
-				String.format( "Displacement fields must store vector components in the first or last dimension. " + 
+		throw new Exception(
+				String.format( "Displacement fields must store vector components in the first or last dimension. " +
 						"Found a %d-d volume; expect size [%d,...] or [...,%d]", n, ( n - 1 ), ( n - 1 ) ) );
 	}
-	
+
     /**
      * Returns a deformation field as a {@link RandomAccessibleInterval}
      * with the vector stored in the first dimension.
@@ -625,10 +645,10 @@ public class N5DisplacementField
      * @return the possibly permuted deformation field
      * @throws Exception
      */
-	public static final < T extends RealType< T > > RandomAccessibleInterval< T > vectorAxisFirst( RandomAccessibleInterval< T > source ) throws Exception
+	public static final < T extends RealType< T > > RandomAccessibleInterval< T > vectorAxisFirst( final RandomAccessibleInterval< T > source ) throws Exception
 	{
 		final int n = source.numDimensions();
-		
+
 		System.out.println("source2perm: " + Util.printInterval(source));
 
 		if ( source.dimension( 0 ) == (n - 1) )
@@ -643,21 +663,21 @@ public class N5DisplacementField
 			return permute( source, component );
 		}
 
-		throw new Exception( 
-				String.format( "Displacement fields must store vector components in the first or last dimension. " + 
+		throw new Exception(
+				String.format( "Displacement fields must store vector components in the first or last dimension. " +
 						"Found a %d-d volume; expect size [%d,...] or [...,%d]", n, ( n - 1 ), ( n - 1 ) ) );
 	}
 
     /**
      * Permutes the dimensions of a {@link RandomAccessibleInterval}
      * using the given permutation vector, where the ith value in p
-     * gives destination of the ith input dimension in the output. 
+     * gives destination of the ith input dimension in the output.
      *
      * @param source the source data
      * @param p the permutation
      * @return the permuted source
      */
-	public static final < T > IntervalView< T > permute( RandomAccessibleInterval< T > source, int[] p )
+	public static final < T > IntervalView< T > permute( final RandomAccessibleInterval< T > source, final int[] p )
 	{
 		final int n = source.numDimensions();
 
@@ -683,17 +703,17 @@ public class N5DisplacementField
      * @param img the iterable interval
      * @return the min and max values stored in a double array
      */
-	public static <T extends RealType<T>> double[] getMinMax( IterableInterval<T> img )
+	public static <T extends RealType<T>> double[] getMinMax( final IterableInterval<T> img )
 	{
 		double min = Double.MAX_VALUE;
 		double max = Double.MIN_VALUE;
-		Cursor<T> c = img.cursor();
+		final Cursor<T> c = img.cursor();
 		while( c.hasNext() )
 		{
-			double v = Math.abs( c.next().getRealDouble());
+			final double v = Math.abs( c.next().getRealDouble());
 			if( v > max )
 				max = v;
-			
+
 			if( v < min )
 				min = v;
 		}

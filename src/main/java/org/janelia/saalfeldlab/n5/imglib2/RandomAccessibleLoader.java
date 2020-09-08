@@ -1,5 +1,6 @@
 /**
- * Copyright (c) 2017-2018, Stephan Saalfeld, Philipp Hanslovsky, Igor Pisarev
+ * Copyright (c) 2017-2019, Stephan Saalfeld, Philipp Hanslovsky, Igor Pisarev
+ * John Bogovic
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
