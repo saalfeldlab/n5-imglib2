@@ -37,7 +37,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 
-import net.imglib2.FinalInterval;
 import org.janelia.saalfeldlab.n5.Compression;
 import org.janelia.saalfeldlab.n5.DataBlock;
 import org.janelia.saalfeldlab.n5.DataType;
@@ -45,6 +44,7 @@ import org.janelia.saalfeldlab.n5.DatasetAttributes;
 import org.janelia.saalfeldlab.n5.N5Reader;
 import org.janelia.saalfeldlab.n5.N5Writer;
 
+import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
 import net.imglib2.IterableInterval;
 import net.imglib2.RandomAccessibleInterval;
