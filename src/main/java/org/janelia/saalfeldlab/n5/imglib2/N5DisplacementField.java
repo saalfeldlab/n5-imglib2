@@ -8,8 +8,6 @@ import org.janelia.saalfeldlab.n5.N5Reader;
 import org.janelia.saalfeldlab.n5.N5Writer;
 
 import net.imglib2.Cursor;
-import net.imglib2.FinalInterval;
-import net.imglib2.Interval;
 import net.imglib2.IterableInterval;
 import net.imglib2.RandomAccessible;
 import net.imglib2.RandomAccessibleInterval;
@@ -20,17 +18,15 @@ import net.imglib2.interpolation.InterpolatorFactory;
 import net.imglib2.interpolation.randomaccess.NLinearInterpolatorFactory;
 import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform;
-import net.imglib2.realtransform.AffineTransform2D;
-import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.realtransform.ExplicitInvertibleRealTransform;
 import net.imglib2.realtransform.DeformationFieldTransform;
-import net.imglib2.realtransform.InverseRealTransform;
 import net.imglib2.realtransform.InvertibleRealTransform;
-import net.imglib2.realtransform.InvertibleRealTransformSequence;
 import net.imglib2.realtransform.RealTransform;
-import net.imglib2.realtransform.RealTransformRandomAccessible;
 import net.imglib2.realtransform.RealTransformSequence;
 import net.imglib2.realtransform.RealViews;
+import net.imglib2.realtransform.Scale;
+import net.imglib2.realtransform.Scale2D;
+import net.imglib2.realtransform.Scale3D;
 import net.imglib2.transform.integer.MixedTransform;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.IntegerType;
@@ -45,7 +41,6 @@ import net.imglib2.type.numeric.integer.UnsignedLongType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.type.numeric.real.DoubleType;
 import net.imglib2.type.numeric.real.FloatType;
-import net.imglib2.util.Util;
 import net.imglib2.view.IntervalView;
 import net.imglib2.view.MixedTransformView;
 import net.imglib2.view.Views;
@@ -67,6 +62,9 @@ public class N5DisplacementField
 	public static final String EXTEND_ZERO = "ext_zero";
 	public static final String EXTEND_MIRROR = "ext_mirror";
 	public static final String EXTEND_BORDER = "ext_border";
+
+	public final static int[] PERMUTATION2D = new int[] { 2, 0, 1 };
+	public final static int[] PERMUTATION3D = new int[] { 3, 0, 1, 2 };
 
 
     /**
@@ -245,6 +243,18 @@ public class N5DisplacementField
 			final T defaultType,
 			final InterpolatorFactory< T, RandomAccessible<T> > interpolator ) throws Exception
 	{
+		if( !n5.datasetExists( forwardDataset ))
+		{
+			System.err.println( "dataset : " + forwardDataset + " does not exist.");
+			return null;
+		}
+
+		if( !n5.datasetExists( inverseDataset ))
+		{
+			System.err.println( "dataset : " + inverseDataset + " does not exist.");
+			return null;
+		}
+
 		return new ExplicitInvertibleRealTransform(
                 open( n5, forwardDataset, false, defaultType, interpolator),
                 open( n5, inverseDataset, true, defaultType, interpolator));
@@ -357,18 +367,15 @@ public class N5DisplacementField
 
 		// have to bump the dimension up by one to apply it to the displacement field
 		int N = spacing.length;
-		final AffineTransform affineMtx;
+		final AffineGet affineMtx;
 		if ( N == 1 )
-			affineMtx = new AffineTransform( 2 );
+			affineMtx = new Scale( spacing[ 0 ] );
 		else if ( N == 2 )
-			affineMtx = new AffineTransform( 3 );
+			affineMtx = new Scale2D( spacing );
 		else if ( N == 3 )
-			affineMtx = new AffineTransform( 4 );
+			affineMtx = new Scale3D( spacing );
 		else
 			return null;
-
-		for ( int i = 0; i < N; i++ )
-			affineMtx.set( spacing[ i ], i, i );
 
 		return affineMtx;
 	}
@@ -458,7 +465,7 @@ public class N5DisplacementField
      * @param defaultType
      * @return the deformation field as a RealRandomAccessible
      */
-	public static < T extends NativeType< T > & RealType< T > > RealRandomAccessible< T > openCalibratedField(
+	public static < T extends NativeType< T > & RealType< T > >  RealRandomAccessible< T >[] openCalibratedField(
 			final N5Reader n5, final String dataset,
 			final InterpolatorFactory< T, RandomAccessible< T > > interpolator, 
 			final T defaultType ) throws Exception
@@ -467,7 +474,7 @@ public class N5DisplacementField
 	}
 
     /**
-     * Returns a deformation field in physical coordinates as a {@link
+     * Returns coordinate displacements in physical coordinates as a {@link
      * RealRandomAccessible} from an n5 dataset.
      *
      * Internally, opens the given n5 dataset as a {@link
@@ -475,43 +482,59 @@ public class N5DisplacementField
      * the input {@link InterpolatorFactory} for interpolation, and
      * transforms to physical coordinates using the pixel spacing stored
      * in the "spacing" attribute, if present.
+     * 
+     * The ith {@link RealRandomAccessible} contains the displacements
+     * for the ith coordinate. The output of this method can be passed
+     * directly to the constructor of {@link DeformationFieldTransform}.
      *
      * @param n5 the n5 reader
      * @param dataset the n5 dataset
      * @param interpolator the type of interpolation 
      * @param extensionType the type of out-of-bounds extension
      * @param defaultType the type
-     * @return the deformation field as a RealRandomAccessible
+     * @return the coordinate displacements
      */
-	public static < T extends NativeType< T > & RealType< T > > RealRandomAccessible< T > openCalibratedField(
+	public static < T extends NativeType< T > & RealType< T > > RealRandomAccessible< T >[] openCalibratedField(
 			final N5Reader n5, final String dataset,
 			final InterpolatorFactory< T, RandomAccessible< T > > interpolator, 
 			final String extensionType,
 			final T defaultType ) throws Exception
 	{
 		RandomAccessibleInterval< T > dfieldRai = openField( n5, dataset, defaultType );
-		RandomAccessibleInterval< T > dfieldRaiPerm = vectorAxisLast( dfieldRai );
-
 		if ( dfieldRai == null )
 		{
 			return null;
 		}
-		RealRandomAccessible< T > dfieldReal = null;
-		if( extensionType.equals( EXTEND_MIRROR )){
-			dfieldReal = Views.interpolate( Views.extendMirrorDouble( dfieldRaiPerm ), interpolator );
-		}
-		else if( extensionType.equals( EXTEND_BORDER )){
-			dfieldReal = Views.interpolate( Views.extendBorder( dfieldRaiPerm ), interpolator );
-		}
-		else {
-			dfieldReal = Views.interpolate( Views.extendZero( dfieldRaiPerm ), interpolator );
+
+		RandomAccessibleInterval< T > dfieldRaiPerm = vectorAxisLast( dfieldRai );
+
+		// num spatial dimensions
+		final int nd = dfieldRaiPerm.numDimensions() - 1;
+		@SuppressWarnings( "unchecked" )
+		RealRandomAccessible<T>[] displacements = new RealRandomAccessible[ nd ];
+
+		for( int i = 0; i < nd; i++ )
+		{
+			IntervalView< T > coordDist = Views.hyperSlice( dfieldRaiPerm, nd, i );
+			RealRandomAccessible< T > dfieldReal = null;
+			if( extensionType.equals( EXTEND_MIRROR )){
+				dfieldReal = Views.interpolate( Views.extendMirrorDouble( coordDist ), interpolator );
+			}
+			else if( extensionType.equals( EXTEND_BORDER )){
+				dfieldReal = Views.interpolate( Views.extendBorder( coordDist ), interpolator );
+			}
+			else {
+				dfieldReal = Views.interpolate( Views.extendZero( coordDist ), interpolator );
+			}
+
+			final AffineGet pix2Phys = openPixelToPhysical( n5, dataset );
+			if ( pix2Phys != null )
+				displacements[ i ] = RealViews.affine( dfieldReal, pix2Phys );
+			else
+				displacements[ i ] = dfieldReal;
 		}
 
-		final AffineGet pix2Phys = openPixelToPhysical( n5, dataset );
-		if ( pix2Phys != null )
-			return RealViews.affine( dfieldReal, pix2Phys );
-
-		return dfieldReal;
+		return displacements;
 	}
 
     /**
@@ -629,8 +652,6 @@ public class N5DisplacementField
 	{
 		final int n = source.numDimensions();
 		
-		System.out.println("source2perm: " + Util.printInterval(source));
-
 		if ( source.dimension( 0 ) == (n - 1) )
 			return source;
 		else if ( source.dimension( n - 1 ) == (n - 1) )
