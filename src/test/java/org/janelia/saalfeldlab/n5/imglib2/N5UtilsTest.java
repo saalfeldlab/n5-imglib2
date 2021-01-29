@@ -63,6 +63,7 @@ import net.imglib2.img.basictypeaccess.ShortAccess;
 import net.imglib2.img.basictypeaccess.array.ShortArray;
 import net.imglib2.img.basictypeaccess.volatiles.VolatileAccess;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
+import net.imglib2.util.Intervals;
 import net.imglib2.util.Pair;
 import net.imglib2.util.Util;
 import net.imglib2.view.IntervalView;
@@ -143,6 +144,19 @@ public class N5UtilsTest {
 					.flatIterable(Views.interval(Views.pair(img, loaded), img)))
 				Assert.assertEquals(pair.getA().get(), pair.getB().get());
 			exec.shutdown();
+
+			// test save region
+			N5Utils.saveRegion( Views.translate( img, dimensions ), n5, datasetName );
+			loaded = N5Utils.open(n5, datasetName);
+			final long[] expectedPaddedDims = Arrays.stream( dimensions ).map( x -> 2 * x ).toArray();
+			final long[] newDims = Intervals.dimensionsAsLongArray( loaded  );
+			System.out.println( "newDims : " + Arrays.toString( newDims ));
+			Assert.assertArrayEquals( "saveRegion padded dims", expectedPaddedDims, newDims );
+
+			IntervalView< UnsignedShortType > loadedSubset = Views.offsetInterval( loaded, dimensions, dimensions );
+			for (final Pair<UnsignedShortType, UnsignedShortType> pair : Views
+					.flatIterable(Views.interval(Views.pair(img, loadedSubset), img)))
+				Assert.assertEquals(pair.getA().get(), pair.getB().get());
 
 		} catch (final IOException e) {
 			fail("Failed by I/O exception.");
