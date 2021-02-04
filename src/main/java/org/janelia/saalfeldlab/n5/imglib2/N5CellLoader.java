@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2017-2018, Stephan Saalfeld, Philipp Hanslovsky, Igor Pisarev
+ * Copyright (c) 2017-2021, Saalfeld lab, HHMI Janelia
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -58,7 +58,7 @@ import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
 
 /**
- * A {@link CellLoader} for N5 dataset blocks.  Supports all primitive types.
+ * A {@link CellLoader} for N5 dataset blocks. Supports all primitive types.
  *
  * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
  * @author Philipp Hanslovsky &lt;hanslovskyp@janelia.hhmi.org&gt;

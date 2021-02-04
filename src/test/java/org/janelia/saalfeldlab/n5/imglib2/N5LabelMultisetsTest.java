@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2017-2018, Stephan Saalfeld, Philipp Hanslovsky, Igor Pisarev
+ * Copyright (c) 2017-2021, Saalfeld lab, HHMI Janelia
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -83,10 +83,9 @@ public class N5LabelMultisetsTest {
 
 		final Random rnd = new Random();
 
-		final int numElements = (int) Intervals.numElements(dimensions);
+		final int numElements = (int)Intervals.numElements(dimensions);
 		final List<LabelMultisetType> typeElements = new ArrayList<>();
-		for (int i = 0; i < numElements; ++i)
-		{
+		for (int i = 0; i < numElements; ++i) {
 			final int numEntries = rnd.nextInt(10);
 			final LabelMultisetEntryList entries = new LabelMultisetEntryList(numEntries);
 			for (int j = 0; j < numEntries; ++j)
