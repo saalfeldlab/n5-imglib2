@@ -39,16 +39,25 @@ import bdv.util.volatiles.VolatileViews;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.cache.volatiles.CacheHints;
 import net.imglib2.cache.volatiles.LoadingStrategy;
+import net.imglib2.type.NativeType;
 
 /**
  * Simple dataset viewer example to demonstrate how {@link N5Utils} may be used.
  *
- * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
+ * Parameters
+ *   first N5 container path, e.g. /home/you/test.n5
+ *   followed by dataset paths, e.g. /data /more/data1 /more/data2 ...
+ *
+ * @author Stephan Saalfeld
  */
 public class N5DatasetViewerExample {
 
-	@SuppressWarnings("unchecked")
 	public static final void main(final String... args) throws IOException {
+
+		mainT(args);
+	}
+
+	public static final <T extends NativeType<T>> void mainT(final String... args) throws IOException {
 
 		final N5Reader n5Reader = new N5FSReader(args[0]);
 		Bdv bdv = null;
@@ -61,7 +70,7 @@ public class N5DatasetViewerExample {
 			final String n5Dataset = args[i];
 			if (n5Reader.datasetExists(n5Dataset)) {
 				final BdvOptions options = bdv == null ? Bdv.options() : Bdv.options().addTo(bdv);
-				final RandomAccessibleInterval dataset = N5Utils.openVolatile(n5Reader, n5Dataset);
+				final RandomAccessibleInterval<T> dataset = N5Utils.openVolatile(n5Reader, n5Dataset);
 				bdv = BdvFunctions.show(
 						VolatileViews.wrapAsVolatile(
 								dataset,
