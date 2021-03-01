@@ -1397,6 +1397,21 @@ public class N5Utils {
 			f.get();
 	}
 
+	/**
+	 * Write an image into an existing n5 dataset, padding the dataset if necessary.
+	 * The min and max values of the input source interval define the subset of the
+	 * dataset to be written.
+	 *
+	 * Warning! Avoid calling this method in parallel for multiple sources that have
+	 * blocks in common. This risks invalid or corrupting data blocks.
+	 *
+	 * @param source the source image to write
+	 * @param n5 the n5 writer
+	 * @param dataset the dataset
+	 * @throws IOException
+	 * @throws ExecutionException
+	 * @throws InterruptedException
+	 */
 	public static <T extends NativeType<T>> void saveRegion(
 			final RandomAccessibleInterval<T> source,
 			final N5Writer n5,
@@ -1405,6 +1420,23 @@ public class N5Utils {
 		saveRegion( source, n5, dataset, n5.getDatasetAttributes( dataset ) );
 	}
 
+	/**
+	 * Write an image into an existing n5 dataset, padding the dataset if necessary.
+	 * The min and max values of the input source interval define the subset of the
+	 * dataset to be written. Blocks of the output at written in parallel using the given
+	 * {@link ExecutorService}.
+	 *
+	 * Warning! Avoid calling this method in parallel for multiple sources that have
+	 * blocks in common. This risks invalid or corrupting data blocks.
+	 *
+	 * @param source the source image to write
+	 * @param n5 the n5 writer
+	 * @param dataset the dataset
+	 * @param exec executor service
+	 * @throws IOException
+	 * @throws ExecutionException
+	 * @throws InterruptedException
+	 */
 	public static <T extends NativeType<T>> void saveRegion(
 			final RandomAccessibleInterval<T> source,
 			final N5Writer n5,
@@ -1417,18 +1449,18 @@ public class N5Utils {
 	/**
 	 * Write an image into an existing n5 dataset, padding the dataset if necessary.
 	 * The min and max values of the input source interval define the subset of the
-	 * dataset to be written. 
-	 * 
+	 * dataset to be written.
+	 *
 	 * Warning! Avoid calling this method in parallel for multiple sources that have
 	 * blocks in common. This risks invalid or corrupting data blocks.
-	 * 
+	 *
 	 * @param source the source image to write
 	 * @param n5 the n5 writer
 	 * @param dataset the dataset
 	 * @param attributes dataset attributes
-	 * @throws IOException 
-	 * @throws ExecutionException 
-	 * @throws InterruptedException 
+	 * @throws IOException
+	 * @throws ExecutionException
+	 * @throws InterruptedException
 	 */
 	public static <T extends NativeType<T>> void saveRegion(
 			final RandomAccessibleInterval<T> source,
@@ -1498,19 +1530,20 @@ public class N5Utils {
 	/**
 	 * Write an image into an existing n5 dataset, padding the dataset if necessary.
 	 * The min and max values of the input source interval define the subset of the
-	 * dataset to be written. 
-	 * 
+	 * dataset to be written. Blocks of the output at written in parallel using the given
+	 * {@link ExecutorService}.
+	 *
 	 * Warning! Avoid calling this method in parallel for multiple sources that have
 	 * blocks in common. This risks invalid or corrupting data blocks.
-	 * 
+	 *
 	 * @param source the source image to write
 	 * @param n5 the n5 writer
 	 * @param dataset the dataset
 	 * @param attributes dataset attributes
 	 * @param exec the executor
-	 * @throws IOException 
-	 * @throws ExecutionException 
-	 * @throws InterruptedException 
+	 * @throws IOException
+	 * @throws ExecutionException
+	 * @throws InterruptedException
 	 */
 	public static <T extends NativeType<T>> void saveRegion(
 			final RandomAccessibleInterval<T> source,
