@@ -1,3 +1,29 @@
+/**
+ * Copyright (c) 2017-2021, Saalfeld lab, HHMI Janelia
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *
+ * Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
 package org.janelia.saalfeldlab.n5.imglib2;
 
 import java.io.IOException;
@@ -52,7 +78,8 @@ public class N5LabelMultisets {
 	}
 
 	/**
-	 * Open an N5 dataset of {@link LabelMultisetType} as a memory cached {@link LazyCellImg}.
+	 * Open an N5 dataset of {@link LabelMultisetType} as a memory cached
+	 * {@link LazyCellImg}.
 	 *
 	 * @param n5
 	 * @param dataset
@@ -67,7 +94,8 @@ public class N5LabelMultisets {
 	}
 
 	/**
-	 * Open an N5 dataset of {@link LabelMultisetType} as a memory cached {@link LazyCellImg}.
+	 * Open an N5 dataset of {@link LabelMultisetType} as a memory cached
+	 * {@link LazyCellImg}.
 	 *
 	 * @param n5
 	 * @param dataset
@@ -84,7 +112,8 @@ public class N5LabelMultisets {
 	}
 
 	/**
-	 * Open an N5 dataset of {@link LabelMultisetType} as a memory cached {@link LazyCellImg}.
+	 * Open an N5 dataset of {@link LabelMultisetType} as a memory cached
+	 * {@link LazyCellImg}.
 	 *
 	 * @param n5
 	 * @param dataset
@@ -101,7 +130,8 @@ public class N5LabelMultisets {
 	}
 
 	/**
-	 * Open an N5 dataset of {@link LabelMultisetType} as a memory cached {@link LazyCellImg}.
+	 * Open an N5 dataset of {@link LabelMultisetType} as a memory cached
+	 * {@link LazyCellImg}.
 	 *
 	 * @param n5
 	 * @param dataset
@@ -129,13 +159,14 @@ public class N5LabelMultisets {
 				grid,
 				new LabelMultisetType().getEntitiesPerPixel(),
 				wrappedCache,
-				new VolatileLabelMultisetArray(0, true, new long[] {Label.INVALID}));
+				new VolatileLabelMultisetArray(0, true, new long[]{Label.INVALID}));
 		cachedImg.setLinkedType(new LabelMultisetType(cachedImg));
 		return cachedImg;
 	}
 
 	/**
-	 * Save a {@link RandomAccessibleInterval} of type {@link LabelMultisetType} as an N5 dataset.
+	 * Save a {@link RandomAccessibleInterval} of type {@link LabelMultisetType}
+	 * as an N5 dataset.
 	 *
 	 * @param source
 	 * @param n5
@@ -186,7 +217,8 @@ public class N5LabelMultisets {
 	}
 
 	/**
-	 * Save a {@link RandomAccessibleInterval} of type {@link LabelMultisetType} as an N5 dataset, multi-threaded.
+	 * Save a {@link RandomAccessibleInterval} of type {@link LabelMultisetType}
+	 * as an N5 dataset, multi-threaded.
 	 *
 	 * @param source
 	 * @param n5
@@ -265,7 +297,8 @@ public class N5LabelMultisets {
 	}
 
 	/**
-	 * Save a {@link RandomAccessibleInterval} of type {@link LabelMultisetType} into an existing N5 dataset.
+	 * Save a {@link RandomAccessibleInterval} of type {@link LabelMultisetType}
+	 * into an existing N5 dataset.
 	 *
 	 * @param source
 	 * @param n5
@@ -319,10 +352,10 @@ public class N5LabelMultisets {
 	}
 
 	/**
-	 * Save a {@link RandomAccessibleInterval} of type {@link LabelMultisetType} into an existing N5 dataset.
-	 * The block offset is determined by the source position, and the
-	 * source is assumed to align with the {@link DataBlock} grid
-	 * of the dataset.
+	 * Save a {@link RandomAccessibleInterval} of type {@link LabelMultisetType}
+	 * into an existing N5 dataset. The block offset is determined by the source
+	 * position, and the source is assumed to align with the {@link DataBlock}
+	 * grid of the dataset.
 	 *
 	 * @param source
 	 * @param n5
@@ -343,10 +376,10 @@ public class N5LabelMultisets {
 	}
 
 	/**
-	 * Save a {@link RandomAccessibleInterval} of type {@link LabelMultisetType} into an existing N5 dataset.
-	 * The block offset is determined by the source position, and the
-	 * source is assumed to align with the {@link DataBlock} grid
-	 * of the dataset.
+	 * Save a {@link RandomAccessibleInterval} of type {@link LabelMultisetType}
+	 * into an existing N5 dataset. The block offset is determined by the source
+	 * position, and the source is assumed to align with the {@link DataBlock}
+	 * grid of the dataset.
 	 *
 	 * @param source
 	 * @param n5
@@ -367,7 +400,8 @@ public class N5LabelMultisets {
 	}
 
 	/**
-	 * Save a {@link RandomAccessibleInterval} of type {@link LabelMultisetType} into an existing N5 dataset.
+	 * Save a {@link RandomAccessibleInterval} of type {@link LabelMultisetType}
+	 * into an existing N5 dataset.
 	 *
 	 * @param source
 	 * @param n5
@@ -390,7 +424,8 @@ public class N5LabelMultisets {
 	}
 
 	/**
-	 * Save a {@link RandomAccessibleInterval} of type {@link LabelMultisetType} into an existing N5 dataset, multi-threaded.
+	 * Save a {@link RandomAccessibleInterval} of type {@link LabelMultisetType}
+	 * into an existing N5 dataset, multi-threaded.
 	 *
 	 * @param source
 	 * @param n5
@@ -468,11 +503,12 @@ public class N5LabelMultisets {
 	}
 
 	/**
-	 * Save a {@link RandomAccessibleInterval} of type {@link LabelMultisetType} into an N5 dataset at a given
-	 * offset. The offset is given in {@link DataBlock} grid coordinates and the
-	 * source is assumed to align with the {@link DataBlock} grid of the
-	 * dataset. Only {@link DataBlock DataBlocks} that contain labels other than
-	 * a given default label are stored.
+	 * Save a {@link RandomAccessibleInterval} of type {@link LabelMultisetType}
+	 * into an N5 dataset at a given offset. The offset is given in
+	 * {@link DataBlock} grid coordinates and the source is assumed to align
+	 * with the {@link DataBlock} grid of the dataset. Only {@link DataBlock
+	 * DataBlocks} that contain labels other than a given default label are
+	 * stored.
 	 *
 	 * @param source
 	 * @param n5
@@ -529,12 +565,11 @@ public class N5LabelMultisets {
 	}
 
 	/**
-	 * Save a {@link RandomAccessibleInterval} of type {@link LabelMultisetType} into an N5 dataset.
-	 * The block offset is determined by the source position, and the
-	 * source is assumed to align with the {@link DataBlock} grid
-	 * of the dataset.
-	 * Only {@link DataBlock DataBlocks} that contain labels other than
-	 * a given default label are stored.
+	 * Save a {@link RandomAccessibleInterval} of type {@link LabelMultisetType}
+	 * into an N5 dataset. The block offset is determined by the source
+	 * position, and the source is assumed to align with the {@link DataBlock}
+	 * grid of the dataset. Only {@link DataBlock DataBlocks} that contain
+	 * labels other than a given default label are stored.
 	 *
 	 * @param source
 	 * @param n5
@@ -557,12 +592,11 @@ public class N5LabelMultisets {
 	}
 
 	/**
-	 * Save a {@link RandomAccessibleInterval} of type {@link LabelMultisetType} into an N5 dataset.
-	 * The block offset is determined by the source position, and the
-	 * source is assumed to align with the {@link DataBlock} grid
-	 * of the dataset.
-	 * Only {@link DataBlock DataBlocks} that contain labels other than
-	 * a given default label are stored.
+	 * Save a {@link RandomAccessibleInterval} of type {@link LabelMultisetType}
+	 * into an N5 dataset. The block offset is determined by the source
+	 * position, and the source is assumed to align with the {@link DataBlock}
+	 * grid of the dataset. Only {@link DataBlock DataBlocks} that contain
+	 * labels other than a given default label are stored.
 	 *
 	 * @param source
 	 * @param n5
@@ -585,12 +619,11 @@ public class N5LabelMultisets {
 	}
 
 	/**
-	 * Save a {@link RandomAccessibleInterval} of type {@link LabelMultisetType} into an N5 dataset.
-	 * The block offset is determined by the source position, and the
-	 * source is assumed to align with the {@link DataBlock} grid
-	 * of the dataset.
-	 * Only {@link DataBlock DataBlocks} that contain labels other than
-	 * {@link Label#BACKGROUND} are stored.
+	 * Save a {@link RandomAccessibleInterval} of type {@link LabelMultisetType}
+	 * into an N5 dataset. The block offset is determined by the source
+	 * position, and the source is assumed to align with the {@link DataBlock}
+	 * grid of the dataset. Only {@link DataBlock DataBlocks} that contain
+	 * labels other than {@link Label#BACKGROUND} are stored.
 	 *
 	 * @param source
 	 * @param n5
@@ -606,11 +639,12 @@ public class N5LabelMultisets {
 	}
 
 	/**
-	 * Save a {@link RandomAccessibleInterval} of type {@link LabelMultisetType} into an N5 dataset at a given
-	 * offset. The offset is given in {@link DataBlock} grid coordinates and the
-	 * source is assumed to align with the {@link DataBlock} grid of the
-	 * dataset. Only {@link DataBlock DataBlocks} that contain labels other than
-	 * a given default label are stored.
+	 * Save a {@link RandomAccessibleInterval} of type {@link LabelMultisetType}
+	 * into an N5 dataset at a given offset. The offset is given in
+	 * {@link DataBlock} grid coordinates and the source is assumed to align
+	 * with the {@link DataBlock} grid of the dataset. Only {@link DataBlock
+	 * DataBlocks} that contain labels other than a given default label are
+	 * stored.
 	 *
 	 * @param source
 	 * @param n5
@@ -635,11 +669,12 @@ public class N5LabelMultisets {
 	}
 
 	/**
-	 * Save a {@link RandomAccessibleInterval} of type {@link LabelMultisetType} into an N5 dataset at a given
-	 * offset. The offset is given in {@link DataBlock} grid coordinates and the
-	 * source is assumed to align with the {@link DataBlock} grid of the
-	 * dataset. Only {@link DataBlock DataBlocks} that contain labels other than
-	 * {@link Label#BACKGROUND} are stored.
+	 * Save a {@link RandomAccessibleInterval} of type {@link LabelMultisetType}
+	 * into an N5 dataset at a given offset. The offset is given in
+	 * {@link DataBlock} grid coordinates and the source is assumed to align
+	 * with the {@link DataBlock} grid of the dataset. Only {@link DataBlock
+	 * DataBlocks} that contain labels other than {@link Label#BACKGROUND} are
+	 * stored.
 	 *
 	 * @param source
 	 * @param n5
@@ -657,7 +692,8 @@ public class N5LabelMultisets {
 	}
 
 	/**
-	 * Creates a {@link ByteArrayDataBlock} with serialized source contents of type {@link LabelMultisetType}.
+	 * Creates a {@link ByteArrayDataBlock} with serialized source contents of
+	 * type {@link LabelMultisetType}.
 	 *
 	 * @param source
 	 * @param gridPosition
@@ -669,21 +705,20 @@ public class N5LabelMultisets {
 
 		final byte[] data = LabelUtils.serializeLabelMultisetTypes(
 				Views.flatIterable(source),
-				(int) Intervals.numElements(source)
-			);
+				(int)Intervals.numElements(source));
 
 		final ByteArrayDataBlock dataBlock = new ByteArrayDataBlock(
 				Intervals.dimensionsAsIntArray(source),
 				gridPosition,
-				data
-			);
+				data);
 
 		return dataBlock;
 	}
 
 	/**
-	 * Creates a {@link ByteArrayDataBlock} with serialized source contents of type {@link LabelMultisetType},
-	 * or returns {@code null} if all labels are equal to {@code defaultLabelId} (regardless of their counts).
+	 * Creates a {@link ByteArrayDataBlock} with serialized source contents of
+	 * type {@link LabelMultisetType}, or returns {@code null} if all labels are
+	 * equal to {@code defaultLabelId} (regardless of their counts).
 	 *
 	 * @param source
 	 * @param gridPosition

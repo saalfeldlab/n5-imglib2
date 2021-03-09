@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2017-2018, Stephan Saalfeld, Philipp Hanslovsky, Igor Pisarev
+ * Copyright (c) 2017-2021, Saalfeld lab, HHMI Janelia
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -133,28 +133,28 @@ public class N5Utils {
 	public static final <T extends NativeType<T>> T type(final DataType dataType) {
 
 		switch (dataType) {
-			case INT8:
-				return (T) new ByteType();
-			case UINT8:
-				return (T) new UnsignedByteType();
-			case INT16:
-				return (T) new ShortType();
-			case UINT16:
-				return (T) new UnsignedShortType();
-			case INT32:
-				return (T) new IntType();
-			case UINT32:
-				return (T) new UnsignedIntType();
-			case INT64:
-				return (T) new LongType();
-			case UINT64:
-				return (T) new UnsignedLongType();
-			case FLOAT32:
-				return (T) new FloatType();
-			case FLOAT64:
-				return (T) new DoubleType();
-			default:
-				return null;
+		case INT8:
+			return (T)new ByteType();
+		case UINT8:
+			return (T)new UnsignedByteType();
+		case INT16:
+			return (T)new ShortType();
+		case UINT16:
+			return (T)new UnsignedShortType();
+		case INT32:
+			return (T)new IntType();
+		case UINT32:
+			return (T)new UnsignedIntType();
+		case INT64:
+			return (T)new LongType();
+		case UINT64:
+			return (T)new UnsignedLongType();
+		case FLOAT32:
+			return (T)new FloatType();
+		case FLOAT64:
+			return (T)new DoubleType();
+		default:
+			return null;
 		}
 	}
 
@@ -387,8 +387,8 @@ public class N5Utils {
 	}
 
 	/**
-	 * Open an N5 dataset as a memory cached {@link LazyCellImg}.
-	 * Supports all primitive types and {@link LabelMultisetType}.
+	 * Open an N5 dataset as a memory cached {@link LazyCellImg}. Supports all
+	 * primitive types and {@link LabelMultisetType}.
 	 *
 	 * @param n5
 	 * @param dataset
@@ -401,11 +401,10 @@ public class N5Utils {
 			final String dataset) throws IOException {
 
 		if (N5LabelMultisets.isLabelMultisetType(n5, dataset))
-			return (CachedCellImg<T, ?>) N5LabelMultisets.openLabelMultiset(n5, dataset);
+			return (CachedCellImg<T, ?>)N5LabelMultisets.openLabelMultiset(n5, dataset);
 		else
 			return open(n5, dataset, (Consumer<IterableInterval<T>>)img -> {});
 	}
-
 
 	/**
 	 * Open an N5 dataset as a memory cached {@link LazyCellImg}.
@@ -419,15 +418,15 @@ public class N5Utils {
 	public static final <T extends NativeType<T>> CachedCellImg<T, ?> openWithBoundedSoftRefCache(
 			final N5Reader n5,
 			final String dataset,
-			final int maxNumCacheEntries) throws IOException
-	{
+			final int maxNumCacheEntries) throws IOException {
+
 		return openWithBoundedSoftRefCache(n5, dataset, (Consumer<IterableInterval<T>>)img -> {}, maxNumCacheEntries);
 	}
 
 	/**
 	 * Open an N5 dataset as a memory cached {@link LazyCellImg} using
-	 * {@link VolatileAccess}.
-	 * Supports all primitive types and {@link LabelMultisetType}.
+	 * {@link VolatileAccess}. Supports all primitive types and
+	 * {@link LabelMultisetType}.
 	 *
 	 * @param n5
 	 * @param dataset
@@ -440,11 +439,10 @@ public class N5Utils {
 			final String dataset) throws IOException {
 
 		if (N5LabelMultisets.isLabelMultisetType(n5, dataset))
-			return (CachedCellImg<T, ?>) N5LabelMultisets.openLabelMultiset(n5, dataset);
+			return (CachedCellImg<T, ?>)N5LabelMultisets.openLabelMultiset(n5, dataset);
 		else
 			return openVolatile(n5, dataset, (Consumer<IterableInterval<T>>)img -> {});
 	}
-
 
 	/**
 	 * Open an N5 dataset as a memory cached {@link LazyCellImg} using
@@ -459,8 +457,8 @@ public class N5Utils {
 	public static final <T extends NativeType<T>> CachedCellImg<T, ?> openVolatileWithBoundedSoftRefCache(
 			final N5Reader n5,
 			final String dataset,
-			final int maxNumCacheEntries) throws IOException
-	{
+			final int maxNumCacheEntries) throws IOException {
+
 		return openVolatileWithBoundedSoftRefCache(n5, dataset, (Consumer<IterableInterval<T>>)img -> {}, maxNumCacheEntries);
 	}
 
@@ -583,11 +581,11 @@ public class N5Utils {
 	 * @return
 	 * @throws IOException
 	 */
-	@SuppressWarnings({"unchecked", "rawtypes"})
 	public static final <T extends NativeType<T>> CachedCellImg<T, ?> open(
 			final N5Reader n5,
 			final String dataset,
 			final Consumer<IterableInterval<T>> blockNotFoundHandler) throws IOException {
+
 		return open(n5, dataset, blockNotFoundHandler, AccessFlags.setOf());
 	}
 
@@ -600,17 +598,18 @@ public class N5Utils {
 	 * @return
 	 * @throws IOException
 	 */
-	@SuppressWarnings({"unchecked", "rawtypes"})
 	public static final <T extends NativeType<T>> CachedCellImg<T, ?> open(
 			final N5Reader n5,
 			final String dataset,
 			final Consumer<IterableInterval<T>> blockNotFoundHandler,
 			final Set<AccessFlags> accessFlags) throws IOException {
-		return open(n5, dataset, blockNotFoundHandler, dataType -> new SoftRefLoaderCache(), accessFlags);
+
+		return open(n5, dataset, blockNotFoundHandler, dataType -> new SoftRefLoaderCache<>(), accessFlags);
 	}
 
 	/**
-	 * Open an N5 dataset as a memory cached {@link LazyCellImg} with a bound on the number of cache entries.
+	 * Open an N5 dataset as a memory cached {@link LazyCellImg} with a bound on
+	 * the number of cache entries.
 	 *
 	 * @param n5
 	 * @param dataset
@@ -619,17 +618,18 @@ public class N5Utils {
 	 * @return
 	 * @throws IOException
 	 */
-	@SuppressWarnings({"unchecked", "rawtypes"})
 	public static final <T extends NativeType<T>> CachedCellImg<T, ?> openWithBoundedSoftRefCache(
 			final N5Reader n5,
 			final String dataset,
 			final Consumer<IterableInterval<T>> blockNotFoundHandler,
 			final int maxNumCacheEntries) throws IOException {
+
 		return openWithBoundedSoftRefCache(n5, dataset, blockNotFoundHandler, maxNumCacheEntries, AccessFlags.setOf());
 	}
 
 	/**
-	 * Open an N5 dataset as a memory cached {@link LazyCellImg} with a bound on the number of cache entries.
+	 * Open an N5 dataset as a memory cached {@link LazyCellImg} with a bound on
+	 * the number of cache entries.
 	 *
 	 * @param n5
 	 * @param dataset
@@ -638,14 +638,14 @@ public class N5Utils {
 	 * @return
 	 * @throws IOException
 	 */
-	@SuppressWarnings({"unchecked", "rawtypes"})
 	public static final <T extends NativeType<T>> CachedCellImg<T, ?> openWithBoundedSoftRefCache(
 			final N5Reader n5,
 			final String dataset,
 			final Consumer<IterableInterval<T>> blockNotFoundHandler,
 			final int maxNumCacheEntries,
 			final Set<AccessFlags> accessFlags) throws IOException {
-		return open(n5, dataset, blockNotFoundHandler, dataType -> new BoundedSoftRefLoaderCache(maxNumCacheEntries), accessFlags);
+
+		return open(n5, dataset, blockNotFoundHandler, dataType -> new BoundedSoftRefLoaderCache<>(maxNumCacheEntries), accessFlags);
 	}
 
 	/**
@@ -715,17 +715,17 @@ public class N5Utils {
 	 * @return
 	 * @throws IOException
 	 */
-	@SuppressWarnings({"unchecked", "rawtypes"})
 	public static final <T extends NativeType<T>> CachedCellImg<T, ?> openVolatile(
 			final N5Reader n5,
 			final String dataset,
 			final Consumer<IterableInterval<T>> blockNotFoundHandler) throws IOException {
+
 		return open(n5, dataset, blockNotFoundHandler, AccessFlags.setOf(AccessFlags.VOLATILE));
 	}
 
 	/**
-	 * Open an N5 dataset as a memory cached {@link LazyCellImg} with a bound on the number of cache entries
-	 * using {@link VolatileAccess}.
+	 * Open an N5 dataset as a memory cached {@link LazyCellImg} with a bound on
+	 * the number of cache entries using {@link VolatileAccess}.
 	 *
 	 * @param n5
 	 * @param dataset
@@ -739,6 +739,7 @@ public class N5Utils {
 			final String dataset,
 			final Consumer<IterableInterval<T>> blockNotFoundHandler,
 			final int maxNumCacheEntries) throws IOException {
+
 		return openWithBoundedSoftRefCache(n5, dataset, blockNotFoundHandler, maxNumCacheEntries, AccessFlags.setOf(AccessFlags.VOLATILE));
 	}
 
@@ -880,7 +881,8 @@ public class N5Utils {
 	/**
 	 * Save a {@link RandomAccessibleInterval} into an N5 dataset at a given
 	 * offset. The offset is given in {@link DataBlock} grid coordinates and the
-	 * source is assumed to align with the {@link DataBlock} grid of the dataset.
+	 * source is assumed to align with the {@link DataBlock} grid of the
+	 * dataset.
 	 *
 	 * @param source
 	 * @param n5
@@ -898,7 +900,7 @@ public class N5Utils {
 
 		if (N5LabelMultisets.isLabelMultisetType(n5, dataset)) {
 			@SuppressWarnings("unchecked")
-			final RandomAccessibleInterval<LabelMultisetType> labelMultisetSource = (RandomAccessibleInterval<LabelMultisetType>) source;
+			final RandomAccessibleInterval<LabelMultisetType> labelMultisetSource = (RandomAccessibleInterval<LabelMultisetType>)source;
 			N5LabelMultisets.saveLabelMultisetBlock(labelMultisetSource, n5, dataset, attributes, gridOffset);
 			return;
 		}
@@ -941,10 +943,9 @@ public class N5Utils {
 	}
 
 	/**
-	 * Save a {@link RandomAccessibleInterval} into an N5 dataset.
-	 * The block offset is determined by the source position, and the
-	 * source is assumed to align with the {@link DataBlock} grid
-	 * of the dataset.
+	 * Save a {@link RandomAccessibleInterval} into an N5 dataset. The block
+	 * offset is determined by the source position, and the source is assumed to
+	 * align with the {@link DataBlock} grid of the dataset.
 	 *
 	 * @param source
 	 * @param n5
@@ -965,10 +966,9 @@ public class N5Utils {
 	}
 
 	/**
-	 * Save a {@link RandomAccessibleInterval} into an N5 dataset.
-	 * The block offset is determined by the source position, and the
-	 * source is assumed to align with the {@link DataBlock} grid
-	 * of the dataset.
+	 * Save a {@link RandomAccessibleInterval} into an N5 dataset. The block
+	 * offset is determined by the source position, and the source is assumed to
+	 * align with the {@link DataBlock} grid of the dataset.
 	 *
 	 * @param source
 	 * @param n5
@@ -991,7 +991,8 @@ public class N5Utils {
 	/**
 	 * Save a {@link RandomAccessibleInterval} into an N5 dataset at a given
 	 * offset. The offset is given in {@link DataBlock} grid coordinates and the
-	 * source is assumed to align with the {@link DataBlock} grid of the dataset.
+	 * source is assumed to align with the {@link DataBlock} grid of the
+	 * dataset.
 	 *
 	 * @param source
 	 * @param n5
@@ -1034,7 +1035,7 @@ public class N5Utils {
 
 		if (N5LabelMultisets.isLabelMultisetType(n5, dataset)) {
 			@SuppressWarnings("unchecked")
-			final RandomAccessibleInterval<LabelMultisetType> labelMultisetSource = (RandomAccessibleInterval<LabelMultisetType>) source;
+			final RandomAccessibleInterval<LabelMultisetType> labelMultisetSource = (RandomAccessibleInterval<LabelMultisetType>)source;
 			N5LabelMultisets.saveLabelMultisetBlock(labelMultisetSource, n5, dataset, gridOffset, exec);
 			return;
 		}
@@ -1163,11 +1164,11 @@ public class N5Utils {
 	}
 
 	/**
-	 * Save a {@link RandomAccessibleInterval} into an N5 dataset.
-	 * The block offset is determined by the source position, and the
-	 * source is assumed to align with the {@link DataBlock} grid
-	 * of the dataset. Only {@link DataBlock DataBlocks} that contain
-	 * values other than a given default value are stored.
+	 * Save a {@link RandomAccessibleInterval} into an N5 dataset. The block
+	 * offset is determined by the source position, and the source is assumed to
+	 * align with the {@link DataBlock} grid of the dataset. Only
+	 * {@link DataBlock DataBlocks} that contain values other than a given
+	 * default value are stored.
 	 *
 	 * @param source
 	 * @param n5
@@ -1190,11 +1191,11 @@ public class N5Utils {
 	}
 
 	/**
-	 * Save a {@link RandomAccessibleInterval} into an N5 dataset.
-	 * The block offset is determined by the source position, and the
-	 * source is assumed to align with the {@link DataBlock} grid
-	 * of the dataset. Only {@link DataBlock DataBlocks} that contain
-	 * values other than a given default value are stored.
+	 * Save a {@link RandomAccessibleInterval} into an N5 dataset. The block
+	 * offset is determined by the source position, and the source is assumed to
+	 * align with the {@link DataBlock} grid of the dataset. Only
+	 * {@link DataBlock DataBlocks} that contain values other than a given
+	 * default value are stored.
 	 *
 	 * @param source
 	 * @param n5
@@ -1264,7 +1265,7 @@ public class N5Utils {
 
 		if (Util.getTypeFromInterval(source) instanceof LabelMultisetType) {
 			@SuppressWarnings("unchecked")
-			final RandomAccessibleInterval<LabelMultisetType> labelMultisetSource = (RandomAccessibleInterval<LabelMultisetType>) source;
+			final RandomAccessibleInterval<LabelMultisetType> labelMultisetSource = (RandomAccessibleInterval<LabelMultisetType>)source;
 			N5LabelMultisets.saveLabelMultiset(labelMultisetSource, n5, dataset, blockSize, compression);
 			return;
 		}
@@ -1330,7 +1331,7 @@ public class N5Utils {
 
 		if (Util.getTypeFromInterval(source) instanceof LabelMultisetType) {
 			@SuppressWarnings("unchecked")
-			final RandomAccessibleInterval<LabelMultisetType> labelMultisetSource = (RandomAccessibleInterval<LabelMultisetType>) source;
+			final RandomAccessibleInterval<LabelMultisetType> labelMultisetSource = (RandomAccessibleInterval<LabelMultisetType>)source;
 			N5LabelMultisets.saveLabelMultiset(labelMultisetSource, n5, dataset, blockSize, compression, exec);
 			return;
 		}
@@ -1699,10 +1700,9 @@ public class N5Utils {
 	}
 
 	/**
-	 * Delete an {@link Interval} in an N5 dataset at a given
-	 * offset. The offset is given in {@link DataBlock} grid coordinates and the
-	 * interval is assumed to align with the {@link DataBlock} grid of the
-	 * dataset.
+	 * Delete an {@link Interval} in an N5 dataset at a given offset. The offset
+	 * is given in {@link DataBlock} grid coordinates and the interval is
+	 * assumed to align with the {@link DataBlock} grid of the dataset.
 	 *
 	 * @param interval
 	 * @param n5
@@ -1720,7 +1720,7 @@ public class N5Utils {
 
 		final Interval zeroMinInterval = new FinalInterval(Intervals.dimensionsAsLongArray(interval));
 		final int n = zeroMinInterval.numDimensions();
-		final long[] max = Intervals.maxAsLongArray( zeroMinInterval );
+		final long[] max = Intervals.maxAsLongArray(zeroMinInterval);
 		final int[] blockSize = attributes.getBlockSize();
 		final long[] offset = new long[n];
 		final long[] gridPosition = new long[n];
@@ -1747,10 +1747,9 @@ public class N5Utils {
 	}
 
 	/**
-	 * Delete an {@link Interval} in an N5 dataset.
-	 * The block offset is determined by the interval position, and the
-	 * interval is assumed to align with the {@link DataBlock} grid
-	 * of the dataset.
+	 * Delete an {@link Interval} in an N5 dataset. The block offset is
+	 * determined by the interval position, and the interval is assumed to align
+	 * with the {@link DataBlock} grid of the dataset.
 	 *
 	 * @param interval
 	 * @param n5
@@ -1771,10 +1770,9 @@ public class N5Utils {
 	}
 
 	/**
-	 * Delete an {@link Interval} in an N5 dataset.
-	 * The block offset is determined by the interval position, and the
-	 * interval is assumed to align with the {@link DataBlock} grid
-	 * of the dataset.
+	 * Delete an {@link Interval} in an N5 dataset. The block offset is
+	 * determined by the interval position, and the interval is assumed to align
+	 * with the {@link DataBlock} grid of the dataset.
 	 *
 	 * @param interval
 	 * @param n5
@@ -1795,10 +1793,9 @@ public class N5Utils {
 	}
 
 	/**
-	 * Delete an {@link Interval} in an N5 dataset at a given
-	 * offset. The offset is given in {@link DataBlock} grid coordinates and the
-	 * interval is assumed to align with the {@link DataBlock} grid of the
-	 * dataset.
+	 * Delete an {@link Interval} in an N5 dataset at a given offset. The offset
+	 * is given in {@link DataBlock} grid coordinates and the interval is
+	 * assumed to align with the {@link DataBlock} grid of the dataset.
 	 *
 	 * @param interval
 	 * @param n5
