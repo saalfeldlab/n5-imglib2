@@ -29,6 +29,7 @@ package org.janelia.saalfeldlab.n5.imglib2;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -56,6 +57,8 @@ import net.imglib2.cache.img.DiskCachedCellImgOptions;
 import net.imglib2.cache.img.LoadedCellCacheLoader;
 import net.imglib2.cache.ref.BoundedSoftRefLoaderCache;
 import net.imglib2.cache.ref.SoftRefLoaderCache;
+import net.imglib2.exception.ImgLibException;
+import net.imglib2.img.Img;
 import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.img.basictypeaccess.AccessFlags;
 import net.imglib2.img.basictypeaccess.ArrayDataAccessFactory;
@@ -64,6 +67,8 @@ import net.imglib2.img.basictypeaccess.volatiles.VolatileAccess;
 import net.imglib2.img.cell.Cell;
 import net.imglib2.img.cell.CellGrid;
 import net.imglib2.img.cell.LazyCellImg;
+import net.imglib2.iterator.IntervalIterator;
+import net.imglib2.loops.LoopBuilder;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.Type;
 import net.imglib2.type.label.LabelMultisetType;
@@ -81,6 +86,7 @@ import net.imglib2.util.Intervals;
 import net.imglib2.util.Pair;
 import net.imglib2.util.Util;
 import net.imglib2.util.ValuePair;
+import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
 
 /**
@@ -91,6 +97,7 @@ import net.imglib2.view.Views;
  *
  * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
  * @author Philipp Hanslovsky &lt;hanslovskyp@janelia.hhmi.org&gt;
+ * @author John Bogovic &lt;bogovicj@janelia.hhmi.org&gt;
  */
 public class N5Utils {
 
@@ -1389,6 +1396,307 @@ public class N5Utils {
 		}
 		for (final Future<?> f : futures)
 			f.get();
+	}
+
+	/**
+	 * Write an image into an existing n5 dataset, padding the dataset if necessary.
+	 * The min and max values of the input source interval define the subset of the
+	 * dataset to be written.
+	 *
+	 * Warning! Avoid calling this method in parallel for multiple sources that have
+	 * blocks in common. This risks invalid or corrupting data blocks.
+	 *
+	 * @param source the source image to write
+	 * @param n5 the n5 writer
+	 * @param dataset the dataset
+	 * @throws IOException
+	 * @throws ExecutionException
+	 * @throws InterruptedException
+	 */
+	public static <T extends NativeType<T>> void saveRegion(
+			final RandomAccessibleInterval<T> source,
+			final N5Writer n5,
+			final String dataset ) throws IOException, InterruptedException, ExecutionException
+	{
+		saveRegion( source, n5, dataset, n5.getDatasetAttributes( dataset ) );
+	}
+
+	/**
+	 * Write an image into an existing n5 dataset, padding the dataset if necessary.
+	 * The min and max values of the input source interval define the subset of the
+	 * dataset to be written. Blocks of the output at written in parallel using the given
+	 * {@link ExecutorService}.
+	 *
+	 * Warning! Avoid calling this method in parallel for multiple sources that have
+	 * blocks in common. This risks invalid or corrupting data blocks.
+	 *
+	 * @param source the source image to write
+	 * @param n5 the n5 writer
+	 * @param dataset the dataset
+	 * @param exec executor service
+	 * @throws IOException
+	 * @throws ExecutionException
+	 * @throws InterruptedException
+	 */
+	public static <T extends NativeType<T>> void saveRegion(
+			final RandomAccessibleInterval<T> source,
+			final N5Writer n5,
+			final String dataset,
+			final ExecutorService exec ) throws IOException, InterruptedException, ExecutionException
+	{
+		saveRegion( source, n5, dataset, n5.getDatasetAttributes( dataset ), exec );
+	}
+
+	/**
+	 * Write an image into an existing n5 dataset, padding the dataset if necessary.
+	 * The min and max values of the input source interval define the subset of the
+	 * dataset to be written.
+	 *
+	 * Warning! Avoid calling this method in parallel for multiple sources that have
+	 * blocks in common. This risks invalid or corrupting data blocks.
+	 *
+	 * @param source the source image to write
+	 * @param n5 the n5 writer
+	 * @param dataset the dataset
+	 * @param attributes dataset attributes
+	 * @throws IOException
+	 * @throws ExecutionException
+	 * @throws InterruptedException
+	 */
+	public static <T extends NativeType<T>> void saveRegion(
+			final RandomAccessibleInterval<T> source,
+			final N5Writer n5,
+			final String dataset,
+			final DatasetAttributes attributes ) throws IOException, InterruptedException, ExecutionException
+	{
+		Optional< long[] > newDimensionsOpt = saveRegionPreprocessing( source, attributes );
+
+		final long[] dimensions;
+		if( newDimensionsOpt.isPresent() )
+		{
+			n5.setAttribute( dataset, "dimensions", newDimensionsOpt.get() );
+			dimensions = newDimensionsOpt.get();
+		}
+		else
+		{
+			dimensions = attributes.getDimensions();
+		}
+
+		final int n = source.numDimensions();
+		final int[] blockSize = attributes.getBlockSize();
+
+		Img< T > currentImg = open( n5, dataset );
+
+		long[] gridOffset = new long[ n ];
+		long[] gridMin = new long[ n ];
+		long[] gridMax = new long[ n ];
+		long[] imgMin = new long[ n ];
+		long[] imgMax = new long[ n ];
+
+		// find the grid positions bounding the source image to save
+		for (int d = 0; d < n; d++ )
+		{
+			gridMin[ d ] = Math.floorDiv( source.min( d ), blockSize[ d ] );
+			gridMax[ d ] = Math.floorDiv( source.max( d ), blockSize[ d ] );
+		}
+
+		// iterate over those blocks
+		IntervalIterator it = new IntervalIterator( gridMin, gridMax );
+		while( it.hasNext())
+		{
+			it.fwd();
+			it.localize( gridOffset );
+
+			for( int d = 0; d < n; d++ )
+			{
+				imgMin[ d ] = gridOffset[ d ] * blockSize[ d ];
+				imgMax[ d ] = Math.min( imgMin[ d ] + blockSize[ d ] - 1, 
+						dimensions[ d ] - 1 );
+			}
+
+			//  save the block
+			IntervalView< T > currentBlock = Views.interval( currentImg, imgMin, imgMax );
+			FinalInterval intersection = Intervals.intersect( currentBlock, source );
+
+			IntervalView< T > srcInt = Views.interval( source, intersection );
+			IntervalView< T > blkInt = Views.interval( currentImg, intersection );
+
+			// copy into the part of the block 
+			LoopBuilder.setImages( srcInt, blkInt ).forEachPixel( (x,y) -> y.set( x ) );
+
+			N5Utils.saveBlock( currentBlock, n5, dataset, gridOffset );
+		}
+	}
+
+	/**
+	 * Write an image into an existing n5 dataset, padding the dataset if necessary.
+	 * The min and max values of the input source interval define the subset of the
+	 * dataset to be written. Blocks of the output at written in parallel using the given
+	 * {@link ExecutorService}.
+	 *
+	 * Warning! Avoid calling this method in parallel for multiple sources that have
+	 * blocks in common. This risks invalid or corrupting data blocks.
+	 *
+	 * @param source the source image to write
+	 * @param n5 the n5 writer
+	 * @param dataset the dataset
+	 * @param attributes dataset attributes
+	 * @param exec the executor
+	 * @throws IOException
+	 * @throws ExecutionException
+	 * @throws InterruptedException
+	 */
+	public static <T extends NativeType<T>> void saveRegion(
+			final RandomAccessibleInterval<T> source,
+			final N5Writer n5,
+			final String dataset,
+			final DatasetAttributes attributes,
+			final ExecutorService exec ) throws InterruptedException, ExecutionException, IOException
+	{
+		Optional< long[] > newDimensionsOpt = saveRegionPreprocessing( source, attributes );
+
+		final long[] dimensions;
+		if( newDimensionsOpt.isPresent() )
+		{
+			n5.setAttribute( dataset, "dimensions", newDimensionsOpt.get() );
+			dimensions = newDimensionsOpt.get();
+		}
+		else
+		{
+			dimensions = attributes.getDimensions();
+		}
+
+		final int n = source.numDimensions();
+		final int[] blockSize = attributes.getBlockSize();
+
+		final Img< T > currentImg = open( n5, dataset );
+
+		final long[] gridOffset = new long[ n ];
+		final long[] gridMin = new long[ n ];
+		final long[] gridMax = new long[ n ];
+		final long[] imgMin = new long[ n ];
+		final long[] imgMax = new long[ n ];
+
+		// find the grid positions bounding the source image to save
+		for (int d = 0; d < n; d++ )
+		{
+			gridMin[ d ] = Math.floorDiv( source.min( d ), blockSize[ d ] );
+			gridMax[ d ] = Math.floorDiv( source.max( d ), blockSize[ d ] );
+		}
+
+		// iterate over those blocks
+		final ArrayList<Future<?>> futures = new ArrayList<>();
+		IntervalIterator it = new IntervalIterator( gridMin, gridMax );
+		while( it.hasNext() )
+		{
+			it.fwd();
+			it.localize( gridOffset );
+
+			for( int d = 0; d < n; d++ )
+			{
+				imgMin[ d ] = gridOffset[ d ] * blockSize[ d ];
+				imgMax[ d ] = Math.min( 
+						imgMin[ d ] + blockSize[ d ] - 1, 
+						dimensions[ d ] - 1 );
+			}
+
+			final long[] imgMinCopy = new long[ n ];
+			final long[] imgMaxCopy = new long[ n ];
+			final long[] gridOffsetCopy = new long[ n ];
+
+			System.arraycopy( imgMin, 0, imgMinCopy, 0, n );
+			System.arraycopy( imgMax, 0, imgMaxCopy, 0, n );
+			System.arraycopy( gridOffset, 0, gridOffsetCopy, 0, n );
+
+			futures.add( exec.submit( () ->
+			{
+				//  save the block
+				final IntervalView< T > currentBlock = Views.interval( currentImg, imgMinCopy, imgMaxCopy );
+				final FinalInterval intersection = Intervals.intersect( currentBlock, source );
+
+				final IntervalView< T > srcInt = Views.interval( source, intersection );
+				final IntervalView< T > blkInt = Views.interval( currentImg, intersection );
+
+				// copy into the part of the block 
+				LoopBuilder.setImages( srcInt, blkInt ).forEachPixel( (x,y) -> y.set( x ) );
+				try
+				{
+					N5Utils.saveBlock( currentBlock, n5, dataset, gridOffsetCopy );
+				}
+				catch ( IOException e )
+				{
+					e.printStackTrace();
+				}
+
+			} ));
+		}
+
+		for (final Future<?> f : futures)
+			f.get();
+	}
+
+	/**
+	 * Performs checks, and determine if padding is necessary.
+	 * 
+	 * @param source the source image to write
+	 * @param attributes n5 dataset attributes
+	 * @return new dataset dimensions if padding necessary, empty optional otherwise
+	 */
+	private static <T extends NativeType<T>>  Optional< long[] > saveRegionPreprocessing(
+			final RandomAccessibleInterval<T> source,
+			final DatasetAttributes attributes)
+	{
+		final DataType dtype = attributes.getDataType();
+		final long[] currentDimensions = attributes.getDimensions();
+		final int n = currentDimensions.length;
+
+		// ensure source has the correct dimensionality
+		if( source.numDimensions() != n )
+		{
+			throw new ImgLibException( 
+					String.format( "Image dimensions (%d) does not match n5 dataset dimensionalidy (%d)",
+							source.numDimensions(), n ));
+		}
+
+		// ensure type of passed image matches the existing dataset
+		final DataType srcType = N5Utils.dataType( Util.getTypeFromInterval( source ));
+		if( srcType != dtype )
+		{
+			throw new ImgLibException( 
+					String.format( "Image type (%s) does not match n5 dataset type (%s)",
+							srcType, dtype ));
+		}
+
+		// check if the volume needs padding
+		// and that the source min is >= 0
+		boolean needsPadding = false;
+		final long[] newDimensions = new long[ n ];
+
+		// set newDimensions to current dimensions
+		for( int d = 0; d < n; d++ )
+		{
+			if( source.min( d ) < 0 )
+			{
+				throw new ImgLibException( 
+						String.format( "Source interval must ",
+								source.min( d ), d ));
+			}
+
+			if( source.max( d ) + 1 > currentDimensions[ d ] )
+			{
+				newDimensions[ d ] = source.max( d ) + 1;
+				needsPadding = true;
+			}
+			else
+			{
+				newDimensions[ d ] = currentDimensions[ d ];
+			}
+		}
+
+		if( needsPadding )
+			return Optional.of( newDimensions );
+		else
+			return Optional.empty();
 	}
 
 	/**
