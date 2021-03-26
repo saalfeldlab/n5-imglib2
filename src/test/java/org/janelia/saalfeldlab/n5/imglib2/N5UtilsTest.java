@@ -63,6 +63,7 @@ import net.imglib2.img.basictypeaccess.ShortAccess;
 import net.imglib2.img.basictypeaccess.array.ShortArray;
 import net.imglib2.img.basictypeaccess.volatiles.VolatileAccess;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
+import net.imglib2.util.Intervals;
 import net.imglib2.util.Pair;
 import net.imglib2.util.Util;
 import net.imglib2.view.IntervalView;
@@ -141,6 +142,19 @@ public class N5UtilsTest {
 					.flatIterable(Views.interval(Views.pair(img, loaded), img)))
 				Assert.assertEquals(pair.getA().get(), pair.getB().get());
 
+			// test save region single thread
+			N5Utils.saveRegion( Views.translate( img, dimensions ), n5, datasetName );
+			loaded = N5Utils.open(n5, datasetName);
+			final long[] expectedPaddedDims = Arrays.stream( dimensions ).map( x -> 2 * x ).toArray();
+			final long[] newDims = Intervals.dimensionsAsLongArray( loaded  );
+			Assert.assertArrayEquals( "saveRegion padded dims", expectedPaddedDims, newDims );
+
+			IntervalView< UnsignedShortType > loadedSubset = Views.offsetInterval( loaded, dimensions, dimensions );
+			for (final Pair<UnsignedShortType, UnsignedShortType> pair : Views
+					.flatIterable(Views.interval(Views.pair(img, loadedSubset), img)))
+				Assert.assertEquals(pair.getA().get(), pair.getB().get());
+
+			// test multithreaded writing
 			final ExecutorService exec = Executors.newFixedThreadPool(4);
 			N5Utils.save(img, n5, datasetName, blockSize, new RawCompression(), exec);
 			loaded = N5Utils.open(n5, datasetName);
@@ -148,6 +162,17 @@ public class N5UtilsTest {
 					.flatIterable(Views.interval(Views.pair(img, loaded), img)))
 				Assert.assertEquals(pair.getA().get(), pair.getB().get());
 			exec.shutdown();
+
+			// test save region single thread
+			final ExecutorService execRegion = Executors.newFixedThreadPool(4);
+			N5Utils.saveRegion( Views.translate( img, dimensions ), n5, datasetName, execRegion );
+			execRegion.shutdown();
+
+			loaded = N5Utils.open(n5, datasetName);
+			IntervalView< UnsignedShortType > loadedSubsetParallel = Views.offsetInterval( loaded, dimensions, dimensions );
+			for (final Pair<UnsignedShortType, UnsignedShortType> pair : Views
+					.flatIterable(Views.interval(Views.pair(img, loadedSubsetParallel), img)))
+				Assert.assertEquals(pair.getA().get(), pair.getB().get());
 
 		} catch (final IOException e) {
 			fail("Failed by I/O exception.");
