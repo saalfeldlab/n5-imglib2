@@ -116,6 +116,7 @@
 		<n5.version>2.5.0</n5.version>
 		<bigdataviewer-core-test.version>5.1.0</bigdataviewer-core-test.version>
 		<bigdataviewer-vistools-test.version>1.0.0-beta-11</bigdataviewer-vistools-test.version>
+		<alphanumeric-comparator.version>1.4.1</alphanumeric-comparator.version>
 	</properties>
 
 	<dependencies>
@@ -158,6 +159,11 @@
 			<artifactId>bigdataviewer-vistools</artifactId>
 			<version>${bigdataviewer-vistools-test.version}</version>
 			<scope>test</scope>
+		</dependency>
+				<dependency>
+			<groupId>se.sawano.java</groupId>
+			<artifactId>alphanumeric-comparator</artifactId>
+			<version>${alphanumeric-comparator.version}</version>
 		</dependency>
 	</dependencies>
 
