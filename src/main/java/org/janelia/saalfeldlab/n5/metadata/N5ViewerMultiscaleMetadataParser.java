@@ -57,6 +57,7 @@ public class N5ViewerMultiscaleMetadataParser implements N5MetadataParser<N5Mult
 	  return Optional.empty();
 
 	final N5SingleScaleMetadata[] childMetadata = scaleLevelNodes.values().stream().map(N5TreeNode::getMetadata).toArray(N5SingleScaleMetadata[]::new);
+	MultiscaleMetadata.sortScaleMetadata(childMetadata);
 	return Optional.of(new N5MultiScaleMetadata(node.getPath(), childMetadata));
   }
 

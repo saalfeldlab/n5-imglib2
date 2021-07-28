@@ -2,6 +2,7 @@ package org.janelia.saalfeldlab.n5.metadata;
 
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.realtransform.Scale3D;
+
 import org.janelia.saalfeldlab.n5.DatasetAttributes;
 import org.janelia.saalfeldlab.n5.N5Reader;
 import org.janelia.saalfeldlab.n5.N5TreeNode;
@@ -10,6 +11,7 @@ import org.janelia.saalfeldlab.n5.imglib2.N5LabelMultisets;
 
 import java.io.IOException;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 /**
  * Default {@link N5MetadataParser} for {@link N5SingleScaleMetadata}.
@@ -31,6 +33,10 @@ public class N5SingleScaleMetadataParser implements N5MetadataParser<N5SingleSca
   public static final String DOWNSAMPLING_FACTORS_KEY = "downsamplingFactors";
   public static final String PIXEL_RESOLUTION_KEY = "pixelResolution";
   public static final String AFFINE_TRANSFORM_KEY = "affineTransform";
+
+  public static final Pattern channelPattern = Pattern.compile("^c\\d+$");
+  public static final Pattern scaleLevelPattern = Pattern.compile("^s\\d+$");
+  public static final Pattern channelScaleLevelPattern = Pattern.compile("^/?c\\d+/s\\d+$");
 
   public static AffineTransform3D buildTransform(
 		  final double[] downsamplingFactors,
@@ -106,10 +112,25 @@ public class N5SingleScaleMetadataParser implements N5MetadataParser<N5SingleSca
 
 	  } else {
 
-		pixelResolution =
-				Optional.ofNullable(n5.getAttribute(node.getPath(), PIXEL_RESOLUTION_KEY, double[].class))
-						.orElseGet(() -> new double[]{1.0, 1.0, 1.0});
-		unit = "pixel";
+		Optional<double[]> pixelResolutionOpt = Optional.ofNullable(
+				n5.getAttribute(node.getPath(), PIXEL_RESOLUTION_KEY, double[].class));
+
+
+		if( pixelResolutionOpt.isPresent() ) {
+			unit = "pixel";
+			pixelResolution = pixelResolutionOpt.get();
+		}
+		else {
+
+			Optional<FinalVoxelDimensions> pr = validateAndReturnN5vPixelResoution(n5, node.getPath() );
+			pixelResolution = pr.map( x -> {
+					double[] res = new double[ x.numDimensions() ];
+					x.dimensions(res);
+					return res; })
+				.orElse( new double[] {1.0, 1.0, 1.0 } );
+
+			unit = pr.map(FinalVoxelDimensions::unit ).orElse("pixel");
+		}
 	  }
 
 	  final Optional<AffineTransform3D> extraTransform = Optional.ofNullable(
@@ -128,6 +149,81 @@ public class N5SingleScaleMetadataParser implements N5MetadataParser<N5SingleSca
 	  return Optional.empty();
 	}
   }
+
+  /**
+   * Checks whether the given group is an n5v scale level: /c[0-9]+/s[0-9]+,
+   * and if so, returns a {@link FinalVoxelDimensions}.
+   * 
+   * @param n5 the reader
+   * @param group the group name
+   * @return an optional containing voxelDimensions if they exists and is consistent
+   */
+  public Optional<FinalVoxelDimensions> validateAndReturnN5vPixelResoution( 
+		  final N5Reader n5, final String group )
+  {
+	  if( !channelScaleLevelPattern.asPredicate().test(group))
+		  return Optional.empty();
+
+	  String baseGroup = group.substring(0, group.lastIndexOf( n5.getGroupSeparator()) );
+	  FinalVoxelDimensions pixelResObj = null;
+
+	  try {
+		String[] children = n5.list(baseGroup);
+		for( String childPath : children )
+		{
+			String path = baseGroup + n5.getGroupSeparator() + childPath;
+			FinalVoxelDimensions pro = getVoxDimObj( n5, path ); if( pro != null )
+			{
+				if( pixelResObj == null ) {
+					pixelResObj = pro;
+				}
+				else if( !FinalVoxelDimensions.equals(pro, pixelResObj)) {
+					return Optional.empty();
+				}
+				continue;
+			}
+
+			double[] pra = getVoxDimArr( n5, path );
+			if( pra != null )
+			{
+				FinalVoxelDimensions pr = new FinalVoxelDimensions("pixel", pra);
+				if( pixelResObj == null )
+					pixelResObj = pr;
+				else if( !FinalVoxelDimensions.equals(pr, pixelResObj))
+				{
+					return Optional.empty();
+				}
+				continue;
+			}
+		}
+	} catch (IOException e) {}
+
+	return Optional.of( pixelResObj );
+  }
+
+	private static boolean arrayEquals(double[] a, double[] b, double eps) {
+		for (int i = 0; i < a.length; i++) {
+			if (Math.abs(a[i] - b[i]) > eps)
+				return false;
+		}
+		return true;
+	}
+
+	private FinalVoxelDimensions getVoxDimObj(final N5Reader n5, final String path) {
+		try {
+			return n5.getAttribute(path, "pixelResolution", FinalVoxelDimensions.class);
+		} catch (Exception e) {
+			return null;
+		}
+	}
+
+	private double[] getVoxDimArr(final N5Reader n5, final String path) {
+		try {
+			return n5.getAttribute(path, "pixelResolution", double[].class);
+		} catch (Exception e) {
+			return null;
+		}
+	}
 
   @Override
   public void writeMetadata(final N5SingleScaleMetadata t, final N5Writer n5, final String group) throws Exception {

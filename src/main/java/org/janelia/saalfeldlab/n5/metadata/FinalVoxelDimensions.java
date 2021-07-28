@@ -57,4 +57,18 @@ public class FinalVoxelDimensions
 	{
 		return dimensions[ d ];
 	}
+
+	public static boolean equals( FinalVoxelDimensions a, FinalVoxelDimensions b )
+	{
+		if( !a.unit().equals(b.unit()))
+			return false;
+
+		final double eps = 1e-9;
+		for( int i = 0; i < a.numDimensions(); i++ ) {
+			if (Math.abs( a.dimension(i) - b.dimension(i)) > eps)
+				return false;
+		}
+
+		return true;
+	}
 }
