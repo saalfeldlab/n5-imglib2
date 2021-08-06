@@ -464,6 +464,7 @@ public class N5DisplacementField {
 	 * the dataset, otherwise, returns the raw {@link RandomAccessibleInterval}.
 	 *
      * @param <T> the type parameter
+     * @param <T> the quantized type parameter
 	 * @param n5 the n5 reader
 	 * @param dataset the dataset path
 	 * @param defaultType the default type
@@ -615,9 +616,9 @@ public class N5DisplacementField {
 	 * ensuring that the vector is stored in the last dimension.
 	 *
 	 * @param <T> the type parameter
-	 * @param n5
-	 * @param dataset
-	 * @param defaultType
+	 * @param n5 the n5 reader
+	 * @param dataset the dataset path 
+	 * @param defaultType the default type
 	 * @return the deformation field
 	 * @throws Exception the exception
 	 */
@@ -636,10 +637,10 @@ public class N5DisplacementField {
 	 *
 	 * @param <T> the type parameter
 	 * @param <Q> the quantized type parameter
-	 * @param n5
-	 * @param dataset
-	 * @param defaultQuantizedType
-	 * @param defaultType
+	 * @param n5 the n5 reader
+	 * @param dataset the dataset path
+	 * @param defaultQuantizedType the quantized type
+	 * @param defaultType the original type
 	 * @return the un-quantized data
 	 * @throws Exception the exception
 	 */

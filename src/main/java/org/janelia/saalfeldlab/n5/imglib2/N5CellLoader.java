@@ -63,7 +63,7 @@ import net.imglib2.view.Views;
  * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
  * @author Philipp Hanslovsky &lt;hanslovskyp@janelia.hhmi.org&gt;
  *
- * @param <T>
+ * @param <T> the type parameter
  */
 public class N5CellLoader<T extends NativeType<T>> implements CellLoader<T> {
 
@@ -99,7 +99,7 @@ public class N5CellLoader<T extends NativeType<T>> implements CellLoader<T> {
 	 *
 	 * @param n5 the n5 reader
 	 * @param dataset the dataset path
-	 * @param cellDimensions
+	 * @param cellDimensions size of the cell (block)
 	 * @param blockNotFoundHandler
 	 *            Sets block contents if the appropriate {@link N5Reader}
 	 *            returns {@code null} for that block.
