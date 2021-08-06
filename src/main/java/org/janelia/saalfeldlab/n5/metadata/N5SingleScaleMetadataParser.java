@@ -19,7 +19,7 @@ import java.util.regex.Pattern;
  * This parser provides default values for all metadata fields when values for the corresponding
  * keys are not found, i.e., it returns empty metadata only when parsing throws an exception.
  * As a result, this parser should appear as the last element of parser lists that are passed to
- * {@link N5DatasetDiscoverer}.
+ * N5DatasetDiscoverer.
  * <p>
  * When <i>downsamplingFactors</i> are specified, this parser assumes downsampling was performed using
  * averaging and includes an offset to the resulting spatial transformation. Specifically, for a downsamplling

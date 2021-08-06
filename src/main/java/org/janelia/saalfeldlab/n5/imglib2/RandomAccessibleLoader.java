@@ -38,7 +38,7 @@ import net.imglib2.view.Views;
  *
  * @deprecated This class belongs into imglib2-cache.
  *
- * @param <T>
+ * @param <T> the type parameter
  *
  * @author Philipp Hanslovsky
  * @author Stephan Saalfeld
