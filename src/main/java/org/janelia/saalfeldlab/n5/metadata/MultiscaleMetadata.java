@@ -75,6 +75,7 @@ public abstract class MultiscaleMetadata<T extends N5DatasetMetadata & SpatialMe
    *
    * @param metadataToBeSorted array of the unsorted scale metadata to be sorted
    * @param <T>                the type of the metadata
+   * @return are all dataset metadata scale levels
    */
   public static <T extends N5DatasetMetadata> boolean sortScaleMetadata(T[] metadataToBeSorted) {
 

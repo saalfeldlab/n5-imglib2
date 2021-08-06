@@ -231,6 +231,7 @@ public class N5DatasetDiscoverer {
    * If the optional parameter {@code comparator} is specified, the groups and datasets
    * will be listed in the order determined by this comparator.
    *
+   * @param n5              the n5 reader
    * @param executor        the executor
    * @param comparator      optional string comparator
    * @param filter          the dataset filter

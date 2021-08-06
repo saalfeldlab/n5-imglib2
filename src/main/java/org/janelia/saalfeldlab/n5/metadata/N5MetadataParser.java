@@ -69,7 +69,6 @@ public interface N5MetadataParser<T extends N5Metadata> extends BiFunction<N5Rea
    * @param n5   the reader
    * @param node list of tree nodes
    * @return the metadata
-   * @throws Exception parsing exception
    */
   Optional<T> parseMetadata(final N5Reader n5, final N5TreeNode node);
 

@@ -43,7 +43,7 @@ public interface N5MetadataWriter<T extends N5Metadata> {
 	 * @param t metadata
 	 * @param n5 the n5 writer
 	 * @param path the path relative to the container root of the group or dataset
-	 * @throws Exception
+	 * @throws Exception the exception
 	 */
 	void writeMetadata(T t, N5Writer n5, String path) throws Exception;
 }

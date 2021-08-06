@@ -85,10 +85,10 @@ public class N5CellLoader<T extends NativeType<T>> implements CellLoader<T> {
 	 * {@link N5CellLoader#N5CellLoader(N5Reader, String, int[], Consumer)} with
 	 * {@code blockNotFoundHandler} defaulting to no action ({@code img -> {}})
 	 *
-	 * @param n5
-	 * @param dataset
-	 * @param cellDimensions
-	 * @throws IOException
+	 * @param n5 the n5 reader
+	 * @param dataset the dataset path
+	 * @param cellDimensions size of the cell (block)
+	 * @throws IOException the execption
 	 */
 	public N5CellLoader(final N5Reader n5, final String dataset, final int[] cellDimensions) throws IOException {
 
@@ -97,13 +97,13 @@ public class N5CellLoader<T extends NativeType<T>> implements CellLoader<T> {
 
 	/**
 	 *
-	 * @param n5
-	 * @param dataset
+	 * @param n5 the n5 reader
+	 * @param dataset the dataset path
 	 * @param cellDimensions
 	 * @param blockNotFoundHandler
 	 *            Sets block contents if the appropriate {@link N5Reader}
 	 *            returns {@code null} for that block.
-	 * @throws IOException
+	 * @throws IOException the exception
 	 */
 	public N5CellLoader(
 			final N5Reader n5,
@@ -157,9 +157,11 @@ public class N5CellLoader<T extends NativeType<T>> implements CellLoader<T> {
 	 * Copies data from source into target and tests whether all values equal a
 	 * reference value.
 	 *
-	 * @param source
-	 * @param target
-	 * @return
+	 * @param <T> the type parameter
+	 * @param source source image
+	 * @param target target image
+	 * @param reference reference value
+	 * @return true if all values were equal to the reference
 	 */
 	public static <T extends Type<T>> boolean burnInTestAllEqual(
 			final RandomAccessibleInterval<T> source,
@@ -257,7 +259,9 @@ public class N5CellLoader<T extends NativeType<T>> implements CellLoader<T> {
 
 	/**
 	 *
-	 * @param defaultValue
+	 * @param <T> type parameter 
+	 * @param <I> interval type
+	 * @param defaultValue the default value
 	 * @return {@link Consumer} that sets all values of its argument to
 	 *         {@code defaultValue}.
 	 */
