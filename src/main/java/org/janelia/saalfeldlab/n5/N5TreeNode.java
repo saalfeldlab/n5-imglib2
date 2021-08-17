@@ -28,7 +28,6 @@ package org.janelia.saalfeldlab.n5;
 import org.janelia.saalfeldlab.n5.metadata.N5DatasetMetadata;
 import org.janelia.saalfeldlab.n5.metadata.N5Metadata;
 
-import javax.swing.tree.DefaultMutableTreeNode;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -90,15 +89,6 @@ public class N5TreeNode {
   public List<N5TreeNode> childrenList() {
 
 	return children;
-  }
-
-  public JTreeNodeWrapper asTreeNode() {
-
-	JTreeNodeWrapper node = new JTreeNodeWrapper(this);
-	for (N5TreeNode c : childrenList()) {
-	  node.add(c.asTreeNode());
-	}
-	return node;
   }
 
   public boolean isDataset() {
@@ -204,22 +194,4 @@ public class N5TreeNode {
 	return pathName.startsWith("/") || pathName.startsWith("\\") ? pathName.substring(1) : pathName;
   }
 
-  //TODO John move this
-  public class JTreeNodeWrapper extends DefaultMutableTreeNode {
-
-	private static final long serialVersionUID = 2650578684960249546L;
-
-	private final N5TreeNode node;
-
-	public JTreeNodeWrapper(N5TreeNode node) {
-
-	  super(node.getPath());
-	  this.node = node;
-	}
-
-	public N5TreeNode getNode() {
-
-	  return node;
-	}
-  }
 }
