@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>30.0.0</version>
+		<version>31.1.0</version>
 		<relativePath />
 	</parent>
 
@@ -113,7 +113,7 @@
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
 		<releaseProfiles>sign,deploy-to-scijava</releaseProfiles>
 
-		<n5.version>2.5.0</n5.version>
+		<n5.version>2.5.1-SNAPSHOT</n5.version>
 		<bigdataviewer-core-test.version>5.1.0</bigdataviewer-core-test.version>
 		<bigdataviewer-vistools-test.version>1.0.0-beta-11</bigdataviewer-vistools-test.version>
 		<alphanumeric-comparator.version>1.4.1</alphanumeric-comparator.version>
@@ -123,6 +123,13 @@
 		<dependency>
 			<groupId>org.janelia.saalfeldlab</groupId>
 			<artifactId>n5</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.janelia.saalfeldlab</groupId>
+			<artifactId>n5</artifactId>
+			<version>${n5.version}</version>
+			<classifier>tests</classifier>
+			<scope>test</scope>
 		</dependency>
 
 		<dependency>
@@ -164,6 +171,11 @@
 			<groupId>se.sawano.java</groupId>
 			<artifactId>alphanumeric-comparator</artifactId>
 			<version>${alphanumeric-comparator.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>net.thisptr</groupId>
+			<artifactId>jackson-jq</artifactId>
+			<version>1.0.0-preview.20191208</version>
 		</dependency>
 	</dependencies>
 
