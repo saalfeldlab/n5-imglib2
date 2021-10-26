@@ -68,7 +68,7 @@ public class N5SingleScaleMetadataParser implements N5MetadataParser<N5SingleSca
 
 	final String datasetNumber = dataset.replaceAll("^s", "");
 	try {
-	  final long downscaleFactorPower = Long.parseLong(datasetNumber) + 1;
+	  final long downscaleFactorPower = Long.parseLong(datasetNumber);
 	  final long f = (long)Math.pow(2, downscaleFactorPower);
 	  return Optional.of(new double[]{f, f, f});
 	} catch (Exception e) {
