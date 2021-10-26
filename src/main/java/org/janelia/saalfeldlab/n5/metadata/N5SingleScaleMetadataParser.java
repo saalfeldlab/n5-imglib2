@@ -2,7 +2,6 @@ package org.janelia.saalfeldlab.n5.metadata;
 
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.realtransform.Scale3D;
-
 import org.janelia.saalfeldlab.n5.DatasetAttributes;
 import org.janelia.saalfeldlab.n5.N5Reader;
 import org.janelia.saalfeldlab.n5.N5TreeNode;
@@ -69,7 +68,8 @@ public class N5SingleScaleMetadataParser implements N5MetadataParser<N5SingleSca
 
 	final String datasetNumber = dataset.replaceAll("^s", "");
 	try {
-	  final long f = Long.parseLong(datasetNumber) + 1;
+	  final long downscaleFactorPower = Long.parseLong(datasetNumber) + 1;
+	  final long f = (long)Math.pow(2, downscaleFactorPower);
 	  return Optional.of(new double[]{f, f, f});
 	} catch (Exception e) {
 	  return Optional.empty();
