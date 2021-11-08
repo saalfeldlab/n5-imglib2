@@ -284,35 +284,124 @@ def arrMultiply( $s1; $s2 ): [$s1, $s2] | transpose | map(.[0] * .[1]) ;
 
 def scaleTransform( $scales ): { "type" : "scale", "scale" : $scales };
 
-def isOmeNgffMultiscale:
+def toTreePath: ltrimstr( "/") | split("/") | map_values( ["children", . ] ) | flatten;
+
+def getSubTree( $path ): getpath( $path | toTreePath );
+
+def moveSubTree( $srcPath; $dstPath ): getSubTree( $srcPath ) as $subTree | setpath( $dstPath | toTreePath; $subTree ) 
+    | delpaths([$srcPath | toTreePath]);
+
+def canonicalAxis( $type; $lbl; $unit ): {
+    "type" : $type,
+    "label" : $lbl,
+    "unit" : $unit };
+
+def dataAxis( $i ): {
+    "type" : "data",
+    "label" : ("dim_" + ( $i | tostring)),
+    "unit" : "none" };
+
+def axisTypeFromLabel( $labRaw ):
+    $labRaw | ascii_downcase as $lab |
+    if $lab == "x" then "space"
+    elif $lab == "y" then "space"
+    elif $lab == "z" then "space"
+    elif $lab == "t" then "time"
+    elif $lab == "c" then "channel"
+    else "unknown" end;
+
+def axisFromLabel( $lbl; $unit ):
+    canonicalAxis( axisTypeFromLabel( $lbl ); $lbl; $unit );
+
+def axesFromLabels( $lbls; $unit ): $lbls | map( axisFromLabel( .; $unit ));
+
+def isNgffMultiscale:
+    type == "object" and 
     has("attributes") and
     (.attributes | has("multiscales")) and
     (.attributes | .multiscales | type == "array") and
     (.attributes | .multiscales | length > 0 ) and
     (.attributes | .multiscales | .[0] | has("datasets") );
 
-def omeNgffTransformsFromMultiscale:
+def ngffTransformsFromMultiscale( $unit; $i ):
     (.metadata | .scale) as $scales |
     reduce (.datasets | .[]) as $d (
         [ {}, $scales, $scales ];
-        [ .[0] + { ($d | .path) : { "transform": scaleTransform(.[1])} },
+        [ .[$i] + { ($d | .path) : { "spatialTransform" : { "unit" : $unit, "transform": scaleTransform(.[1])}} },
         arrMultiply( .[1]; .[2]),
         .[2] ])
     | .[0];
 
-def omeNgffAddTransformsToChildren:
+def ngffAddTransformsToChildren( $unit; $i ):
     .children as $children |
-    (.attributes | .multiscales | .[0]) as $ms |
-    ( $ms | omeZarrTransformsFromMultiscale) as $transforms |
+    (.attributes | .multiscales | .[$i]) as $ms |
+    ( $ms | ngffTransformsFromMultiscale($unit; $i) ) as $transforms |
     ( $ms | .datasets | map (.path)) as $paths |
     ( reduce ($paths | .[] ) as $p (
         $children;
-        .[$p] |= . + ( $transforms | .[$p]) )) as $newChildren |
+        (.[$p] | .attributes) |= . + ( $transforms | .[$p]) )) as $newChildren |
     .children |= $newChildren;
 
-def n5PathToTreePath: ltrimstr( "/") | split("/") | map_values( ["children", . ] ) | flatten;
+def ngffAddTransformsToMultiscale( $unit; $i ):
+    (.attributes | .multiscales | .[$i]) as $ms |
+    ( $ms | ngffTransformsFromMultiscale($unit; $i) ) as $transforms |
+    ( $ms | .datasets | map (.path)) as $paths |
+    ( reduce ($paths | .[] ) as $p (
+        $children;
+        (.[$p] | .attributes) |= . + ( $transforms | .[$p]) )) as $newChildren |
+    .children |= $newChildren;
 
-def getSubTree( $path ): getpath( $path | n5PathToTreePath );
+def ngffAddTransformsToMultiscales( $unit; $i ):
+    (.attributes | .multiscales | .[$i]) as $ms |
+    ( .attributes | .multiscales | .[$i] | .datasets ) as $dsets |
+    ( $ms | ngffTransformsFromMultiscale($unit; $i)) as $transforms |
+    ( $dsets | map ( .path as $p | . + ( $transforms | .[$p]) )) as $newdsets | 
+    setpath( ["attributes","multiscales",0,"datasets"]; $newdsets );
 
-def moveSubTree( $srcPath; $dstPath ): getSubTree( $srcPath ) as $subTree | setpath( $dstPath | n5PathToTreePath; $subTree ) 
-    | delpaths([$srcPath | n5PathToTreePath]);
+def selectMultiscale( $i ):
+    .attributes |= with_entries( if .key == "multiscales" then .value |= ( .[$i]) else . end );
+
+def backupNgffMultiscales( $newName) :
+    .attributes |= with_entries( .key |= if . == "multiscales" then $newName else . end );
+
+def convertNgff( $unit; $i ):
+    ngffAddTransformsToChildren( $unit; $i ) | ngffAddTransformsToMultiscales( $unit; $i ) | selectMultiscale( $i );
+
+def can2NgffGetScale: .attributes | .spatialTransform | .transform | .scale ;
+def can2NgffGetDownsampleFactors : .children | map( can2NgffGetScale) |
+    if (. | length) > 1 then
+        [.[0], .[1]] | transpose | map ( .[1] / .[0] )
+    else [1,1,1] end;
+
+def buildNgffScaleMetadata( $scale ): { 
+    "metadata": {
+        "order":0,
+        "preserve_range" : true,
+        "scale": $scale } 
+};
+
+def setNgffScaleMetadata: can2NgffGetDownsampleFactors as $scale | 
+    ( .attributes | .multiscales | .[0] ) |= . + buildNgffScaleMetadata( $scale );
+
+def requiredDatasetAttributes : ["dimensions","dataType","blockSize","compression"];
+
+def clearDatasetMetadata: requiredDatasetAttributes as $required | 
+    reduce ( keys | .[] ) as $k ( . ;
+        if ( $required | contains([$k]) | not) then del(.[$k]) else . end );
+
+def intensityRange( $min; $max ): { "intensityLimits" : {
+    "min" : $min,
+    "max" : $max
+    }
+};
+
+def rgbaColor( $r; $g; $b; $a ): {
+    "red" : $r,
+    "green" : $g,
+    "blue" : $b,
+    "alpha" : $a
+};
+
+def intColor( $rgba ): {
+    "rgba" : $rgba
+};
