@@ -1,6 +1,7 @@
 package org.janelia.saalfeldlab.n5.metadata.canonical;
 
 import org.janelia.saalfeldlab.n5.DatasetAttributes;
+import org.janelia.saalfeldlab.n5.metadata.ColorMetadata;
 import org.janelia.saalfeldlab.n5.metadata.N5DatasetMetadata;
 import org.janelia.saalfeldlab.n5.metadata.axes.AxisMetadata;
 
@@ -19,7 +20,16 @@ public class CanonicalSpatialDatasetMetadata extends CanonicalDatasetMetadata im
 			final SpatialMetadataCanonical spatialTransform,
 			final DatasetAttributes attributes,
 			final IntensityLimits limits) {
-		super( path, attributes, limits );
+		super( path, attributes, limits , null );
+		this.spatialTransform = spatialTransform;
+	}
+
+	public CanonicalSpatialDatasetMetadata(final String path,
+			final SpatialMetadataCanonical spatialTransform,
+			final DatasetAttributes attributes,
+			final IntensityLimits limits,
+			final ColorMetadata colorMeta ) {
+		super( path, attributes, limits , colorMeta );
 		this.spatialTransform = spatialTransform;
 	}
 

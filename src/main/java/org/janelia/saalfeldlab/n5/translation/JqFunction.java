@@ -41,6 +41,10 @@ public class JqFunction<S,T> implements Function<S,T>{
 		query = qTmp;
 	}
 
+	public boolean isValid() {
+		return query != null;
+	}
+
 	@SuppressWarnings("unchecked")
 	public JqFunction(final String translation, final Gson gson, T t ) {
 		this( translation, gson, (Class<T>) t.getClass());

@@ -17,20 +17,17 @@ import com.google.gson.JsonElement;
 public class TranslatedN5Reader extends AbstractGsonReader {
 	
 	private final N5Reader n5;
-	
+
 	protected final InvertibleTreeTranslation translation;
 
-//	private final ContainerTranslation translation;
-	
 	public TranslatedN5Reader( final N5Reader n5Base, 
 			final Gson gson,
 			final String fwdTranslation, 
 			final String invTranslation ) {
 		this.n5 = n5Base;
-//		translation = new ContainerTranslation( treeTranslation, gson );
 		ContainerMetadataNode root = ContainerMetadataNode.build(n5Base, gson);
+		root.addPathsRecursive();
 		translation = new InvertibleTreeTranslation(root, gson, fwdTranslation, invTranslation);
-//		translation = new TreeTranslation( root, gson, treeTranslation );
 	}
 	
 	public InvertibleTreeTranslation getTranslation() {

@@ -2,31 +2,51 @@ package org.janelia.saalfeldlab.n5.metadata.canonical;
 
 import org.janelia.saalfeldlab.n5.DatasetAttributes;
 import org.janelia.saalfeldlab.n5.metadata.AbstractN5DatasetMetadata;
+import org.janelia.saalfeldlab.n5.metadata.ColorMetadata;
 import org.janelia.saalfeldlab.n5.metadata.IntensityMetadata;
 import org.janelia.saalfeldlab.n5.metadata.N5DatasetMetadata;
 
-public class CanonicalDatasetMetadata extends AbstractN5DatasetMetadata implements CanonicalMetadata, N5DatasetMetadata, IntensityMetadata {
+import net.imglib2.type.numeric.ARGBType;
+
+public class CanonicalDatasetMetadata extends AbstractN5DatasetMetadata implements CanonicalMetadata, N5DatasetMetadata, IntensityMetadata, ColorMetadata {
 
 	private IntensityLimits intensityLimits;
 
+	private ColorMetadata colorMetadata;
+
+	private static final ARGBType defaultColor = new ARGBType( ARGBType.rgba(255, 255, 255, 255));
+
 	public CanonicalDatasetMetadata(final String path,
 			final DatasetAttributes attributes,
-			final double min, final double max ) {
+			final double min, final double max,
+			final ColorMetadata colorMetadata ) {
 		super( path, attributes);
 		intensityLimits = new IntensityLimits( min, max );
+		this.colorMetadata = colorMetadata;
 	}
 
 	public CanonicalDatasetMetadata(final String path,
 			final DatasetAttributes attributes,
-			final IntensityLimits limits ) {
+			final IntensityLimits limits,
+			final ColorMetadata colorMetadata ) {
 		super( path, attributes);
 		intensityLimits = limits;
+		this.colorMetadata = colorMetadata;
+	}
+
+	public CanonicalDatasetMetadata(final String path,
+			final DatasetAttributes attributes,
+			final ColorMetadata colorMetadata ) {
+		super( path, attributes);
+		intensityLimits = null;
+		this.colorMetadata = colorMetadata;
 	}
 
 	public CanonicalDatasetMetadata(final String path,
 			final DatasetAttributes attributes) {
 		super( path, attributes );
 		intensityLimits = null;
+		colorMetadata = null;
 	}
 
 	/**
@@ -45,6 +65,15 @@ public class CanonicalDatasetMetadata extends AbstractN5DatasetMetadata implemen
 		return intensityLimits == null ? 
 				IntensityMetadata.maxForDataType(getAttributes().getDataType()) :
 					intensityLimits.max;
+	}
+
+	@Override
+	public ARGBType getColor() {
+		return colorMetadata == null ? defaultColor : colorMetadata.getColor();
+	}
+
+	public ColorMetadata getColorMetadata() {
+		return colorMetadata;
 	}
 
 	protected static class IntensityLimits {

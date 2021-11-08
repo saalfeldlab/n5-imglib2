@@ -13,7 +13,7 @@ public class TreeTranslation {
 
 	protected ContainerMetadataNode rootOrig;
 	protected ContainerMetadataNode rootTranslated;
-	protected ContainerTranslation fwdFun;
+	protected JqContainerTranslation fwdFun;
 	protected Gson gson;
 
 	public TreeTranslation( 
@@ -23,10 +23,11 @@ public class TreeTranslation {
 		this.rootOrig = root;
 		this.gson = gson;
 		fwdFun = new JqContainerTranslation( fwd, gson );
+
 		updateTranslated();
 	}
 
-	public ContainerTranslation getTranslationFunction() {
+	public JqContainerTranslation getTranslationFunction() {
 		return fwdFun;
 	}
 

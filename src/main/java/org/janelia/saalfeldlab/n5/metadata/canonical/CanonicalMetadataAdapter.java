@@ -4,6 +4,9 @@ import java.lang.reflect.Type;
 import java.util.Optional;
 
 import org.janelia.saalfeldlab.n5.DatasetAttributes;
+import org.janelia.saalfeldlab.n5.metadata.ColorMetadata;
+import org.janelia.saalfeldlab.n5.metadata.IntColorMetadata;
+import org.janelia.saalfeldlab.n5.metadata.RGBAColorMetadata;
 import org.janelia.saalfeldlab.n5.metadata.canonical.CanonicalDatasetMetadata.IntensityLimits;
 
 import com.google.gson.JsonDeserializationContext;
@@ -18,10 +21,8 @@ public class CanonicalMetadataAdapter implements JsonDeserializer<CanonicalMetad
 	public CanonicalMetadata deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
 			throws JsonParseException {
 
-		JsonObject jsonObj = json.getAsJsonObject();
-//		final String path = json.getAsJsonObject().get("path").getAsString();
-//		final String path = jsonObj.get("path").getAsString();
-		final String path = "";
+		final JsonObject jsonObj = json.getAsJsonObject();
+		final String path = jsonObj.get("path").getAsString();
 		final Optional<DatasetAttributes> attrs = AbstractMetadataTemplateParser.datasetAttributes(context, json);
 
 		SpatialMetadataCanonical spatial = null;
@@ -44,11 +45,20 @@ public class CanonicalMetadataAdapter implements JsonDeserializer<CanonicalMetad
 			intensityLimits = context.deserialize(jsonObj.get("intensityLimits"), IntensityLimits.class);
 		}
 
+		ColorMetadata color = null;
+		if (jsonObj.has("color")) {
+			JsonObject colorObj = jsonObj.get("color").getAsJsonObject();
+			if( colorObj.has("rgba"))
+				color = context.deserialize(colorObj, IntColorMetadata.class);
+			else
+				color = context.deserialize(colorObj, RGBAColorMetadata.class);
+		}
+
 		if (attrs.isPresent()) {
 			if( spatial != null )
-				return new CanonicalSpatialDatasetMetadata(path, spatial, attrs.get(), intensityLimits );
+				return new CanonicalSpatialDatasetMetadata(path, spatial, attrs.get(), intensityLimits, color );
 			else 
-				return new CanonicalDatasetMetadata(path, attrs.get(), intensityLimits );
+				return new CanonicalDatasetMetadata(path, attrs.get(), intensityLimits, color );
 		} else if( spatial != null ) {
 			return new CanonicalSpatialMetadata( path, spatial, intensityLimits );
 		} else if (multiscale != null && multiscale.getChildrenMetadata() != null) {

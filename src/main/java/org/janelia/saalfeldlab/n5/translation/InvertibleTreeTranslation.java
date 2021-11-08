@@ -11,7 +11,7 @@ import com.google.gson.JsonElement;
 
 public class InvertibleTreeTranslation extends TreeTranslation {
 
-	protected ContainerTranslation invFun;
+	protected JqContainerTranslation invFun;
 
 	public InvertibleTreeTranslation( 
 			final ContainerMetadataNode root,
@@ -20,14 +20,14 @@ public class InvertibleTreeTranslation extends TreeTranslation {
 		super( root, gson, fwd );
 		invFun = new JqContainerTranslation( inv, gson );
 	}
-	
-	public ContainerTranslation getInverseTranslationFunction() {
+
+	public JqContainerTranslation getInverseTranslationFunction() {
 		return invFun;
 	}
 	
 	public void updateOriginal() {
 		rootOrig = invFun.apply(rootTranslated);
-		rootOrig.addPathsRecursive( );
+		rootOrig.addPathsRecursive();
 	}
 
 	public <T> void setTranslatedAttribute(String pathName, String key, T attribute) {
