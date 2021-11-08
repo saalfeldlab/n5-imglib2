@@ -35,40 +35,30 @@ import com.google.gson.reflect.TypeToken;
  * 
  * @author John Bogovic
  */
-public class ContainerMetadataNode implements N5Writer {
 
+public class ContainerMetadataNode implements N5Writer {
 	protected HashMap<String, JsonElement> attributes;
 	protected Map<String, ContainerMetadataNode> children;
 	protected final transient Gson gson;
-	protected String path;
 
-	public ContainerMetadataNode( String path ) {
+	public ContainerMetadataNode() {
 		gson = JqUtils.buildGson(null);
 		attributes = new HashMap<String, JsonElement>();
 		children = new HashMap<String, ContainerMetadataNode >();
-		this.path = path;
 		addPathsRecursive();
 	}
 
-	public ContainerMetadataNode() {
-		this("");
-	}
-
-	public ContainerMetadataNode(
-			final String path,
-			final HashMap<String, JsonElement> attributes,
+	public ContainerMetadataNode(final HashMap<String, JsonElement> attributes,
 			final Map<String, ContainerMetadataNode> children, final Gson gson) {
 		this.attributes = attributes;
 		this.children = children;
 		this.gson = gson;
-		this.path = path;
 	}
 
 	public ContainerMetadataNode( ContainerMetadataNode other) {
 		gson = other.gson;
 		attributes = other.attributes;
 		children = other.children;
-		this.path = other.path;
 	}
 
 	public HashMap<String, JsonElement> getAttributes() {
@@ -124,7 +114,10 @@ public class ContainerMetadataNode implements N5Writer {
 	 * @return the path to this node from the root.
 	 */
 	public String getPath() {
-		return path == null ? "" : path;
+		if( attributes.containsKey("path"))
+			return attributes.get("path").getAsString();
+		else
+			return "";
 	}
 
 	public Stream<String> getChildPathsRecursive( String thisPath ) {
@@ -146,7 +139,7 @@ public class ContainerMetadataNode implements N5Writer {
 	 * @param thisPath
 	 */
 	public void addPathsRecursive( String thisPath ) {
-		this.path = thisPath;
+		attributes.put("path", new JsonPrimitive( thisPath ));
 		for ( String childPath : children.keySet() )
 			children.get(childPath).addPathsRecursive( thisPath + "/" + childPath );
 	}
@@ -449,9 +442,9 @@ public class ContainerMetadataNode implements N5Writer {
 			childMap.put(child.getNodeName(), buildHelper(n5, child));
 
 		if ( attrs != null )
-			return new ContainerMetadataNode("", attrs, childMap, n5.getGson());
+			return new ContainerMetadataNode(attrs, childMap, n5.getGson());
 		else
-			return new ContainerMetadataNode("", new HashMap<>(), childMap, n5.getGson());
+			return new ContainerMetadataNode(new HashMap<>(), childMap, n5.getGson());
 	}
 
 	public static <T extends N5Reader> ContainerMetadataNode buildN5(final T n5, final String dataset, final Gson gson )
@@ -481,9 +474,9 @@ public class ContainerMetadataNode implements N5Writer {
 			childMap.put(child.getNodeName(), buildHelperN5(n5, child, gson));
 
 		if (attrs.isPresent())
-			return new ContainerMetadataNode("", attrs.get(), childMap, gson );
+			return new ContainerMetadataNode(attrs.get(), childMap, gson );
 		else
-			return new ContainerMetadataNode("", new HashMap<>(), childMap, gson);
+			return new ContainerMetadataNode(new HashMap<>(), childMap, gson);
 	}
 
 	public static Optional<HashMap<String, JsonElement>> getMetadataMapN5(final N5Reader n5, final String dataset,
