@@ -29,8 +29,10 @@ import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.realtransform.ScaleAndTranslation;
 import org.janelia.saalfeldlab.n5.DatasetAttributes;
+import org.janelia.saalfeldlab.n5.metadata.axes.AxisMetadata;
 
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 /**
  * Janelia COSEM's implementation of a {@link N5SingleScaleMetadata}.
@@ -39,7 +41,7 @@ import java.util.stream.IntStream;
  * 
  * @author John Bogovic
  */
-public class N5CosemMetadata extends N5SingleScaleMetadata {
+public class N5CosemMetadata extends N5SingleScaleMetadata implements AxisMetadata {
 
   private final CosemTransform cosemTransformMeta;
 
@@ -60,6 +62,32 @@ public class N5CosemMetadata extends N5SingleScaleMetadata {
 
 	return cosemTransformMeta;
   }
+
+	@Override
+	public String[] getAxisLabels() {
+		return reverse( cosemTransformMeta.axes );
+	}
+
+	@Override
+	public String[] getAxisTypes() {
+		return Stream.generate( () -> "space").limit( cosemTransformMeta.scale.length )
+				.toArray( String[]::new );
+	}
+
+	@Override
+	public String[] getUnits() {
+		return reverse( cosemTransformMeta.units );
+	}
+
+	private String[] reverse( String[] in )
+	{
+		final String[] out = new String[ in.length ];
+		int j = 0;
+		for( int i = in.length - 1; i <= 0; i-- )
+			out[j++] = in[i];
+
+		return out;
+	}
 
   public static class CosemTransform {
 
@@ -124,5 +152,6 @@ public class N5CosemMetadata extends N5SingleScaleMetadata {
 	  return IntStream.range(0, translate.length).mapToDouble(i -> translate[translate.length - i - 1]).toArray();
 	}
   }
+
 
 }
