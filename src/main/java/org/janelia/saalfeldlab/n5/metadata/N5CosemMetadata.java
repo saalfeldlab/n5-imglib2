@@ -83,7 +83,7 @@ public class N5CosemMetadata extends N5SingleScaleMetadata implements AxisMetada
 	{
 		final String[] out = new String[ in.length ];
 		int j = 0;
-		for( int i = in.length - 1; i <= 0; i-- )
+		for( int i = in.length - 1; i >= 0; i-- )
 			out[j++] = in[i];
 
 		return out;
