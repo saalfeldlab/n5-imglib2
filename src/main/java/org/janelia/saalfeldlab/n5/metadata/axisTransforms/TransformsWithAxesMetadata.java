@@ -1,10 +1,6 @@
-package org.janelia.saalfeldlab.n5.metadata.canonical;
+package org.janelia.saalfeldlab.n5.metadata.axisTransforms;
 
-import java.util.Arrays;
-import java.util.stream.IntStream;
-
-import org.janelia.saalfeldlab.n5.metadata.axes.Axis;
-import org.janelia.saalfeldlab.n5.metadata.axes.AxisUtils;
+import org.janelia.saalfeldlab.n5.metadata.axes.IndexedAxis;
 import org.janelia.saalfeldlab.n5.metadata.transforms.ScaleSpatialTransform;
 import org.janelia.saalfeldlab.n5.metadata.transforms.SpatialTransform;
 import org.janelia.saalfeldlab.n5.translation.JqUtils;
@@ -29,47 +25,10 @@ public class TransformsWithAxesMetadata {
 		return transforms;
 	}
 
-	public static IndexedAxis[] axesFromLabels(String[] labels, String[] units) {
-		final String[] types = AxisUtils.getDefaultTypes(labels);
-
-		int N = labels.length;
-		IndexedAxis[] axesIdx = new IndexedAxis[N];
-		for (int i = 0; i < N; i++) {
-			axesIdx[i] = new IndexedAxis(types[i], labels[i], units[i], i);
-		}
-		return axesIdx;
-	}
-
-	public static IndexedAxis[] axesFromLabels( String[] labels, String unit ) {
-		String[] units = new String[ labels.length ];
-		Arrays.fill( units, unit );
-		return axesFromLabels( labels, units );
-	}
-
-	public static IndexedAxis[] axesFromLabels(String... labels) {
-		return axesFromLabels(labels, "none");
-	}
-
-	public static IndexedAxis[] dataAxes( int[] indexes ) {
-		return Arrays.stream(indexes).mapToObj( i -> dataAxis(i) ).toArray( IndexedAxis[]::new );
-	}
-	
-	public static IndexedAxis[] dataAxes( int N ) {
-		return IntStream.range(0, N).mapToObj( i -> dataAxis(i) ).toArray( IndexedAxis[]::new );
-	}
-
-	public static IndexedAxis[] dataAxes( int start, int endInclusive ) {
-		return IntStream.rangeClosed(start, endInclusive).mapToObj( i -> dataAxis(i) ).toArray( IndexedAxis[]::new );
-	}
-
-	public static IndexedAxis dataAxis(int i) {
-		return new IndexedAxis("data", String.format("dim_%d", i), "none", i);
-	}
-	
 	public static TransformsWithAxes transform( SpatialTransform transform,
 			String... outputLabels ) {
-		final IndexedAxis[] inputs = dataAxes( outputLabels.length );
-		final IndexedAxis[] outputs = axesFromLabels( outputLabels );
+		final IndexedAxis[] inputs = IndexedAxis.dataAxes( outputLabels.length );
+		final IndexedAxis[] outputs = IndexedAxis.axesFromLabels( outputLabels );
 		return new TransformsWithAxes( transform, inputs, outputs );
 	}
 
@@ -83,20 +42,6 @@ public class TransformsWithAxesMetadata {
 			this.transform = transform;
 			this.inputs = inputs;
 			this.outputs = outputs;
-		}
-	}
-
-	public static class IndexedAxis extends Axis {
-
-		private int index;
-
-		public IndexedAxis(final String type, final String label, final String unit, final int index) {
-			super(type, label, unit);
-			this.index = index;
-		}
-
-		public int getIndex() {
-			return index;
 		}
 	}
 	

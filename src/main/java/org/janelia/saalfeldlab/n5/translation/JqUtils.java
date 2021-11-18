@@ -7,6 +7,8 @@ import org.janelia.saalfeldlab.n5.Compression;
 import org.janelia.saalfeldlab.n5.CompressionAdapter;
 import org.janelia.saalfeldlab.n5.DataType;
 import org.janelia.saalfeldlab.n5.N5Reader;
+import org.janelia.saalfeldlab.n5.metadata.axisTransforms.TransformAxes;
+import org.janelia.saalfeldlab.n5.metadata.axisTransforms.TransformAxesMetadataAdapter;
 import org.janelia.saalfeldlab.n5.metadata.canonical.CanonicalMetadata;
 import org.janelia.saalfeldlab.n5.metadata.canonical.CanonicalMetadataAdapter;
 import org.janelia.saalfeldlab.n5.metadata.transforms.SpatialTransform;
@@ -68,6 +70,7 @@ public class JqUtils {
 		gsonBuilder.registerTypeAdapter(SpatialTransform.class, new SpatialTransformAdapter( n5 ));
 		gsonBuilder.registerTypeAdapter(CanonicalMetadata.class, new CanonicalMetadataAdapter());
 		gsonBuilder.registerTypeAdapter(DataType.class, new DataType.JsonAdapter());
+		gsonBuilder.registerTypeAdapter(TransformAxes.class, new TransformAxesMetadataAdapter());
 		gsonBuilder.registerTypeHierarchyAdapter(Compression.class, CompressionAdapter.getJsonAdapter());
 		gsonBuilder.disableHtmlEscaping();
 		return gsonBuilder;
