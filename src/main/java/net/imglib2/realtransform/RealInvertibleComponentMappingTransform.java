@@ -15,17 +15,17 @@ public class RealInvertibleComponentMappingTransform extends RealComponentMappin
 	protected final RealPoint dpt;
 
 	public RealInvertibleComponentMappingTransform( final int[] componentIn ) {
-		this(componentIn, Arrays.stream(componentIn).max().getAsInt() + 1);
+		this(Arrays.stream(componentIn).max().getAsInt() + 1, componentIn);
 	}
 	
-	public RealInvertibleComponentMappingTransform( final int[] componentIn, final int nd ) {
-		super( checkAndFillComponent( componentIn, nd ) );
+	public RealInvertibleComponentMappingTransform( final int nd, final int[] componentIn ) {
+		super( nd, checkAndFillComponent( componentIn, nd ) );
 
 		inverseComponent = new int[ nd ];
 		for( int i  = 0; i < nd; i++ ) {
-			inverseComponent[component[i]] = i;
+			inverseComponent[components[i]] = i;
 		}
-		dpt = new RealPoint( component.length );
+		dpt = new RealPoint( components.length );
 	}
 	
 	private static int[] checkAndFillComponent( int[] component, int nd )
@@ -65,7 +65,7 @@ public class RealInvertibleComponentMappingTransform extends RealComponentMappin
 		assert target.length >= numTargetDimensions;
 
 		for ( int d = 0; d < numTargetDimensions; ++d )
-			target[ d ] = source[ inverseComponent[ d ] ];	
+			source[ d ] = target[ inverseComponent[ d ] ];
 	}
 
 	@Override
@@ -74,12 +74,12 @@ public class RealInvertibleComponentMappingTransform extends RealComponentMappin
 		assert target.numDimensions() >= numTargetDimensions;
 
 		for ( int d = 0; d < numTargetDimensions; ++d )
-			source.setPosition( target.getDoublePosition( inverseComponent[ d ] ), d );	
+			source.setPosition( target.getDoublePosition( inverseComponent[ d ] ), d );
 	}
 
 	@Override
 	public RealInvertibleComponentMappingTransform copy() {
-		return new RealInvertibleComponentMappingTransform(component);
+		return new RealInvertibleComponentMappingTransform(components);
 	}
 
 	@Override
@@ -89,27 +89,27 @@ public class RealInvertibleComponentMappingTransform extends RealComponentMappin
 
 	@Override
 	public int numDimensions() {
-		return component.length;
+		return components.length;
 	}
 
 	@Override
 	public double get(int row, int column) {
-		return component[row] == column ? 1 : 0;
+		return components[row] == column ? 1 : 0;
 	}
 
 	@Override
 	public double[] getRowPackedCopy() {
-		final int n = component.length;
+		final int n = components.length;
 		final double[] mtx = new double[ n * ( n + 1)];
 		for( int i = 0; i < n; i++ )
-			mtx[i + (n + 1) * component[i]] = 1;
+			mtx[i + (n + 1) * components[i]] = 1;
 
 		return mtx;
 	}
 
 	@Override
 	public RealLocalizable d(int d) {
-		for( int i = 0; i < component.length; i++ )
+		for( int i = 0; i < components.length; i++ )
 			dpt.setPosition(get(i, d), i);
 
 		return dpt;
