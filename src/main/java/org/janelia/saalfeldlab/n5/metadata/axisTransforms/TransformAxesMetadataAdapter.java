@@ -53,10 +53,40 @@ public class TransformAxesMetadataAdapter implements JsonDeserializer<TransformA
 			outputLabels = context.deserialize(jsonObj.get("outputLabels"), String[].class);
 		}
 
-		final IndexedAxis[] inputAxes = makeAxes( -1, inputAxesParsed, "none", null, inIdxs, true );
-		final IndexedAxis[] outputAxes= makeAxes( -1, outputAxesParsed, "none", outputLabels, outIdxs, false );
+//		final IndexedAxis[] inputAxes = makeAxes( -1, inputAxesParsed, "none", null, inIdxs, true );
+//		final IndexedAxis[] outputAxes= makeAxes( -1, outputAxesParsed, "none", outputLabels, outIdxs, false );
 
-		return new TransformAxes( transform, inputAxes, outputAxes );
+		final IndexedAxis[] inputAxes = makeAxes( inputAxesParsed, "none", null, inIdxs );
+		final IndexedAxis[] outputAxes= makeAxes( outputAxesParsed, "none", outputLabels, outIdxs );
+
+		final TransformAxes ta = new TransformAxes( transform, inputAxes, outputAxes );
+		return ta;
+	}
+
+	private static IndexedAxis[] makeAxes( IndexedAxis[] axes, String unit, String[] axisLabels, int[] indexes )
+	{
+		if( axes != null )
+			return axes;
+
+		int N = 0;
+		if( axisLabels != null )
+			N = axisLabels.length;
+		else if( indexes != null )
+			N = indexes.length;
+
+		if( N > 0 ) {
+			IndexedAxis[] out = new IndexedAxis[ N ];
+			for( int i = 0; i < N; i++ ) {
+				out[i] = new IndexedAxis(
+						null,
+						axisLabels != null ? axisLabels[i] : null,
+						unit != null ? unit : null,
+						indexes != null ? indexes[i] : -1);
+			}
+			return out;
+		}
+
+		return null;
 	}
 
 	private static IndexedAxis[] makeAxes( int N, IndexedAxis[] axes, String unit, String[] axisLabels, int[] indexes, boolean input )

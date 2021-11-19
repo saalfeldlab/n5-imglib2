@@ -1,31 +1,46 @@
 package org.janelia.saalfeldlab.n5.metadata.axisTransforms;
 
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Set;
 import java.util.stream.IntStream;
 
+import org.janelia.saalfeldlab.n5.N5FSReader;
 import org.janelia.saalfeldlab.n5.metadata.axes.IndexedAxisMetadata;
-import org.janelia.saalfeldlab.n5.metadata.transforms.ScaleSpatialTransform;
 import org.janelia.saalfeldlab.n5.metadata.transforms.SpatialTransform;
+import org.janelia.saalfeldlab.n5.translation.JqUtils;
 
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
 
 import net.imglib2.realtransform.RealTransform;
+import net.imglib2.realtransform.RealTransformSequence;
 import net.imglib2.realtransform.StackedRealTransform;
 
+/**
+ * A data structure corresponding to Proposal D here:
+ * https://github.com/saalfeldlab/n5-ij/wiki/Transformation-spec-proposal-for-NGFF#proposal-d
+ * 
+ * @author John Bogovic
+ */
 public class TransformAxisMetadata  implements SpatialTransform, IndexedAxisMetadata  {
 
-	public TransformAxes[] transforms;
-	private HashMap<Integer, Integer> idx2Xfm;
+	public static final RealTransform IDENTITY = new RealTransformSequence();
 
-	public String[] labels;
-	public String[] types;
-	public String[] units;
+	public TransformAxes[] transforms;
+
+	private transient HashMap<Integer, Integer> idx2Xfm;
+
+	public transient String[] labels;
+	public transient String[] types;
+	public transient String[] units;
 
 	private TransformAxisMetadata( TransformAxes[] transforms ) {
+
+		this.transforms = transforms;
+		setDefaults();
+
 		idx2Xfm = indexToTransform( transforms );
 		int maxIdx = idx2Xfm.entrySet().stream().mapToInt( e -> e.getKey() ).max().getAsInt();
 		
@@ -34,13 +49,22 @@ public class TransformAxisMetadata  implements SpatialTransform, IndexedAxisMeta
 		types = new String[ N ];
 		units = new String[ N ];
 
-		for (TransformAxes ta : transforms)
+		for (TransformAxes ta : transforms) {
 			for (int i = 0; i < ta.getAxisLabels().length; i++) {
 				int idx = ta.getIndexes()[i];
 				labels[idx] = ta.getAxisLabels()[i];
 				types[idx] = ta.getAxisTypes()[i];
 				units[idx] = ta.getUnits()[i];
 			}
+		}
+	}
+
+	protected void setDefaults() {
+		int firstIndex = 0;
+		for (TransformAxes ta : transforms) {
+			ta.setDefaults(firstIndex);
+			firstIndex += ta.getOutputAxes().length;
+		}
 	}
 
 	public static TransformAxisMetadata build( TransformAxes... transforms ) {
@@ -100,6 +124,16 @@ public class TransformAxisMetadata  implements SpatialTransform, IndexedAxisMeta
 
 	@Override
 	public RealTransform getTransform() {
+
+		// returns the first transformation where all axes are spatial dimensions or the identity otherwise
+		return Arrays.stream( transforms ).filter( t ->
+				Arrays.stream(t.getAxisTypes()).allMatch( u -> u.equals("space")))
+			.map( t -> t.getTransform() )
+			.findFirst()
+			.orElse( IDENTITY );
+	}
+
+	public RealTransform getStackedTransform() {
 		return new StackedRealTransform(
 			Arrays.stream(transforms).map( TransformAxes::getTransform ).toArray( RealTransform[]::new ));
 	}
@@ -108,19 +142,39 @@ public class TransformAxisMetadata  implements SpatialTransform, IndexedAxisMeta
 		return transforms[i].getTransform();
 	}
 
-	public static void main( String[] args ) throws JsonSyntaxException, JsonIOException, FileNotFoundException {
+	public TransformAxes[] getTransformAxes() {
+		return transforms;
+	}
 
-		ScaleSpatialTransform spaceXfm = new ScaleSpatialTransform( new double[] {2, 3, 4 });
-		TransformAxes space = new TransformAxes( spaceXfm, "x","y","z");
-		TransformAxes channel = new TransformAxes( new int[]{3}, "c" );
+	public static void main( String[] args ) throws JsonSyntaxException, JsonIOException, IOException {
 
-		TransformAxisMetadata tam = TransformAxisMetadata.build( space, channel );
+//		ScaleSpatialTransform spaceXfm = new ScaleSpatialTransform( new double[] {2, 3, 4 });
+//		TransformAxes space = new TransformAxes( spaceXfm, "x","y","z");
+//		TransformAxes channel = new TransformAxes( new int[]{3}, "c" );
+//
+//		TransformAxisMetadata tam = TransformAxisMetadata.build( space, channel );
+//
+//		Arrays.stream(tam.getAxisLabels()).forEach(System.out::println);
+//		System.out.println("");
+//		Arrays.stream(tam.getAxisTypes()).forEach(System.out::println);
+//		System.out.println("");
+//		Arrays.stream(tam.getUnits()).forEach(System.out::println);
+//
+//		System.out.println( "");
+//		System.out.println( Arrays.toString( space.getUnits()));
+////		System.out.println( Arrays.stream( space.getUnits()).allMatch( u -> u.equals("space")));
+//
+//		RealTransform spatialTransform = tam.getTransform();
+//		System.out.println( spatialTransform );
+
+
+		N5FSReader n5 = new N5FSReader( "/groups/saalfeld/home/bogovicj/dev/n5/n5-imglib2-translation/src/test/resources/canonical.n5", JqUtils.gsonBuilder(null));
+		String dataset = "/transformAxis/czyx_short";
 		
-		Arrays.stream(tam.getAxisLabels()).forEach(System.out::println);
-		System.out.println("");
-		Arrays.stream(tam.getAxisTypes()).forEach(System.out::println);
-		System.out.println("");
-		Arrays.stream(tam.getUnits()).forEach(System.out::println);
+		TransformAxisMetadata tam = n5.getAttribute(dataset, "transformMetadata", TransformAxisMetadata.class );
+		tam.setDefaults();
+		System.out.println( tam );
+
 	}
 
 }

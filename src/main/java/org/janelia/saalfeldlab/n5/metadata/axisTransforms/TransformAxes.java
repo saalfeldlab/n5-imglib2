@@ -18,6 +18,12 @@ import com.google.gson.JsonSyntaxException;
 
 import net.imglib2.realtransform.RealTransform;
 
+/**
+ * A transformation whose axes are labeled. 
+ * The number of input and output dimensions must be the same.
+ * 
+ * @author John Bogovic
+ */
 public class TransformAxes implements SpatialTransform, IndexedAxisMetadata {
 	
 	private SpatialTransform transform;
@@ -29,6 +35,7 @@ public class TransformAxes implements SpatialTransform, IndexedAxisMetadata {
 	public TransformAxes( SpatialTransform transform, 
 			IndexedAxis[] inputAxes, 
 			IndexedAxis[] outputAxes ) {
+
 		this.transform = transform;
 		this.inputAxes = inputAxes;
 		this.outputAxes = outputAxes;
@@ -48,6 +55,37 @@ public class TransformAxes implements SpatialTransform, IndexedAxisMetadata {
 		this( new IdentitySpatialTransform(), 
 				IndexedAxis.dataAxes( labels.length ),
 				IndexedAxis.axesFromLabels( labels, "none" ));
+	}
+
+	protected void setDefaults( int firstIndex ) {
+		int nd = -1;
+		if( transform != null )
+			nd = transform.getTransform().numSourceDimensions();
+
+		// ugly - Identity transformations can return 0 dimension 
+		// (since they can apply to points of any size)
+		if( nd < 1 && outputAxes != null )
+			nd = outputAxes.length;
+		else if( nd < 1 && inputAxes != null )
+			nd = inputAxes.length;
+
+		// set default values
+		if (this.transform == null)
+			this.transform = new IdentitySpatialTransform();
+
+		if (this.inputAxes == null)
+			this.inputAxes = IndexedAxis.dataAxes(nd, firstIndex);
+
+		if (this.outputAxes == null)
+			this.outputAxes = IndexedAxis.defaultAxes(nd, firstIndex);
+
+		int i = firstIndex;
+		for (IndexedAxis ia : inputAxes)
+			ia.setDefaults(true, i++);
+
+		i = firstIndex;
+		for (IndexedAxis oa : outputAxes)
+			oa.setDefaults(false, i++);
 	}
 
 	public IndexedAxis[] getInputAxes() {

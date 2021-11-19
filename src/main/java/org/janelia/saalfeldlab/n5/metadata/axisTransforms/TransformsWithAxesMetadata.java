@@ -7,12 +7,11 @@ import org.janelia.saalfeldlab.n5.translation.JqUtils;
 
 import com.google.gson.Gson;
 
+
 /**
- * A data structure corresponding to Proposal D here:
- * https://github.com/saalfeldlab/n5-ij/wiki/Transformation-spec-proposal-for-NGFF#proposal-d
- * 
- * @author John Bogovic
+ * Use {@link TransformAxisMetadata}
  */
+@Deprecated
 public class TransformsWithAxesMetadata {
 
 	private final TransformsWithAxes[] transforms;

@@ -167,6 +167,10 @@ public class AxisUtils {
 		return Arrays.stream(labels).map( l -> defaultAxisTypes.get(l)).toArray( String[]::new );
 	}
 
+	public static String getDefaultType( final String label ) {
+		return defaultAxisTypes.get(label);
+	}
+
 	// implemented as a singleton
 	public static class DefaultAxisTypes {
 
@@ -181,6 +185,11 @@ public class AxisUtils {
 			 labelToType.put("z", "space");
 			 labelToType.put("c", "channel");
 			 labelToType.put("t", "time");
+			 labelToType.put("X", "space");
+			 labelToType.put("Y", "space");
+			 labelToType.put("Z", "space");
+			 labelToType.put("C", "channel");
+			 labelToType.put("T", "time");
 		}
 
 		public static final DefaultAxisTypes getInstance()
@@ -192,7 +201,12 @@ public class AxisUtils {
 		}
 		
 		public String get( String label ) {
-			return labelToType.get(label);
+			if( labelToType.containsKey(label))
+				return labelToType.get(label);
+			else if( label.toLowerCase().startsWith("data"))
+				return "data";
+			else
+				return "unknown";
 		}
 	}
 	
