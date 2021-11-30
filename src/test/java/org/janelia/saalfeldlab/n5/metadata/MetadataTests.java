@@ -130,8 +130,9 @@ public class MetadataTests {
 	  long childrenNoMetadataCount = n5root.childrenList().stream()
 			  .filter(x -> Objects.isNull(x.getMetadata()))
 			  .count();
-	  Assert.assertEquals("discovery node count with single scale metadata", 6, childrenWithMetadata.size());
-	  Assert.assertEquals("discovery node count without single scale metadata", 3, childrenNoMetadataCount);
+	  Assert.assertEquals("discovery node count with single scale metadata", 4, childrenWithMetadata.size());
+	  /* discoverAndParse trims children that have no metadata in their trees (coserm, cosem_ms, n5v_ds, others)*/
+	  Assert.assertEquals("discovery node count without single scale metadata", 1, childrenNoMetadataCount);
 
 	  childrenWithMetadata.stream().filter(x -> datasetSet.contains(x.getPath())).forEach(n -> {
 
@@ -165,28 +166,77 @@ public class MetadataTests {
   }
 
   @Test
+  public void testN5ViewerGenericMetadata() {
+
+	final double eps = 1e-6;
+
+	final List<N5MetadataParser<?>> parsers = Collections.singletonList(new N5GenericSingleScaleMetadataParser());
+
+	final String[] datasetList = new String[]{"n5v_ds"};
+	final Set<String> datasetSet = Stream.of(datasetList).collect(Collectors.toSet());
+
+	final N5DatasetDiscoverer discoverer = new N5DatasetDiscoverer(n5, parsers, null);
+	try {
+	  final N5TreeNode n5root = discoverer.discoverAndParseRecursive("/");
+
+	  List<N5TreeNode> childrenWithMetadata = n5root.childrenList().stream()
+			  .filter(x -> Objects.nonNull(x.getMetadata()))
+			  .collect(Collectors.toList());
+	  long childrenNoMetadataCount = n5root.childrenList().stream()
+			  .filter(x -> Objects.isNull(x.getMetadata()))
+			  .count();
+
+	  Assert.assertEquals("discovery node count with generic single scale metadata", 6, childrenWithMetadata.size());
+	  Assert.assertEquals("discovery node count without generic single scale metadata", 3, childrenNoMetadataCount);
+
+	  childrenWithMetadata.stream().filter(x -> datasetSet.contains(x.getPath())).forEach(n -> {
+
+		final String dname = n.getPath();
+		Assert.assertNotNull(dname, n.getMetadata());
+
+		SpatialMetadata m = (SpatialMetadata)n.getMetadata();
+		AffineTransform3D xfm = m.spatialTransform3d();
+		double s = xfm.get(0, 0); // scale
+		double t = xfm.get(0, 3); // translation / offset
+
+		if (dname.contains("ds")) {
+		  Assert.assertEquals(dname + " scale", 2.0, s, eps);
+		  Assert.assertEquals(dname + " offset", 0.5, t, eps);
+		} else {
+		  Assert.assertEquals(dname + " scale", 1.5, s, eps);
+		  Assert.assertEquals(dname + " offset", 0.0, t, eps);
+		}
+	  });
+	} catch (IOException e) {
+	  fail("Discovery failed");
+	  e.printStackTrace();
+	}
+
+  }
+
+  @Test
   public void testGenericMetadata() {
 
 	final double eps = 1e-6;
 
-	final N5DatasetDiscoverer discoverer= new N5DatasetDiscoverer(n5, 
-			Collections.singletonList( 
+	final N5DatasetDiscoverer discoverer = new N5DatasetDiscoverer(n5,
+			Collections.singletonList(
 					N5GenericSingleScaleMetadataParser.builder().resolution("pixelResolution")
-					.build()),
+							.build()),
 			null);
 
-	final N5DatasetDiscoverer discovererDf= new N5DatasetDiscoverer(n5, 
-			Collections.singletonList( 
+	final N5DatasetDiscoverer discovererDf= new N5DatasetDiscoverer(n5,
+			Collections.singletonList(
 					N5GenericSingleScaleMetadataParser.builder().resolution("pixelResolution")
 					.downsamplingFactors("downsamplingFactors").build()),
 			null);
 
-	final N5DatasetDiscoverer discovererRes= new N5DatasetDiscoverer(n5, 
-			Collections.singletonList( 
+	final N5DatasetDiscoverer discovererRes= new N5DatasetDiscoverer(n5,
+			Collections.singletonList(
 					N5GenericSingleScaleMetadataParser.builder().resolution("res").build()),
 			null);
-	final N5DatasetDiscoverer discovererResOff = new N5DatasetDiscoverer(n5, 
-			Collections.singletonList( 
+	final N5DatasetDiscoverer discovererResOff = new N5DatasetDiscoverer(n5,
+			Collections.singletonList(
 					N5GenericSingleScaleMetadataParser.builder().offset("off").resolution("res").build()),
 			null);
 

@@ -93,22 +93,22 @@ public class N5SingleScaleMetadataParser implements N5MetadataParser<N5SingleSca
 
 	  Optional<FinalVoxelDimensions> voxdim;
 	  try {
-		  voxdim = Optional.ofNullable(
-			  n5.getAttribute(node.getPath(), PIXEL_RESOLUTION_KEY, FinalVoxelDimensions.class));
-	  } catch ( Exception e ) {
-		  voxdim = Optional.empty();
+		voxdim = Optional.ofNullable(
+				n5.getAttribute(node.getPath(), PIXEL_RESOLUTION_KEY, FinalVoxelDimensions.class));
+	  } catch (Exception e) {
+		voxdim = Optional.empty();
 	  }
 
-	  final String unit;
-	  final double[] pixelResolution;
-	  if( voxdim.isPresent() ) {
+	  String unit = "pixel";
+	  double[] pixelResolution = null;
+	  if (voxdim.isPresent()) {
 
-		  pixelResolution = voxdim.map(x -> {
-			final double[] res = new double[nd];
-			x.dimensions(res);
-			return res;
-		  }).orElseGet(() -> new double[]{1.0, 1.0, 1.0});
-		  unit = voxdim.map(x -> x.unit()).orElse("pixel");
+		pixelResolution = voxdim.map(x -> {
+		  final double[] res = new double[nd];
+		  x.dimensions(res);
+		  return res;
+		}).orElseGet(() -> new double[]{1.0, 1.0, 1.0});
+		unit = voxdim.map(x -> x.unit()).orElse("pixel");
 
 	  } else {
 
@@ -119,17 +119,6 @@ public class N5SingleScaleMetadataParser implements N5MetadataParser<N5SingleSca
 		if( pixelResolutionOpt.isPresent() ) {
 			unit = "pixel";
 			pixelResolution = pixelResolutionOpt.get();
-		}
-		else {
-
-			Optional<FinalVoxelDimensions> pr = validateAndReturnN5vPixelResoution(n5, node.getPath() );
-			pixelResolution = pr.map( x -> {
-					double[] res = new double[ x.numDimensions() ];
-					x.dimensions(res);
-					return res; })
-				.orElse( new double[] {1.0, 1.0, 1.0 } );
-
-			unit = pr.map(FinalVoxelDimensions::unit ).orElse("pixel");
 		}
 	  }
 
