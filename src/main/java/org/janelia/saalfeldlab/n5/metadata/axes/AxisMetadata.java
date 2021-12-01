@@ -1,6 +1,5 @@
 package org.janelia.saalfeldlab.n5.metadata.axes;
 
-import java.util.Arrays;
 import java.util.stream.IntStream;
 
 /**
@@ -16,6 +15,14 @@ public interface AxisMetadata {
 	public String[] getAxisTypes();
 
 	public String[] getUnits();
+
+	public default Axis getAxis( int i ) {
+		return new Axis(getAxisTypes()[i], getAxisLabels()[i], getUnits()[i]);
+	}
+
+	public default Axis[] getAxes() {
+		return IntStream.range(0, getAxisTypes().length ).mapToObj( i -> getAxis(i)).toArray( Axis[]::new );
+	}
 
 	/**
 	 * 

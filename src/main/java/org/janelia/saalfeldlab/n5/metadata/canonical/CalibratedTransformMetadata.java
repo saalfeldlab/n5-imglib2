@@ -1,20 +1,26 @@
 package org.janelia.saalfeldlab.n5.metadata.canonical;
 
+import java.util.Arrays;
+
 import org.janelia.saalfeldlab.n5.metadata.SpatialMetadata;
+import org.janelia.saalfeldlab.n5.metadata.axes.Axis;
+import org.janelia.saalfeldlab.n5.metadata.axes.AxisMetadata;
 import org.janelia.saalfeldlab.n5.metadata.transforms.CalibratedSpatialTransform;
 import org.janelia.saalfeldlab.n5.metadata.transforms.LinearSpatialTransform;
 
 import net.imglib2.realtransform.AffineGet;
 
-public class CalibratedTransformMetadata implements SpatialMetadata {
+public class CalibratedTransformMetadata implements SpatialMetadata, AxisMetadata {
 
 	private final String path;
 	private final CalibratedSpatialTransform spatialTransform;
+	private final Axis[] axes;
 	
-	public CalibratedTransformMetadata(final String path, final CalibratedSpatialTransform spatialTransform)
+	public CalibratedTransformMetadata(final String path, final CalibratedSpatialTransform spatialTransform, final Axis[] axes)
 	{
 		this.path = path;
 		this.spatialTransform = spatialTransform;
+		this.axes = axes;
 	}
 
 	@Override
@@ -38,6 +44,21 @@ public class CalibratedTransformMetadata implements SpatialMetadata {
 	@Override
 	public String unit() {
 		return spatialTransform.getUnit();
+	}
+
+	@Override
+	public String[] getAxisLabels() {
+		return Arrays.stream( axes ).map( Axis::getLabel).toArray( String[]::new );
+	}
+
+	@Override
+	public String[] getAxisTypes() {
+		return Arrays.stream( axes ).map( Axis::getType ).toArray( String[]::new );
+	}
+
+	@Override
+	public String[] getUnits() {
+		return Arrays.stream( axes ).map( Axis::getUnit ).toArray( String[]::new );
 	}
 
 }

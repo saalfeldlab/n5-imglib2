@@ -60,7 +60,7 @@ public class AxisUtils {
 	}
 
 	/** 
-	 * Finds and returns a permutation p such that source[p[i]] equals target[i]
+	 * Finds and returns a permutation p such that source[p[i]] equals xyczt
 	 * 
 	 * @param axisLabels
 	 * @return the permutation array
