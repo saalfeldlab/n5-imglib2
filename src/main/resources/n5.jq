@@ -323,38 +323,41 @@ def isNgffMultiscale:
     (.attributes | .multiscales | length > 0 ) and
     (.attributes | .multiscales | .[0] | has("datasets") );
 
-def ngffTransformsFromMultiscale( $unit; $i ):
-    (.metadata | .scale) as $scales |
+def ngffAxesFromMultiscale( $unit; $rev ): ( .axes | if $rev then reverse else . end) as $axLabels | axesFromLabels($axLabels; $unit );
+
+def ngffTransformsFromMultiscale( $unit; $i; $rev ):
+    ngffAxesFromMultiscale( "pixels"; $rev ) as $axes |
+    (.metadata | .scale | if $rev then reverse else . end) as $scales |
     reduce (.datasets | .[]) as $d (
         [ {}, $scales, $scales ];
-        [ .[$i] + { ($d | .path) : { "spatialTransform" : { "unit" : $unit, "transform": scaleTransform(.[1])}} },
+        [ .[$i] + { ($d | .path) : { "spatialTransform" : { "unit" : $unit, "axes": $axes, "transform": scaleTransform(.[1])}} },
         arrMultiply( .[1]; .[2]),
         .[2] ])
     | .[0];
 
-def ngffAddTransformsToChildren( $unit; $i ):
+def ngffAddTransformsToChildren( $unit; $i; $rev ):
     .children as $children |
     (.attributes | .multiscales | .[$i]) as $ms |
-    ( $ms | ngffTransformsFromMultiscale($unit; $i) ) as $transforms |
+    ( $ms | ngffTransformsFromMultiscale($unit; $i; $rev) ) as $transforms |
     ( $ms | .datasets | map (.path)) as $paths |
     ( reduce ($paths | .[] ) as $p (
         $children;
         (.[$p] | .attributes) |= . + ( $transforms | .[$p]) )) as $newChildren |
     .children |= $newChildren;
 
-def ngffAddTransformsToMultiscale( $unit; $i ):
+def ngffAddTransformsToMultiscale( $unit; $i; $rev ):
     (.attributes | .multiscales | .[$i]) as $ms |
-    ( $ms | ngffTransformsFromMultiscale($unit; $i) ) as $transforms |
+    ( $ms | ngffTransformsFromMultiscale($unit; $i; $rev) ) as $transforms |
     ( $ms | .datasets | map (.path)) as $paths |
     ( reduce ($paths | .[] ) as $p (
         $children;
         (.[$p] | .attributes) |= . + ( $transforms | .[$p]) )) as $newChildren |
     .children |= $newChildren;
 
-def ngffAddTransformsToMultiscales( $unit; $i ):
+def ngffAddTransformsToMultiscales( $unit; $i; $rev ):
     (.attributes | .multiscales | .[$i]) as $ms |
     ( .attributes | .multiscales | .[$i] | .datasets ) as $dsets |
-    ( $ms | ngffTransformsFromMultiscale($unit; $i)) as $transforms |
+    ( $ms | ngffTransformsFromMultiscale($unit; $i; $rev)) as $transforms |
     ( $dsets | map ( .path as $p | . + ( $transforms | .[$p]) )) as $newdsets | 
     setpath( ["attributes","multiscales",0,"datasets"]; $newdsets );
 
@@ -364,10 +367,11 @@ def selectMultiscale( $i ):
 def backupNgffMultiscales( $newName) :
     .attributes |= with_entries( .key |= if . == "multiscales" then $newName else . end );
 
-def convertNgff( $unit; $i ):
-    ngffAddTransformsToChildren( $unit; $i ) | ngffAddTransformsToMultiscales( $unit; $i ) | selectMultiscale( $i );
+def convertNgff( $unit; $i; $rev ):
+    ngffAddTransformsToChildren( $unit; $i; $rev ) | ngffAddTransformsToMultiscales( $unit; $i; $rev ) | selectMultiscale( $i );
 
 def can2NgffGetScale: .attributes | .spatialTransform | .transform | .scale ;
+
 def can2NgffGetDownsampleFactors : .children | map( can2NgffGetScale) |
     if (. | length) > 1 then
         [.[0], .[1]] | transpose | map ( .[1] / .[0] )
