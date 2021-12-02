@@ -50,11 +50,11 @@ import net.imglib2.Interval;
 import net.imglib2.IterableInterval;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.cache.Cache;
+import net.imglib2.cache.CacheLoader;
 import net.imglib2.cache.LoaderCache;
 import net.imglib2.cache.img.CachedCellImg;
 import net.imglib2.cache.img.DiskCachedCellImgFactory;
 import net.imglib2.cache.img.DiskCachedCellImgOptions;
-import net.imglib2.cache.img.LoadedCellCacheLoader;
 import net.imglib2.cache.ref.BoundedSoftRefLoaderCache;
 import net.imglib2.cache.ref.SoftRefLoaderCache;
 import net.imglib2.exception.ImgLibException;
@@ -364,7 +364,7 @@ public class N5Utils {
 	 * remainder.
 	 *
 	 * @param max the max coordinate of the dataset
-	 * @param offse the block offsett
+	 * @param offset the block offsett
 	 * @param gridOffset the grid offset
 	 * @param blockDimensions the block dimensions
 	 * @param croppedBlockDimensions the cropped block dimensions as a long array
@@ -706,13 +706,10 @@ public class N5Utils {
 		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
 		final long[] dimensions = attributes.getDimensions();
 		final int[] blockSize = attributes.getBlockSize();
-
-		final N5CellLoader<T> loader = new N5CellLoader<>(n5, dataset, blockSize, blockNotFoundHandler);
-
 		final CellGrid grid = new CellGrid(dimensions, blockSize);
-
-		final Cache<Long, Cell<A>> cache = loaderCache.withLoader(LoadedCellCacheLoader.get(grid, loader, type, accessFlags));
-		final CachedCellImg img = new CachedCellImg(grid, type, cache, ArrayDataAccessFactory.get(type, accessFlags));
+		final CacheLoader<Long, Cell<A>> loader = new N5CacheLoader<>(n5, dataset, grid, type, accessFlags, blockNotFoundHandler);
+		final Cache<Long, Cell<A>> cache = loaderCache.withLoader(loader);
+		final CachedCellImg<T, A> img = new CachedCellImg<>(grid, type, cache, ArrayDataAccessFactory.get(type, accessFlags));
 		return img;
 	}
 
