@@ -586,6 +586,7 @@ public class N5Utils {
 	/**
 	 * Open an N5 dataset as a memory cached {@link LazyCellImg}.
 	 *
+	 * @param <T> the type
 	 * @param n5 n5 reader
 	 * @param dataset the dataset path
 	 * @param blockNotFoundHandler consumer handling missing blocks 
@@ -603,6 +604,7 @@ public class N5Utils {
 	/**
 	 * Open an N5 dataset as a memory cached {@link LazyCellImg}.
 	 *
+	 * @param <T> the type
 	 * @param n5 n5 reader
 	 * @param dataset the dataset path
 	 * @param blockNotFoundHandler consumer handling missing blocks

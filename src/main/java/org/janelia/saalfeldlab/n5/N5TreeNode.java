@@ -34,6 +34,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 /**
@@ -89,6 +90,16 @@ public class N5TreeNode {
   public List<N5TreeNode> childrenList() {
 
 	return children;
+  }
+
+  public Optional<N5TreeNode> getDescendant( String path ) {
+
+	  return getDescendants( x -> x.getPath().endsWith(path)).findFirst();
+  }
+
+  public Stream<N5TreeNode> getDescendants( Predicate<N5TreeNode> filter ) {
+
+	  return N5TreeNode.flattenN5Tree(this).filter( filter );
   }
 
   public boolean isDataset() {
