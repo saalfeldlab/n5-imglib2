@@ -464,7 +464,7 @@ public class N5DisplacementField {
 	 * the dataset, otherwise, returns the raw {@link RandomAccessibleInterval}.
 	 *
      * @param <T> the type parameter
-     * @param <T> the quantized type parameter
+     * @param <Q> the quantized type parameter
 	 * @param n5 the n5 reader
 	 * @param dataset the dataset path
 	 * @param defaultType the default type

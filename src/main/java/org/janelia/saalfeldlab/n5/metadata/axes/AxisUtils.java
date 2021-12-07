@@ -26,8 +26,10 @@ public class AxisUtils {
 
 	/** 
 	 * Finds and returns a permutation p such that source[p[i]] equals target[i]
-	 * @param source
-	 * @param target
+	 * 
+	 * @param <T> the object type
+	 * @param source the source objects
+	 * @param target the target objects
 	 * @return the permutation array
 	 */
 	public static <T> int[] findPermutation( final T[] source, final T[] target ) {
@@ -49,11 +51,12 @@ public class AxisUtils {
 		return p;
 	}
 
-	/** 
+	/**
 	 * Finds and returns a permutation p such that source[p[i]] equals target[i]
 	 * 
-	 * @param axisLabels
-	 * @return the permutation array
+	 * @param <A> the axis type
+	 * @param axisMetadata the axis metadata
+	 * @return the permutation
 	 */
 	public static <A extends AxisMetadata> int[] findImagePlusPermutation( final AxisMetadata axisMetadata ) {
 		return findImagePlusPermutation( axisMetadata.getAxisLabels());
@@ -62,7 +65,7 @@ public class AxisUtils {
 	/** 
 	 * Finds and returns a permutation p such that source[p[i]] equals xyczt
 	 * 
-	 * @param axisLabels
+	 * @param axisLabels the axis labels
 	 * @return the permutation array
 	 */
 	public static int[] findImagePlusPermutation( final String[] axisLabels ) {
@@ -74,14 +77,13 @@ public class AxisUtils {
 		p[3] = indexOf( axisLabels, "z" );
 		p[4] = indexOf( axisLabels, "t" );
 		return p;
-//		return Arrays.stream(p).filter( x -> x >= 0 ).toArray();
 	}
 	
 	/**
 	 * Replaces "-1"s in the input permutation array
 	 * with the largest value.
 	 * 
-	 * @param p
+	 * @param p the permutation
 	 */
 	public static void fillPermutation( int[] p ) {
 		int j = Arrays.stream(p).max().getAsInt() + 1;
@@ -129,6 +131,7 @@ public class AxisUtils {
      * using the given permutation vector, where the ith value in p
      * gives destination of the ith input dimension in the output. 
      *
+     * @param <T> the image type
      * @param source the source data
      * @param p the permutation
      * @return the permuted source
@@ -150,8 +153,6 @@ public class AxisUtils {
 
 		IntervalView<T> out = Views.interval( new MixedTransformView< T >( source, t ), min, max );
 		return out;
-
-//		return Views.interval( new MixedTransformView< T >( source, t ), min, max );
 	}
 	
 	public static int[] invertPermutation( final int[] p )

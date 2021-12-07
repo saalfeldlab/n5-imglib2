@@ -69,6 +69,7 @@ public class N5LabelMultisets {
 	 * @param n5 the n5 reader
 	 * @param dataset the dataset path
 	 * @return true of the dataset is of type LabelMultiset
+	 * @throws IOException the exception
 	 */
 	public static boolean isLabelMultisetType(final N5Reader n5, final String dataset) throws IOException {
 

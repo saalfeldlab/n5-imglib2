@@ -56,11 +56,10 @@ public class ContainerMetadataWriter {
 	}
 	
 	/**
-	 * Writes all attributes stored in the tree 
+	 * Writes all attributes stored in the tree.
 	 * 
-	 * @param pathName
-	 * @param node
-	 * @throws IOException
+	 * @param pathName the path
+	 * @throws IOException the exception
 	 */
 	public void writeAllAttributes(
 			final String pathName ) throws IOException {

@@ -22,12 +22,6 @@ public class TranslatedTreeMetadataWriter extends TreeTranslation{
 
 		this.n5 = n5;
 		this.writer = new ContainerMetadataWriter(n5, rootTranslated);
-//		this.root = super.getOrig();
-
-//		translationFun = new ContainerTranslation( translation, gson);
-//		root = ContainerMetadataNode.build(n5, gson);
-//		treeTranslation = new TreeTranslation(root, gson, translation);
-//		translated = translationFun.apply( root );
 	}
 	
 	public TranslatedTreeMetadataWriter(
@@ -45,9 +39,8 @@ public class TranslatedTreeMetadataWriter extends TreeTranslation{
 	/**
 	 * Writes all attributes stored in the node corresponding to the given pathName.
 	 * 
-	 * @param pathName
-	 * @param node
-	 * @throws IOException
+	 * @param pathName the path
+	 * @throws IOException the exception
 	 */
 	public void writeAllTranslatedAttributes(
 			final String pathName ) throws IOException {

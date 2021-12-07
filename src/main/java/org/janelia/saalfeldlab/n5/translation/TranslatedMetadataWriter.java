@@ -1,18 +1,10 @@
 package org.janelia.saalfeldlab.n5.translation;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Optional;
-
 import org.janelia.saalfeldlab.n5.N5Writer;
 import org.janelia.saalfeldlab.n5.metadata.N5Metadata;
 import org.janelia.saalfeldlab.n5.metadata.N5MetadataWriter;
 import org.janelia.saalfeldlab.n5.container.ContainerMetadataNode;
 import org.janelia.saalfeldlab.n5.container.ContainerMetadataWriter;
-
-import com.google.gson.JsonElement;
-
 
 public class TranslatedMetadataWriter<T extends N5Metadata> extends TreeTranslation implements N5MetadataWriter<T>{
 
