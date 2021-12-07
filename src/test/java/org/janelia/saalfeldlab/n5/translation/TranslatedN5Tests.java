@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Random;
 
+import org.janelia.saalfeldlab.n5.DataType;
 import org.janelia.saalfeldlab.n5.DatasetAttributes;
 import org.janelia.saalfeldlab.n5.N5FSWriter;
 import org.janelia.saalfeldlab.n5.RawCompression;
@@ -58,27 +59,27 @@ public class TranslatedN5Tests {
 		}
 	}
 
-//	@After
-//	public void after() {
-//		try {
-//			n5.remove();
-//		} catch (IOException e) { }
-//	}
+	@After
+	public void after() {
+		try {
+			n5.remove();
+		} catch (IOException e) { }
+	}
 	
 	@Test
 	public void testPathTranslation() {
 
-//		try {
-//			n5.createGroup("/pathXlation");
-//			n5.createDataset("/pathXlation/src", 
-//					new DatasetAttributes( new long[]{16,16}, new int[]{16,16}, DataType.UINT8, new RawCompression()));
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
-//		Assert.assertTrue("pathXlation src exists", n5.exists("/pathXlation/src"));
-//
+		try {
+			n5.createGroup("/pathXlation");
+			n5.createDataset("/pathXlation/src", 
+					new DatasetAttributes( new long[]{16,16}, new int[]{16,16}, DataType.UINT8, new RawCompression()));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		Assert.assertTrue("pathXlation src exists", n5.exists("/pathXlation/src"));
+
 //		final String translation = "include \"n5\"; moveSubTree( \"/pathXlation/src\"; \"/pathXlation/dst\" )";
-//		final TranslatedN5Reader n5Xlated = new TranslatedN5Reader(n5, translation);
+//		final TranslatedN5Reader n5Xlated = new TranslatedN5Reader(n5, translation, ".");
 //		System.out.println( n5Xlated.exists("pathXlation/dst"));
 
 
@@ -91,7 +92,6 @@ public class TranslatedN5Tests {
 		DatasetAttributes attrs;
 		try {
 			attrs = n5Xlated.getDatasetAttributes("data");
-			System.out.println( attrs );
 			Assert.assertNotNull("translated dataset attributes exist", attrs);
 
 			CachedCellImg<UnsignedByteType, ?> imgFromXlated = N5Utils.open(n5Xlated, "data");
@@ -104,22 +104,8 @@ public class TranslatedN5Tests {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
-//		try {
-//			
-////			// write src
-////			treeWriter.setMetadataTree( translator.getOrig());
-////			treeWriter.writeAllAttributes();
-////			int parsedCode = n5.getAttribute( "pathXlation/src", "secretCode", Integer.class);
-////			Assert.assertEquals("parsed code src", code, parsedCode );
-//
-//		} catch (IOException e) {
-////			e.printStackTrace();
-//			Assert.fail( e.getMessage() );
-//		}
-
 	}
-	
+
 	public static < T extends RealType< T > & NativeType< T > > boolean equal( final Img<T> imgA, final Img<T> imgB ) {
 		try {
 			final Cursor< T > c = imgA.cursor();
