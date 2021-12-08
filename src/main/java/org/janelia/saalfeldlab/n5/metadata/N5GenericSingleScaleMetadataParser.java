@@ -34,6 +34,13 @@ public class N5GenericSingleScaleMetadataParser implements N5MetadataParser<N5Si
   public final String unitKey;
   public final String downsamplingFactorsKey;
 
+  public boolean minKeyStrict = false;
+  public boolean maxKeyStrict = false;
+  public boolean resolutionKeyStrict = false;
+  public boolean offsetKeyStrict = false;
+  public boolean unitKeyStrict = false;
+  public boolean downsamplingFactorsKeyStrict = false;
+
   public N5GenericSingleScaleMetadataParser() {
 	  minKey = DEFAULT_MIN;
 	  maxKey = DEFAULT_MAX;
@@ -84,6 +91,13 @@ public class N5GenericSingleScaleMetadataParser implements N5MetadataParser<N5Si
 	private String downsamplingFactorsKey = "";
 	private String unitKey = "";
 
+	private boolean minStrict = false;
+	private boolean maxStrict = false;
+	private boolean resolutionStrict = false;
+	private boolean offsetStrict = false;
+	private boolean unitStrict = false;
+	private boolean downsamplingFactorsStrict = false;
+
 	public Builder min(String key) {
 
 	  this.minKey = key;
@@ -120,9 +134,46 @@ public class N5GenericSingleScaleMetadataParser implements N5MetadataParser<N5Si
 	  return this;
 	}
 
+	public Builder resolutionStrict() {
+	  this.resolutionStrict = true;
+	  return this;
+	}
+
+	public Builder downsamplingFactorsStrict() {
+	  this.downsamplingFactorsStrict = true;
+	  return this;
+	}
+
+	public Builder offsetStrict() {
+	  this.offsetStrict = true;
+	  return this;
+	}
+
+	public Builder minStrict() {
+	  this.minStrict = true;
+	  return this;
+	}
+
+	public Builder maxStrict() {
+	  this.maxStrict = true;
+	  return this;
+	}
+
+	public Builder unitStrict() {
+	  this.unitStrict = true;
+	  return this;
+	}
+
 	public N5GenericSingleScaleMetadataParser build() {
 
-	  return new N5GenericSingleScaleMetadataParser(minKey, maxKey, resolutionKey, offsetKey, unitKey, downsamplingFactorsKey);
+	  N5GenericSingleScaleMetadataParser p = new N5GenericSingleScaleMetadataParser(minKey, maxKey, resolutionKey, offsetKey, unitKey, downsamplingFactorsKey);
+	  p.resolutionKeyStrict = resolutionStrict;
+	  p.downsamplingFactorsKeyStrict = downsamplingFactorsStrict;
+	  p.offsetKeyStrict = offsetStrict;
+	  p.unitKeyStrict = unitStrict;
+	  p.minKeyStrict = minStrict;
+	  p.maxKeyStrict = maxStrict;
+	  return p;
 	}
   }
 
@@ -144,7 +195,10 @@ public class N5GenericSingleScaleMetadataParser implements N5MetadataParser<N5Si
 
 			if (resolution.length < attributes.getNumDimensions())
 			  return Optional.empty();
-		  } else
+		  } 
+		  else if ( resolutionKeyStrict )
+		    return Optional.empty();
+		  else
 			resolution = DoubleStream.generate(() -> 1.0).limit(nd).toArray();
 
 			final double[] downsamplingFactors ;
@@ -152,24 +206,32 @@ public class N5GenericSingleScaleMetadataParser implements N5MetadataParser<N5Si
 			downsamplingFactors = n5.getAttribute(node.getPath(), downsamplingFactorsKey, double[].class);
 			if (downsamplingFactors.length < attributes.getNumDimensions())
 			  return Optional.empty();
+		  else if ( downsamplingFactorsKeyStrict )
+			  return Optional.empty();
 		  } else
 			downsamplingFactors = DoubleStream.generate(() -> 1.0).limit(nd).toArray();
 
 			final String unit;
 		  if (!unitKey.isEmpty() && groupAttributeTypes.containsKey(unitKey))
 			unit = n5.getAttribute(node.getPath(), unitKey, String.class);
+		  else if ( unitKeyStrict )
+			  return Optional.empty();
 		  else
 			unit = "pixel";
 
 			final double min;
 		  if (!minKey.isEmpty() && groupAttributeTypes.containsKey(minKey))
 			min = n5.getAttribute(node.getPath(), minKey, double.class);
+		  else if ( minKeyStrict )
+			  return Optional.empty();
 		  else
 			min = 0;
 
 			final double max;
 		  if (!maxKey.isEmpty() && groupAttributeTypes.containsKey(maxKey))
 			max = n5.getAttribute(node.getPath(), maxKey, double.class);
+		  else if ( maxKeyStrict )
+			  return Optional.empty();
 		  else
 			max = IntensityMetadata.maxForDataType(attributes.getDataType());
 
@@ -182,6 +244,8 @@ public class N5GenericSingleScaleMetadataParser implements N5MetadataParser<N5Si
 			offset = n5.getAttribute(node.getPath(), offsetKey, double[].class);
 			for (int i = 0; i < offset.length; i++)
 			  transform.set(offset[i], i, 3);
+		  } else if ( offsetKeyStrict ) {
+			  return Optional.empty();
 		  } else {
 			offset = new double[3];
 			for (int i = 0; i < offset.length; i++)
