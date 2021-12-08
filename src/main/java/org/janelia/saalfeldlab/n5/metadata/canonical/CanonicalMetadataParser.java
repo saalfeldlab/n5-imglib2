@@ -94,27 +94,16 @@ public class CanonicalMetadataParser implements N5MetadataParser<CanonicalMetada
 	protected void setup( final N5Reader n5 ) {
 		// TODO rebuilding gson and root is the safest thing to do, but possibly inefficient
 
-//		if( gson == null )
-			setGson( JqUtils.buildGson( n5 ));
+		setGson( JqUtils.buildGson( n5 ));
 
-//		if( root == null ) { 
-			root = ContainerMetadataNode.build(n5, gson);
-			root.addPathsRecursive();	
-//		}
+		root = ContainerMetadataNode.build(n5, gson);
+		root.addPathsRecursive();
 	}
 
 	@Override
 	public Optional<CanonicalMetadata> parseMetadata(N5Reader n5, N5TreeNode node) {
 		setup( n5 );
 		return parseMetadata( node, n5.getGroupSeparator());
-//		if( root == null ) {
-//			return Optional.empty();
-//		}
-//
-//		return root.getChild( node.getPath(), n5.getGroupSeparator() )
-//			.map( ContainerMetadataNode::getAttributes )
-//			.map( this::canonicalMetadata )
-//			.filter(filter);
 	}
 
 	@Override

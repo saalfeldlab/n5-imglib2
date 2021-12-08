@@ -54,6 +54,11 @@ public class CanonicalMetadataAdapter implements JsonDeserializer<CanonicalMetad
 				color = context.deserialize(colorObj, RGBAColorMetadata.class);
 		}
 
+		if( spatial == null && multichannel == null && multiscale == null &&
+				color == null && intensityLimits == null ) {
+			return null;
+		}
+
 		if (attrs.isPresent()) {
 			if( spatial != null )
 				return new CanonicalSpatialDatasetMetadata(path, spatial, attrs.get(), intensityLimits, color );
