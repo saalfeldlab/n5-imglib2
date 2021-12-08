@@ -230,6 +230,8 @@ public class N5GenericSingleScaleMetadataParser implements N5MetadataParser<N5Si
 			final double max;
 		  if (!maxKey.isEmpty() && groupAttributeTypes.containsKey(maxKey))
 			max = n5.getAttribute(node.getPath(), maxKey, double.class);
+		  else if ( maxKeyStrict )
+			  return Optional.empty();
 		  else
 			max = IntensityMetadata.maxForDataType(attributes.getDataType());
 
@@ -242,6 +244,8 @@ public class N5GenericSingleScaleMetadataParser implements N5MetadataParser<N5Si
 			offset = n5.getAttribute(node.getPath(), offsetKey, double[].class);
 			for (int i = 0; i < offset.length; i++)
 			  transform.set(offset[i], i, 3);
+		  } else if ( offsetKeyStrict ) {
+			  return Optional.empty();
 		  } else {
 			offset = new double[3];
 			for (int i = 0; i < offset.length; i++)
