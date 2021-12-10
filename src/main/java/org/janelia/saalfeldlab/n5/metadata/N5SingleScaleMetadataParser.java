@@ -1,5 +1,6 @@
 package org.janelia.saalfeldlab.n5.metadata;
 
+import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.realtransform.Scale3D;
 import org.janelia.saalfeldlab.n5.DatasetAttributes;
@@ -9,6 +10,7 @@ import org.janelia.saalfeldlab.n5.N5Writer;
 import org.janelia.saalfeldlab.n5.imglib2.N5LabelMultisets;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
@@ -58,9 +60,18 @@ public class N5SingleScaleMetadataParser implements N5MetadataParser<N5SingleSca
 				0, 0, 1.0, 0.0);
 	}
 
+	Scale3D scale = null;
+	if( pixelResolution.length == 2 )
+		scale = new Scale3D(pixelResolution[0], pixelResolution[1], 1);
+	else if( pixelResolution.length == 3 )
+		scale = new Scale3D(pixelResolution);
+
 	final AffineTransform3D transform = new AffineTransform3D();
-	transform.preConcatenate(mipmapTransform).preConcatenate(new Scale3D(pixelResolution));
+	if( scale != null )
+		transform.preConcatenate(mipmapTransform).preConcatenate(scale);
+
 	extraTransformOpt.ifPresent(x -> transform.preConcatenate(x));
+
 	return transform;
   }
 
@@ -76,6 +87,13 @@ public class N5SingleScaleMetadataParser implements N5MetadataParser<N5SingleSca
 	}
   }
 
+  private double[] ones( int nd )
+  {
+	  final double[] ones = new double[nd];
+	  Arrays.fill( ones, 1 );
+	  return ones;
+  }
+
   @Override
   public Optional<N5SingleScaleMetadata> parseMetadata(final N5Reader n5, final N5TreeNode node) {
 
@@ -86,10 +104,9 @@ public class N5SingleScaleMetadataParser implements N5MetadataParser<N5SingleSca
 		return Optional.empty();
 
 	  final int nd = attributes.getNumDimensions();
-
 	  final double[] downsamplingFactors = Optional.ofNullable(
 			  n5.getAttribute(node.getPath(), DOWNSAMPLING_FACTORS_KEY, double[].class))
-			  .orElseGet(() -> inferDownsamplingFactorsFromDataset(node.getNodeName()).orElseGet(() -> new double[]{1.0, 1.0, 1.0}));
+			  .orElseGet(() -> inferDownsamplingFactorsFromDataset(node.getNodeName()).orElseGet(() -> ones(nd)));
 
 	  Optional<FinalVoxelDimensions> voxdim;
 	  try {
@@ -107,7 +124,7 @@ public class N5SingleScaleMetadataParser implements N5MetadataParser<N5SingleSca
 		  final double[] res = new double[nd];
 		  x.dimensions(res);
 		  return res;
-		}).orElseGet(() -> new double[]{1.0, 1.0, 1.0});
+		}).orElseGet(() -> ones(nd));
 		unit = voxdim.map(x -> x.unit()).orElse("pixel");
 
 	  } else {
@@ -127,14 +144,17 @@ public class N5SingleScaleMetadataParser implements N5MetadataParser<N5SingleSca
 
 	  final AffineTransform3D transform = buildTransform(downsamplingFactors, pixelResolution, extraTransform);
 
-	  double[] offset = new double[]{transform.get(0, 3), transform.get(1, 3), transform.get(2, 3)};
+	  double[] offset = new double[ nd ];
+	  if( nd == 2 )
+		  offset = new double[]{transform.get(0, 3), transform.get(1, 3) };
+	  else if ( nd == 3 )
+		  offset = new double[]{transform.get(0, 3), transform.get(1, 3), transform.get(2, 3)};
 
 	  final boolean isLabelMultiset = N5LabelMultisets.isLabelMultisetType(n5, node.getPath());
 
 	  return Optional.of(new N5SingleScaleMetadata(node.getPath(), transform, downsamplingFactors, pixelResolution, offset, unit, attributes, isLabelMultiset));
 
 	} catch (IOException e) {
-		e.printStackTrace();
 	  return Optional.empty();
 	}
   }
