@@ -1,5 +1,6 @@
 package org.janelia.saalfeldlab.n5.metadata.canonical;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -18,7 +19,11 @@ import org.janelia.saalfeldlab.n5.N5Reader;
 import org.janelia.saalfeldlab.n5.N5TreeNode;
 import org.janelia.saalfeldlab.n5.RawCompression;
 import org.janelia.saalfeldlab.n5.XzCompression;
+import org.janelia.saalfeldlab.n5.metadata.ColorMetadata;
+import org.janelia.saalfeldlab.n5.metadata.IntColorMetadata;
 import org.janelia.saalfeldlab.n5.metadata.N5MetadataParser;
+import org.janelia.saalfeldlab.n5.metadata.RGBAColorMetadata;
+import org.janelia.saalfeldlab.n5.metadata.canonical.CanonicalDatasetMetadata.IntensityLimits;
 import org.janelia.saalfeldlab.n5.container.ContainerMetadataNode;
 import org.janelia.saalfeldlab.n5.metadata.transforms.LinearSpatialTransform;
 import org.janelia.saalfeldlab.n5.metadata.transforms.SpatialTransform;
@@ -62,7 +67,6 @@ public class CanonicalMetadataParser implements N5MetadataParser<CanonicalMetada
 
 	public CanonicalMetadataParser( final Predicate<CanonicalMetadata> filter) {
 		this.filter = filter;
-
 	}
 
 	public void setFilter(final Predicate<CanonicalMetadata> filter) {
@@ -102,19 +106,57 @@ public class CanonicalMetadataParser implements N5MetadataParser<CanonicalMetada
 
 	@Override
 	public Optional<CanonicalMetadata> parseMetadata(N5Reader n5, N5TreeNode node) {
-		setup( n5 );
-		return parseMetadata( node, n5.getGroupSeparator());
+
+		final String path = node.getPath();
+
+		DatasetAttributes attrs = null;
+		SpatialMetadataCanonical spatial = null;
+		MultiResolutionSpatialMetadataCanonical multiscale = null;
+		MultiChannelMetadataCanonical multichannel = null;
+		IntensityLimits intensityLimits = null;
+		ColorMetadata color = null;
+		try {
+			attrs = n5.getDatasetAttributes( path );
+			spatial = n5.getAttribute(path, "spatialTransform", SpatialMetadataCanonical.class);
+			multiscale = n5.getAttribute(path, "multiscales", MultiResolutionSpatialMetadataCanonical.class);
+			multichannel = n5.getAttribute(path, "multichannel", MultiChannelMetadataCanonical.class);
+			intensityLimits = n5.getAttribute(path, "intensityLimits", IntensityLimits.class);
+
+			color = n5.getAttribute(path, "color", IntColorMetadata.class);
+			if( color == null )
+				color = n5.getAttribute(path, "color", RGBAColorMetadata.class);
+
+		} catch (IOException e) {
+		}
+
+		if( spatial == null && multichannel == null && multiscale == null &&
+				color == null && intensityLimits == null ) {
+			return Optional.empty();
+		}
+
+		if (attrs != null ) {
+			if( spatial != null )
+				return Optional.of(new CanonicalSpatialDatasetMetadata(path, spatial, attrs, intensityLimits, color ));
+			else
+				return Optional.of(new CanonicalDatasetMetadata(path, attrs, intensityLimits, color ));
+		} else if( spatial != null ) {
+			return Optional.of(new CanonicalSpatialMetadata( path, spatial, intensityLimits ));
+		} else if (multiscale != null && multiscale.getChildrenMetadata() != null) {
+			return Optional.of(new CanonicalMultiscaleMetadata(path, multiscale ));
+		} else if (multichannel != null && multichannel.getPaths() != null) {
+			return Optional.of(new CanonicalMultichannelMetadata(path, multichannel ));
+		} else {
+			// if lots of things are present
+			return Optional.empty();
+		}
 	}
 
-	@Override
-	public Optional<CanonicalMetadata> parseMetadata(final N5Reader n5, final String dataset) {
-		return parseMetadata( n5, new N5TreeNode( dataset ));
-	}
-
+	@Deprecated
 	public Optional<CanonicalMetadata> parseMetadata(final String dataset, final String groupSep ) {
 		return parseMetadata( new N5TreeNode( dataset ), groupSep );
 	}
 
+	@Deprecated
 	public Optional<CanonicalMetadata> parseMetadata(N5TreeNode node, String groupSep) {
 		if (root == null)
 			return Optional.empty();
@@ -129,6 +171,12 @@ public class CanonicalMetadataParser implements N5MetadataParser<CanonicalMetada
 		return gson.fromJson(gson.toJson(attrMap), CanonicalMetadata.class);
 	}
 
+	/**
+	 * Use {@link JqUtils} instead.
+	 * 
+	 * @return Scope
+	 */
+	@Deprecated
 	public static Scope buildRootScope() {
 		// First of all, you have to prepare a Scope which s a container of
 		// built-in/user-defined functions and variables.
