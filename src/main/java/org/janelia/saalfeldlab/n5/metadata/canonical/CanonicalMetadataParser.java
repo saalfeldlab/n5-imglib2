@@ -26,6 +26,8 @@ import org.janelia.saalfeldlab.n5.metadata.RGBAColorMetadata;
 import org.janelia.saalfeldlab.n5.metadata.canonical.CanonicalDatasetMetadata.IntensityLimits;
 import org.janelia.saalfeldlab.n5.container.ContainerMetadataNode;
 import org.janelia.saalfeldlab.n5.metadata.transforms.LinearSpatialTransform;
+import org.janelia.saalfeldlab.n5.metadata.transforms.ParametrizedTransform;
+import org.janelia.saalfeldlab.n5.metadata.transforms.SequenceSpatialTransform;
 import org.janelia.saalfeldlab.n5.metadata.transforms.SpatialTransform;
 import org.janelia.saalfeldlab.n5.metadata.transforms.SpatialTransformAdapter;
 import org.janelia.saalfeldlab.n5.translation.JqUtils;
@@ -95,6 +97,7 @@ public class CanonicalMetadataParser implements N5MetadataParser<CanonicalMetada
 		this.gson = gson;
 	}
 	
+	@Deprecated
 	protected void setup( final N5Reader n5 ) {
 		// TODO rebuilding gson and root is the safest thing to do, but possibly inefficient
 
@@ -104,6 +107,7 @@ public class CanonicalMetadataParser implements N5MetadataParser<CanonicalMetada
 		root.addPathsRecursive();
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public Optional<CanonicalMetadata> parseMetadata(N5Reader n5, N5TreeNode node) {
 
@@ -127,6 +131,30 @@ public class CanonicalMetadataParser implements N5MetadataParser<CanonicalMetada
 				color = n5.getAttribute(path, "color", RGBAColorMetadata.class);
 
 		} catch (IOException e) {
+		}
+
+		if( spatial != null ) {
+			SpatialTransform transform = spatial.transform();
+			if( transform instanceof ParametrizedTransform ) {
+				@SuppressWarnings("rawtypes")
+				ParametrizedTransform pt = (ParametrizedTransform)transform;
+				if( pt.getParameterPath() != null ) {
+					pt.buildTransform( pt.getParameters(n5));
+				}
+			}
+			else if ( transform instanceof SequenceSpatialTransform ) {
+				SequenceSpatialTransform seq = (SequenceSpatialTransform)transform;
+				for( SpatialTransform t : seq.getTransformations())
+				{
+					if( t instanceof ParametrizedTransform ) {
+						@SuppressWarnings("rawtypes")
+						ParametrizedTransform pt = (ParametrizedTransform)t;
+						if( pt.getParameterPath() != null ) {
+							pt.buildTransform( pt.getParameters(n5));
+						}
+					}
+				}
+			}
 		}
 
 		if( spatial == null && multichannel == null && multiscale == null &&
