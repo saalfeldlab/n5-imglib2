@@ -9,7 +9,6 @@ import java.util.function.Predicate;
 
 import org.janelia.saalfeldlab.n5.Bzip2Compression;
 import org.janelia.saalfeldlab.n5.Compression;
-import org.janelia.saalfeldlab.n5.CompressionAdapter;
 import org.janelia.saalfeldlab.n5.DataType;
 import org.janelia.saalfeldlab.n5.DatasetAttributes;
 import org.janelia.saalfeldlab.n5.GsonAttributesParser;
@@ -25,17 +24,14 @@ import org.janelia.saalfeldlab.n5.metadata.N5MetadataParser;
 import org.janelia.saalfeldlab.n5.metadata.RGBAColorMetadata;
 import org.janelia.saalfeldlab.n5.metadata.canonical.CanonicalDatasetMetadata.IntensityLimits;
 import org.janelia.saalfeldlab.n5.container.ContainerMetadataNode;
-import org.janelia.saalfeldlab.n5.metadata.transforms.LinearSpatialTransform;
 import org.janelia.saalfeldlab.n5.metadata.transforms.ParametrizedTransform;
 import org.janelia.saalfeldlab.n5.metadata.transforms.SequenceSpatialTransform;
 import org.janelia.saalfeldlab.n5.metadata.transforms.SpatialTransform;
-import org.janelia.saalfeldlab.n5.metadata.transforms.SpatialTransformAdapter;
 import org.janelia.saalfeldlab.n5.translation.JqUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonElement;
 
@@ -75,18 +71,10 @@ public class CanonicalMetadataParser implements N5MetadataParser<CanonicalMetada
 		this.filter = filter;
 	}
 
+	@Deprecated
 	public CanonicalMetadataParser( final N5Reader n5, final String n5Tree, final String translation) {
-
-		final GsonBuilder gsonBuilder = new GsonBuilder();
-		gsonBuilder.registerTypeAdapter( SpatialTransform.class, new SpatialTransformAdapter( n5 ) );
-		gsonBuilder.registerTypeAdapter( LinearSpatialTransform.class, new SpatialTransformAdapter( n5 ) );
-		gsonBuilder.registerTypeAdapter( CanonicalMetadata.class, new CanonicalMetadataAdapter() );
-		gsonBuilder.registerTypeAdapter( DataType.class, new DataType.JsonAdapter());
-		gsonBuilder.registerTypeHierarchyAdapter( Compression.class, CompressionAdapter.getJsonAdapter());
-		gsonBuilder.disableHtmlEscaping();
-		gson = gsonBuilder.create();
-
-		root = gson.fromJson( n5Tree, ContainerMetadataNode.class );
+		gson = JqUtils.buildGson(n5);
+//		root = gson.fromJson( n5Tree, ContainerMetadataNode.class );
 	}
 
 	public Gson getGson() {
