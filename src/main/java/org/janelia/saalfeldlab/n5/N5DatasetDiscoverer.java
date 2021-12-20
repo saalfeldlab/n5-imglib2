@@ -44,7 +44,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
+
+import javax.swing.JTree;
 
 /**
  * This class aids in detecting and parsing datsets in an N5 container.
@@ -333,20 +337,37 @@ public class N5DatasetDiscoverer {
    * @return the n5 tree node
    * @throws IOException the io exception
    */
-  public N5TreeNode discoverAndParseRecursive(final String base) throws IOException {
+  public N5TreeNode discoverAndParseRecursive(final String base ) throws IOException {
+
+	return discoverAndParseRecursive(base, x -> {});
+  }
+
+	public N5TreeNode discoverAndParseRecursive(final String base, Consumer<N5TreeNode> callback ) throws IOException {
+
+		groupSeparator = n5.getGroupSeparator();
+		root = new N5TreeNode(base);
+		discoverAndParseRecursive(root, callback );
+		return root;
+	}
+
+  public N5TreeNode discoverAndParseRecursive(final N5TreeNode root ) throws IOException {
+	  return discoverAndParseRecursive( root, x -> {})  ;
+  }
+
+  public N5TreeNode discoverAndParseRecursive(final N5TreeNode root, Consumer<N5TreeNode> callback ) throws IOException {
 
 	groupSeparator = n5.getGroupSeparator();
 
 	String[] datasetPaths;
-	N5TreeNode root = null;
 	try {
-	  datasetPaths = n5.deepList(base, executor);
-	  root = N5TreeNode.fromFlatList(base, datasetPaths, groupSeparator);
+	  datasetPaths = n5.deepList(root.getPath(), executor);
+	  N5TreeNode.fromFlatList(root, datasetPaths, groupSeparator);
 	} catch (Exception e) {
 	  return null;
 	}
+	callback.accept(root);
 
-	parseMetadataRecursive(root);
+	parseMetadataRecursive(root,callback);
 	sortAndTrimRecursive(root);
 
 	return root;
@@ -435,6 +456,10 @@ public class N5DatasetDiscoverer {
   }
 
   public void parseMetadataRecursive(final N5TreeNode rootNode) {
+	  parseMetadataRecursive( rootNode, x -> {});
+  }
+
+  public void parseMetadataRecursive(final N5TreeNode rootNode, Consumer<N5TreeNode> callback) {
 	/* depth first, check if we have children */
 	List<N5TreeNode> children = rootNode.childrenList();
 	final ArrayList<Future<?>> childrenFutures = new ArrayList<Future<?>>();
@@ -450,17 +475,18 @@ public class N5DatasetDiscoverer {
 			useExec = (threadPoolExec.getActiveCount() < threadPoolExec.getMaximumPoolSize() - 1);
 		  }
 		  if (useExec) {
-			childrenFutures.add(this.executor.submit(() -> parseMetadataRecursive(child)));
+			childrenFutures.add(this.executor.submit(() -> parseMetadataRecursive(child, callback)));
 		  } else {
-			parseMetadataRecursive(child);
+			parseMetadataRecursive(child,callback);
 		  }
 		}
 	  } else {
 		for (final N5TreeNode child : children) {
-		  parseMetadataRecursive(child);
+		  parseMetadataRecursive(child,callback);
 		}
 	  }
 	}
+	callback.accept(rootNode);
 
 	for (Future<?> childrenFuture : childrenFutures) {
 	  try {
@@ -476,6 +502,8 @@ public class N5DatasetDiscoverer {
 	} catch (IOException e) {
 	}
 	LOG.debug("parsed metadata for: {}:\t found: {}", rootNode.getPath(), rootNode.getMetadata() == null ? "NONE" : rootNode.getMetadata().getClass().getSimpleName());
+
+	callback.accept(rootNode);
   }
 
   public static final List<N5MetadataParser<?>> fromParsers(final N5MetadataParser<?>[] parsers) {

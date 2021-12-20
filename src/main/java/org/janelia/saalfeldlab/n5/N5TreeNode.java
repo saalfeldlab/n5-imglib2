@@ -156,10 +156,24 @@ public class N5TreeNode {
    */
   public static N5TreeNode fromFlatList(final String base, final String[] pathList, final String groupSeparator) {
 
-	final HashMap<String, N5TreeNode> pathToNode = new HashMap<>();
 	final N5TreeNode root = new N5TreeNode(base);
+	fromFlatList( root, pathList, groupSeparator );
+	return root;
+  }
 
-	final String normalizedBase = normalDatasetName(base, groupSeparator);
+  /**
+   * Generates a tree based on the output of {@link N5Reader#deepList}, returning the root node.
+   *
+   * @param root           the root node corresponding to the base
+   * @param pathList       the output of deepList
+   * @param groupSeparator the n5 group separator
+   * @return the root node
+   */
+  public static void fromFlatList(final N5TreeNode root, final String[] pathList, final String groupSeparator) {
+
+	final HashMap<String, N5TreeNode> pathToNode = new HashMap<>();
+
+	final String normalizedBase = normalDatasetName(root.getPath(), groupSeparator);
 	pathToNode.put(normalizedBase, root);
 
 	// sort the paths by length such that parent nodes always have smaller
@@ -184,7 +198,6 @@ public class N5TreeNode {
 	  }
 	  parent.add(node);
 	}
-	return root;
   }
 
   private static String normalDatasetName(final String fullPath, final String groupSeparator) {
