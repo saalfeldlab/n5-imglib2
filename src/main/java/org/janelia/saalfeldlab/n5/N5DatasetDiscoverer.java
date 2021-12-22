@@ -44,11 +44,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
-
-import javax.swing.JTree;
 
 /**
  * This class aids in detecting and parsing datsets in an N5 container.
@@ -299,12 +296,11 @@ public class N5DatasetDiscoverer {
    * @param node the node
    * @return {@code true} if the branch contains a node that can be opened, {@code false} otherwise
    */
-  private static boolean trim(final N5TreeNode node) {
+  public static boolean trim(final N5TreeNode node ) {
 
 	final List<N5TreeNode> children = node.childrenList();
 	if (children.isEmpty()) {
 	  return node.getMetadata() != null;
-	  //			return node.isDataset();
 	}
 
 	boolean ret = false;
@@ -312,20 +308,113 @@ public class N5DatasetDiscoverer {
 	  final N5TreeNode childNode = it.next();
 	  if (!trim(childNode)) {
 		it.remove();
-	  } else
+	  } else {
 		ret = true;
+	  }
 	}
 
 	return ret || node.getMetadata() != null;
   }
 
-  private static void sort(final N5TreeNode node, final Comparator<? super String> comparator) {
+  public static void trimRm(final N5TreeNode node, final Consumer<N5TreeNode> rmFun ) {
+	ArrayList< N5TreeNode > toRemove = trimList( node );
+	toRemove.forEach(rmFun);
+  }
 
+  public static ArrayList<N5TreeNode> trimList(final N5TreeNode node ) {
+	ArrayList< N5TreeNode > toRemove = new ArrayList<>();
+	trimListHelper( node, toRemove );
+	return toRemove;
+  }
+
+  /**
+   * 
+   * @param node a node
+   * @param toRemove a list that should contain all nodes to be removed
+   * @return true if no children have metadata and this node should be removed
+   */
+  private static boolean trimListHelper(final N5TreeNode node, final ArrayList< N5TreeNode > toRemove ) {
+
+	final List<N5TreeNode> children = node.childrenList();
+	if( children.isEmpty() )
+	{
+		boolean rm = node.getMetadata() == null;
+		if( rm ) {
+			toRemove.add( node );
+		}
+		return rm;
+	}
+	else {
+		// should all children be removed?
+		// if so, this node should be removed
+	    boolean rm = true;
+	    for( N5TreeNode c : children ) {
+	    	 /*
+	    	  * The line below is wrong, because
+	    	  * if rm is ever false, then trimListHelper is not called,
+	    	  * we need this method to be called on all children
+	    	  */
+	    	// rm = rm && trimListHelper( c, toRemove );
+
+	    	final boolean childResult = trimListHelper( c, toRemove );
+	    	rm = rm && childResult;
+	    }
+
+		if( rm ) {
+			toRemove.add( node );
+		}
+		return rm;
+	}
+  }
+
+  public static boolean trim(final N5TreeNode node, final Consumer<N5TreeNode> removeFunction ) {
+
+	final List<N5TreeNode> children = node.childrenList();
+	if (children.isEmpty()) {
+	  return node.getMetadata() != null;
+	}
+
+	ArrayList<N5TreeNode> listCopy = new ArrayList<>();
+	listCopy.addAll(children);
+	boolean ret = false;
+	for ( N5TreeNode childNode : listCopy ) {
+	  if ( !trim(childNode,removeFunction) ) {
+		  removeFunction.accept(childNode);
+	  } else {
+		ret = true;
+	  }
+	}
+
+	return ret || node.getMetadata() != null;
+  }
+
+  public static void sort(final N5TreeNode node, final Comparator<? super String> comparator,
+		  final Consumer<N5TreeNode> callback) {
+
+	  System.out.println( "sort sort ");
 	final List<N5TreeNode> children = node.childrenList();
 	children.sort(Comparator.comparing(N5TreeNode::toString, comparator));
 
-	for (final N5TreeNode childNode : children)
-	  sort(childNode, comparator);
+	  System.out.println( "sort callback ");
+	if( callback != null ) {
+		callback.accept( node );
+	}
+
+	  System.out.println( "sort recurse ");
+	for (final N5TreeNode childNode : node.childrenList()) {
+	  sort(childNode, comparator, callback );
+	}
+  }
+
+  public void sort(final N5TreeNode node, final Consumer<N5TreeNode> callback) {
+	if (comparator != null) {
+		sort(node, comparator, callback);
+	}
+  }
+
+  public void sort(final N5TreeNode node) {
+	if (comparator != null)
+		  sort(node, comparator, null);
   }
 
   /**
@@ -405,42 +494,21 @@ public class N5DatasetDiscoverer {
 	}
 	return node;
   }
+  
 
-  //TODO ensure this isn't used before removal
-  //  public void parseGroupsRecursive(final N5TreeNode node) {
-  //
-  //	if (groupParsers == null)
-  //	  return;
-  //
-  //	// the group parser is responsible for
-  //	// checking whether the node's metad
-  //	// ata exist or not,
-  //	// and may more may not  run
-  //
-  //	// this is not a dataset but may be a group (e.g. multiscale pyramid)
-  //	// try to parse groups
-  //
-  //	for (final N5MetadataParser<?> gp : groupParsers) {
-  //
-  //	  final Optional<? extends N5Metadata> groupMeta = gp.apply(n5, node);
-  //	  if (groupMeta.isPresent()) {
-  //		node.setMetadata(groupMeta.get());
-  //		break;
-  //	  }
-  //	}
-  //
-  //	for (final N5TreeNode c : node.childrenList())
-  //	  parseGroupsRecursive(c);
-  //  }
 
   public void sortAndTrimRecursive(final N5TreeNode node) {
+	  sortAndTrimRecursive( node, x -> {});
+  }
 
-	trim(node);
+  public void sortAndTrimRecursive(final N5TreeNode node, final Consumer<N5TreeNode> callback) {
+	trim(node, callback);
+
 	if (comparator != null)
-	  sort(node, comparator);
+	  sort(node, callback);
 
 	for (final N5TreeNode c : node.childrenList())
-	  sortAndTrimRecursive(c);
+	  sortAndTrimRecursive(c, callback);
   }
 
   public void filterRecursive(final N5TreeNode node) {
