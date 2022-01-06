@@ -18,6 +18,11 @@ public class N5TreeNodeTest {
 
 		root.addPath("ant/bat");
 		assertTrue( root.getDescendant("ant/bat").isPresent() );
+
+		final N5TreeNode c0Node = new N5TreeNode("c0");
+		root.add(c0Node);
+		c0Node.addPath("c0/s0");
+		assertTrue( root.getDescendant("c0/s0").isPresent() );
 	}
 
 }
