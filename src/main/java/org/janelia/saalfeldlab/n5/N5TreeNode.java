@@ -34,6 +34,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -72,6 +73,11 @@ public class N5TreeNode {
 	return Paths.get(removeLeadingSlash(path)).getFileName().toString();
   }
 
+  public String getParentPath() {
+
+	return Paths.get(removeLeadingSlash(path)).getParent().toString();
+  }
+
   public void add(final N5TreeNode child) {
 
 	children.add(child);
@@ -95,6 +101,36 @@ public class N5TreeNode {
   public Optional<N5TreeNode> getDescendant( String path ) {
 
 	  return getDescendants( x -> x.getPath().endsWith(path)).findFirst();
+  }
+
+  public N5TreeNode addPath( final String path ) {
+	  return addPath( path, x -> new N5TreeNode( x ));
+  }
+
+  public N5TreeNode addPath( final String path, Function<String, N5TreeNode> constructor ) {
+	  final String normPath = removeLeadingSlash(path);
+	  if( this.path.equals(normPath))
+		  return this;
+
+	  final String relativePath = removeLeadingSlash( normPath.replaceAll(this.path, ""));
+	  final int sepIdx = relativePath.indexOf("/");
+	  final String childName;
+	  if( sepIdx < 0 )
+		  childName = relativePath;
+	  else
+		  childName = relativePath.substring(0, sepIdx);
+
+	  // get the appropriate child along the path if it exists, otherwise add it
+	  N5TreeNode child = null;
+	  Stream<N5TreeNode> cs = children.stream().filter( n -> n.getNodeName().equals(childName));;
+	  Optional<N5TreeNode> copt = cs.findFirst();
+	  if( copt.isPresent() )
+		  child = copt.get();
+	  else {
+		  child = constructor.apply( this.path.isEmpty() ? childName : this.path + "/" + childName );
+		  add( child );
+	  }
+	  return child.addPath(normPath);
   }
 
   public Stream<N5TreeNode> getDescendants( Predicate<N5TreeNode> filter ) {
