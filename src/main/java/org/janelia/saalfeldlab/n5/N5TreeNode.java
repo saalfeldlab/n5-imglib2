@@ -109,6 +109,10 @@ public class N5TreeNode {
 
   public N5TreeNode addPath( final String path, Function<String, N5TreeNode> constructor ) {
 	  final String normPath = removeLeadingSlash(path);
+
+	  if( !getPath().isEmpty() && !normPath.startsWith(getPath()))
+		  return null;
+
 	  if( this.path.equals(normPath))
 		  return this;
 
@@ -163,6 +167,28 @@ public class N5TreeNode {
 
 	final String nodeName = getNodeName();
 	return nodeName.isEmpty() ? "/" : nodeName;
+  }
+
+  public boolean structureEquals( N5TreeNode other )
+  {
+	  final boolean samePath = getPath().equals(other.getPath());
+	  if( !samePath )
+		  return false;
+
+	  boolean childrenEqual = true;
+	  for( N5TreeNode c : childrenList()) {
+		  Optional<N5TreeNode> otherChildOpt = other.childrenList().stream()
+			  .filter( x -> x.getNodeName().equals( c.getNodeName()))
+			  .findFirst();
+
+		 childrenEqual = childrenEqual &&
+				 otherChildOpt.map( x -> x.structureEquals(c))
+				 .orElse(false);
+
+		 if( !childrenEqual )
+			 break;
+	  }
+	  return childrenEqual;
   }
 
   public String printRecursive() {
