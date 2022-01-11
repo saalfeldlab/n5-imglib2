@@ -78,6 +78,11 @@ public class N5TreeNode {
 	return Paths.get(removeLeadingSlash(path)).getParent().toString();
   }
 
+  /**
+   * Adds a node as a child of this node.
+   *
+   * @param child the child node
+   */
   public void add(final N5TreeNode child) {
 
 	children.add(child);
@@ -103,10 +108,25 @@ public class N5TreeNode {
 	  return getDescendants( x -> x.getPath().endsWith(path)).findFirst();
   }
 
+  /**
+   * Adds a node at the specified full path and any parent nodes along the path,
+   * if they do not already exist. Returns the node at the specified path.
+   *
+   * @param path the full path to node
+   * @return the node
+   */
   public N5TreeNode addPath( final String path ) {
 	  return addPath( path, x -> new N5TreeNode( x ));
   }
 
+  /**
+   * Adds a node at the specified full path and any parent nodes along the path,
+   * if they do not already exist. Returns the node at the specified path.
+   *
+   * @param path the full path to node
+   * @param constructor function creating a node from a path
+   * @return the node
+   */
   public N5TreeNode addPath( final String path, Function<String, N5TreeNode> constructor ) {
 	  final String normPath = removeLeadingSlash(path);
 
