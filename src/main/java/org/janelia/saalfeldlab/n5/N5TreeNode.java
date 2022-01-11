@@ -34,6 +34,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -72,6 +73,11 @@ public class N5TreeNode {
 	return Paths.get(removeLeadingSlash(path)).getFileName().toString();
   }
 
+  public String getParentPath() {
+
+	return Paths.get(removeLeadingSlash(path)).getParent().toString();
+  }
+
   public void add(final N5TreeNode child) {
 
 	children.add(child);
@@ -95,6 +101,40 @@ public class N5TreeNode {
   public Optional<N5TreeNode> getDescendant( String path ) {
 
 	  return getDescendants( x -> x.getPath().endsWith(path)).findFirst();
+  }
+
+  public N5TreeNode addPath( final String path ) {
+	  return addPath( path, x -> new N5TreeNode( x ));
+  }
+
+  public N5TreeNode addPath( final String path, Function<String, N5TreeNode> constructor ) {
+	  final String normPath = removeLeadingSlash(path);
+
+	  if( !getPath().isEmpty() && !normPath.startsWith(getPath()))
+		  return null;
+
+	  if( this.path.equals(normPath))
+		  return this;
+
+	  final String relativePath = removeLeadingSlash( normPath.replaceAll(this.path, ""));
+	  final int sepIdx = relativePath.indexOf("/");
+	  final String childName;
+	  if( sepIdx < 0 )
+		  childName = relativePath;
+	  else
+		  childName = relativePath.substring(0, sepIdx);
+
+	  // get the appropriate child along the path if it exists, otherwise add it
+	  N5TreeNode child = null;
+	  Stream<N5TreeNode> cs = children.stream().filter( n -> n.getNodeName().equals(childName));;
+	  Optional<N5TreeNode> copt = cs.findFirst();
+	  if( copt.isPresent() )
+		  child = copt.get();
+	  else {
+		  child = constructor.apply( this.path.isEmpty() ? childName : this.path + "/" + childName );
+		  add( child );
+	  }
+	  return child.addPath(normPath);
   }
 
   public Stream<N5TreeNode> getDescendants( Predicate<N5TreeNode> filter ) {
@@ -129,6 +169,28 @@ public class N5TreeNode {
 	return nodeName.isEmpty() ? "/" : nodeName;
   }
 
+  public boolean structureEquals( N5TreeNode other )
+  {
+	  final boolean samePath = getPath().equals(other.getPath());
+	  if( !samePath )
+		  return false;
+
+	  boolean childrenEqual = true;
+	  for( N5TreeNode c : childrenList()) {
+		  Optional<N5TreeNode> otherChildOpt = other.childrenList().stream()
+			  .filter( x -> x.getNodeName().equals( c.getNodeName()))
+			  .findFirst();
+
+		 childrenEqual = childrenEqual &&
+				 otherChildOpt.map( x -> x.structureEquals(c))
+				 .orElse(false);
+
+		 if( !childrenEqual )
+			 break;
+	  }
+	  return childrenEqual;
+  }
+
   public String printRecursive() {
 
 	return printRecursiveHelper(this, "");
@@ -156,10 +218,24 @@ public class N5TreeNode {
    */
   public static N5TreeNode fromFlatList(final String base, final String[] pathList, final String groupSeparator) {
 
-	final HashMap<String, N5TreeNode> pathToNode = new HashMap<>();
 	final N5TreeNode root = new N5TreeNode(base);
+	fromFlatList( root, pathList, groupSeparator );
+	return root;
+  }
 
-	final String normalizedBase = normalDatasetName(base, groupSeparator);
+  /**
+   * Generates a tree based on the output of {@link N5Reader#deepList}, returning the root node.
+   *
+   * @param root           the root node corresponding to the base
+   * @param pathList       the output of deepList
+   * @param groupSeparator the n5 group separator
+   * @return the root node
+   */
+  public static void fromFlatList(final N5TreeNode root, final String[] pathList, final String groupSeparator) {
+
+	final HashMap<String, N5TreeNode> pathToNode = new HashMap<>();
+
+	final String normalizedBase = normalDatasetName(root.getPath(), groupSeparator);
 	pathToNode.put(normalizedBase, root);
 
 	// sort the paths by length such that parent nodes always have smaller
@@ -184,7 +260,6 @@ public class N5TreeNode {
 	  }
 	  parent.add(node);
 	}
-	return root;
   }
 
   private static String normalDatasetName(final String fullPath, final String groupSeparator) {
