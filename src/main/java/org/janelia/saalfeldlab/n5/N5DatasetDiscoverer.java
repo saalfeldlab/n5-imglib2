@@ -261,6 +261,15 @@ public class N5DatasetDiscoverer {
 	parseMetadata(n5, node, metadataParsers, new ArrayList<>());
   }
 
+  /**
+   * Parses metadata for a node using the given parsers, stopping after the first success.
+   *
+   * @param n5 the N5Reader
+   * @param node the tree node
+   * @param metadataParsers list of metadata parsers
+   * @param groupParsers list of group parsers
+   * @throws IOException the exception
+   */
   public static void parseMetadata(final N5Reader n5, final N5TreeNode node,
 		  final List<N5MetadataParser<?>> metadataParsers,
 		  final List<N5MetadataParser<?>> groupParsers) throws IOException {
@@ -328,6 +337,7 @@ public class N5DatasetDiscoverer {
   }
 
   /**
+   * Helper function for trimming.
    * 
    * @param node a node
    * @param toRemove a list that should contain all nodes to be removed
@@ -523,10 +533,22 @@ public class N5DatasetDiscoverer {
 	  filterRecursive(c);
   }
 
+  /**
+   * Parses metadata for the given node and all children in parallel using this object's executor.
+   *
+   * @param rootNode the root node
+   */
   public void parseMetadataRecursive(final N5TreeNode rootNode) {
 	  parseMetadataRecursive( rootNode, x -> {});
   }
 
+  /**
+   * Parses metadata for the given node and all children in parallel using this object's executor.
+   * The given function is called for every node after parsing is completed, successful or not.
+   *
+   * @param rootNode the root node
+   * @param callback the callback function
+   */
   public void parseMetadataRecursive(final N5TreeNode rootNode, Consumer<N5TreeNode> callback) {
 	/* depth first, check if we have children */
 	List<N5TreeNode> children = rootNode.childrenList();
