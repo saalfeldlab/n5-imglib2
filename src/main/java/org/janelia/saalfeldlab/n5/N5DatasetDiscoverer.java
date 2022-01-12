@@ -298,6 +298,10 @@ public class N5DatasetDiscoverer {
 	}
   }
 
+  public static boolean trim(final N5TreeNode node ) {
+	  return trim( node, x -> {});
+  }
+
   /**
    * Removes branches of the N5 container tree that do not contain any nodes that can be opened
    * (nodes with metadata).
@@ -305,7 +309,7 @@ public class N5DatasetDiscoverer {
    * @param node the node
    * @return {@code true} if the branch contains a node that can be opened, {@code false} otherwise
    */
-  public static boolean trim(final N5TreeNode node ) {
+  public static boolean trim(final N5TreeNode node, final Consumer<N5TreeNode> callback  ) {
 
 	final List<N5TreeNode> children = node.childrenList();
 	if (children.isEmpty()) {
@@ -315,81 +319,9 @@ public class N5DatasetDiscoverer {
 	boolean ret = false;
 	for (final Iterator<N5TreeNode> it = children.iterator(); it.hasNext(); ) {
 	  final N5TreeNode childNode = it.next();
-	  if (!trim(childNode)) {
+	  if (!trim(childNode, callback)) {
 		it.remove();
-	  } else {
-		ret = true;
-	  }
-	}
-
-	return ret || node.getMetadata() != null;
-  }
-
-  public static void trimRm(final N5TreeNode node, final Consumer<N5TreeNode> rmFun ) {
-	ArrayList< N5TreeNode > toRemove = trimList( node );
-	toRemove.forEach(rmFun);
-  }
-
-  public static ArrayList<N5TreeNode> trimList(final N5TreeNode node ) {
-	ArrayList< N5TreeNode > toRemove = new ArrayList<>();
-	trimListHelper( node, toRemove );
-	return toRemove;
-  }
-
-  /**
-   * Helper function for trimming.
-   * 
-   * @param node a node
-   * @param toRemove a list that should contain all nodes to be removed
-   * @return true if no children have metadata and this node should be removed
-   */
-  private static boolean trimListHelper(final N5TreeNode node, final ArrayList< N5TreeNode > toRemove ) {
-
-	final List<N5TreeNode> children = node.childrenList();
-	if( children.isEmpty() )
-	{
-		boolean rm = node.getMetadata() == null;
-		if( rm ) {
-			toRemove.add( node );
-		}
-		return rm;
-	}
-	else {
-		// should all children be removed?
-		// if so, this node should be removed
-	    boolean rm = true;
-	    for( N5TreeNode c : children ) {
-	    	 /*
-	    	  * The line below is wrong, because
-	    	  * if rm is ever false, then trimListHelper is not called,
-	    	  * we need this method to be called on all children
-	    	  */
-	    	// rm = rm && trimListHelper( c, toRemove );
-
-	    	final boolean childResult = trimListHelper( c, toRemove );
-	    	rm = rm && childResult;
-	    }
-
-		if( rm ) {
-			toRemove.add( node );
-		}
-		return rm;
-	}
-  }
-
-  public static boolean trim(final N5TreeNode node, final Consumer<N5TreeNode> removeFunction ) {
-
-	final List<N5TreeNode> children = node.childrenList();
-	if (children.isEmpty()) {
-	  return node.getMetadata() != null;
-	}
-
-	ArrayList<N5TreeNode> listCopy = new ArrayList<>();
-	listCopy.addAll(children);
-	boolean ret = false;
-	for ( N5TreeNode childNode : listCopy ) {
-	  if ( !trim(childNode,removeFunction) ) {
-		  removeFunction.accept(childNode);
+		callback.accept(childNode);
 	  } else {
 		ret = true;
 	  }
@@ -401,16 +333,13 @@ public class N5DatasetDiscoverer {
   public static void sort(final N5TreeNode node, final Comparator<? super String> comparator,
 		  final Consumer<N5TreeNode> callback) {
 
-	  System.out.println( "sort sort ");
 	final List<N5TreeNode> children = node.childrenList();
 	children.sort(Comparator.comparing(N5TreeNode::toString, comparator));
 
-	  System.out.println( "sort callback ");
 	if( callback != null ) {
 		callback.accept( node );
 	}
 
-	  System.out.println( "sort recurse ");
 	for (final N5TreeNode childNode : node.childrenList()) {
 	  sort(childNode, comparator, callback );
 	}
@@ -505,13 +434,11 @@ public class N5DatasetDiscoverer {
 	return node;
   }
   
-
-
   public void sortAndTrimRecursive(final N5TreeNode node) {
-	  sortAndTrimRecursive( node, x -> {});
+	  sortAndTrimRecursive( node, x -> { });
   }
 
-  public void sortAndTrimRecursive(final N5TreeNode node, final Consumer<N5TreeNode> callback) {
+  public void sortAndTrimRecursive(final N5TreeNode node, final Consumer<N5TreeNode> callback ) {
 	trim(node, callback);
 
 	if (comparator != null)

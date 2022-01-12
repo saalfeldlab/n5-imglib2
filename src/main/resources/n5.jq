@@ -457,7 +457,7 @@ def canonicalToN5v: .spatialTransform as $st |
     {
         "pixelResolution" : {
             "unit" : ( $st | .unit ),
-            "dimension" : ( $st | scaleFromSpatialTransform),
+            "dimension" : ( $st | scaleFromSpatialTransform)
         }
     };
 
