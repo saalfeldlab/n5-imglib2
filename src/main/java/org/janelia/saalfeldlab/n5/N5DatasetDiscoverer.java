@@ -397,7 +397,7 @@ public class N5DatasetDiscoverer {
 	callback.accept(root);
 
 	parseMetadataRecursive(root,callback);
-	sortAndTrimRecursive(root);
+	sortAndTrimRecursive(root,callback);
 
 	return root;
   }
@@ -504,7 +504,6 @@ public class N5DatasetDiscoverer {
 		}
 	  }
 	}
-	callback.accept(rootNode);
 
 	for (Future<?> childrenFuture : childrenFutures) {
 	  try {
