@@ -249,7 +249,6 @@ public class N5TreeNode {
    * @param root           the root node corresponding to the base
    * @param pathList       the output of deepList
    * @param groupSeparator the n5 group separator
-   * @return the root node
    */
   public static void fromFlatList(final N5TreeNode root, final String[] pathList, final String groupSeparator) {
 

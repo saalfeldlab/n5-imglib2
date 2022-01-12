@@ -696,7 +696,8 @@ public class N5Utils {
 	/**
 	 * Open an N5 dataset as a memory cached {@link LazyCellImg}.
 	 *
-	 * @param <T> the type
+	 * @param <T> the voxel type
+	 * @param <A> the access type
 	 * @param n5 n5 reader
 	 * @param dataset the dataset path
 	 * @param blockNotFoundHandler consumer handling missing blocks
@@ -849,7 +850,7 @@ public class N5Utils {
 	 * @param <T> the type parameter
 	 * @param n5 n5 reader
 	 * @param group the group path
-	 * @param useVolatileAccess
+	 * @param useVolatileAccess uses volatile access if true
 	 * @return the mipmap level images and their respective relative resolutions
 	 * @throws IOException the exception
 	 */

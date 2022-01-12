@@ -307,6 +307,7 @@ public class N5DatasetDiscoverer {
    * (nodes with metadata).
    *
    * @param node the node
+   * @param callback the callback function
    * @return {@code true} if the branch contains a node that can be opened, {@code false} otherwise
    */
   public static boolean trim(final N5TreeNode node, final Consumer<N5TreeNode> callback  ) {
