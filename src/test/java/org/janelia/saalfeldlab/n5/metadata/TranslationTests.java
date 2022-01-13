@@ -60,7 +60,7 @@ public class TranslationTests {
 		containerDirTest = new File(n5TestRoot);
 
 		try {
-			n5 = new N5FSWriter( containerDir.getCanonicalPath() );
+			n5 = new N5FSWriter( containerDir.getCanonicalPath(), JqUtils.gsonBuilder(null) );
 			n5Test = new N5FSWriter( containerDirTest.getCanonicalPath(), JqUtils.gsonBuilder(null));
 
 			int v = 0;
@@ -74,13 +74,13 @@ public class TranslationTests {
 		}
 	}
 
-//	@After
-//	public void after() {
-//		try {
-//			n5.remove();
-//		} catch (IOException e) {
-//		}
-//	}
+	@After
+	public void after() {
+		try {
+			n5.remove();
+		} catch (IOException e) {
+		}
+	}
 
 	@Test
 	public void testTransformSimple() {

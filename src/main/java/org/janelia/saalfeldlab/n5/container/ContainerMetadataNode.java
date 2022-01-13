@@ -93,9 +93,10 @@ public class ContainerMetadataNode implements N5Writer {
 	}
 
 	/**
-	 * 
+	 * Returns a stream of nodes for the given path.
+     *
 	 * @param path full or relative path
-	 * @return
+	 * @return stream of nodes
 	 */
 	public Stream<ContainerMetadataNode> pathToChild(final String path) {
 		final String groupSeparator = "/";
@@ -136,7 +137,7 @@ public class ContainerMetadataNode implements N5Writer {
 	/**
 	 * Adds path attributes to this node and recursively to its children.
 	 * 
-	 * @param thisPath
+	 * @param thisPath path to a node
 	 */
 	public void addPathsRecursive( String thisPath ) {
 		attributes.put("path", new JsonPrimitive( thisPath ));

@@ -84,32 +84,4 @@ public class SpatialMetadataCanonical implements SpatialMetadata, AxisMetadata {
 		return Arrays.stream( axes ).map( Axis::getUnit ).toArray( String[]::new );
 	}
 
-//	public static class SpatialMetadataTemplateAdapter implements JsonDeserializer<SpatialMetadataTemplate>
-//	{
-//
-//		@Override
-//		public SpatialMetadataTemplate deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
-//				throws JsonParseException {
-//
-//			System.out.println( "deserialize SpatialMetadataTemplateAdapter");
-//			LinearSpatialTransform transform = context.deserialize(
-//					json.getAsJsonObject().get("spatialTransform"), 
-//					LinearSpatialTransform.class );
-//
-//			String path = context.deserialize(
-//					json.getAsJsonObject().get("path"), 
-//					String.class );
-//
-//			String unit = context.deserialize(
-//					json.getAsJsonObject().get("unit"), 
-//					String.class );
-//
-//			if( attrs.isPresent() )
-//				return new SpatialMetadataTemplate( path, transform, unit );
-//			else
-//				return new SpatialMetadataTemplate( path, transform, unit );
-//		}
-//		
-//	}
-
 }

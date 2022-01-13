@@ -608,6 +608,7 @@ public class N5Utils {
 	 * @param n5 n5 reader
 	 * @param dataset the dataset path
 	 * @param blockNotFoundHandler consumer handling missing blocks
+	 * @param accessFlags the access flag set
 	 * @return the image
 	 * @throws IOException the exception
 	 */
@@ -624,6 +625,7 @@ public class N5Utils {
 	 * Open an N5 dataset as a memory cached {@link LazyCellImg} with a bound on
 	 * the number of cache entries.
 	 *
+	 * @param <T> the type
 	 * @param n5 n5 reader
 	 * @param dataset the dataset path
 	 * @param blockNotFoundHandler consumer handling missing blocks
@@ -644,10 +646,12 @@ public class N5Utils {
 	 * Open an N5 dataset as a memory cached {@link LazyCellImg} with a bound on
 	 * the number of cache entries.
 	 *
+	 * @param <T> the type
 	 * @param n5 n5 reader
 	 * @param dataset the dataset path
 	 * @param blockNotFoundHandler consumer handling missing blocks
 	 * @param maxNumCacheEntries the maximum number of cache entries
+	 * @param accessFlags the access flag set
 	 * @return the image
 	 * @throws IOException the exception
 	 */
@@ -664,10 +668,12 @@ public class N5Utils {
 	/**
 	 * Open an N5 dataset as a memory cached {@link LazyCellImg}.
 	 *
+	 * @param <T> the type
 	 * @param n5 n5 reader
 	 * @param dataset the dataset path
 	 * @param blockNotFoundHandler consumer handling missing blocks
-	 * @param loaderCacheFactory the cache
+	 * @param loaderCacheFactory the cache factory
+	 * @param accessFlags the access flag set
 	 * @return the image
 	 * @throws IOException the exception
 	 */
@@ -690,9 +696,14 @@ public class N5Utils {
 	/**
 	 * Open an N5 dataset as a memory cached {@link LazyCellImg}.
 	 *
+	 * @param <T> the voxel type
+	 * @param <A> the access type
 	 * @param n5 n5 reader
 	 * @param dataset the dataset path
 	 * @param blockNotFoundHandler consumer handling missing blocks
+	 * @param loaderCache the cache
+	 * @param accessFlags the access flag set
+	 * @param type the type
 	 * @return the image
 	 * @throws IOException the exception
 	 */
@@ -719,6 +730,7 @@ public class N5Utils {
 	 * Open an N5 dataset as a memory cached {@link LazyCellImg} using
 	 * {@link VolatileAccess}.
 	 *
+	 * @param <T> the type
 	 * @param n5 n5 reader
 	 * @param dataset the dataset path
 	 * @param blockNotFoundHandler consumer handling missing blocks
@@ -737,6 +749,7 @@ public class N5Utils {
 	 * Open an N5 dataset as a memory cached {@link LazyCellImg} with a bound on
 	 * the number of cache entries using {@link VolatileAccess}.
 	 *
+	 * @param <T> the type
 	 * @param n5 n5 reader
 	 * @param dataset the dataset path
 	 * @param blockNotFoundHandler consumer handling missing blocks
@@ -760,8 +773,8 @@ public class N5Utils {
 	 * @param <T> the type parameter
 	 * @param n5 the exception
 	 * @param group the group path
-	 * @param useVolatileAccess
-	 * @param blockNotFoundHandlerSupplier
+	 * @param useVolatileAccess uses volatile access if true
+	 * @param blockNotFoundHandlerSupplier supply a consumer handling missing blocks
 	 * @return the mipmap level images and their respective relative resolutions
 	 * @throws IOException the exception
 	 */
@@ -810,8 +823,8 @@ public class N5Utils {
 	 * @param <T> the type parameter
 	 * @param n5 n5 reader
 	 * @param group the group path
-	 * @param useVolatileAccess
-	 * @param defaultValueSupplier
+	 * @param useVolatileAccess uses volatile access if true
+	 * @param defaultValueSupplier supplies a default value
 	 * @return the mipmap level images and their respective relative resolutions
 	 * @throws IOException the exception
 	 */
@@ -837,7 +850,7 @@ public class N5Utils {
 	 * @param <T> the type parameter
 	 * @param n5 n5 reader
 	 * @param group the group path
-	 * @param useVolatileAccess
+	 * @param useVolatileAccess uses volatile access if true
 	 * @return the mipmap level images and their respective relative resolutions
 	 * @throws IOException the exception
 	 */
@@ -983,10 +996,11 @@ public class N5Utils {
 	 * offset is determined by the source position, and the source is assumed to
 	 * align with the {@link DataBlock} grid of the dataset.
 	 *
-	 * @param source
-	 * @param n5
-	 * @param dataset
-	 * @throws IOException
+	 * @param <T> the type parameter
+	 * @param source the image to write
+	 * @param n5 the n5 writer
+	 * @param dataset the dataset path
+	 * @throws IOException the exception
 	 */
 	public static final <T extends NativeType<T>> void saveBlock(
 			final RandomAccessibleInterval<T> source,
@@ -1331,12 +1345,13 @@ public class N5Utils {
 	/**
 	 * Save a {@link RandomAccessibleInterval} as an N5 dataset, multi-threaded.
 	 *
-	 * @param source
+	 * @param <T> the type parameter
+	 * @param source the image to write
 	 * @param n5 the n5 writer
 	 * @param dataset the dataset path
-	 * @param blockSize
+	 * @param blockSize the block size
 	 * @param compression the compression type
-	 * @param exec
+	 * @param exec executor for parallel writing
 	 * @throws IOException the io exception 
 	 * @throws InterruptedException the interrupted exception
 	 * @throws ExecutionException the execution exception
@@ -1426,12 +1441,13 @@ public class N5Utils {
 	 * Warning! Avoid calling this method in parallel for multiple sources that have
 	 * blocks in common. This risks invalid or corrupting data blocks.
 	 *
+	 * @param <T> the type parameter
 	 * @param source the source image to write
 	 * @param n5 the n5 writer
 	 * @param dataset the dataset
-	 * @throws IOException
-	 * @throws ExecutionException
-	 * @throws InterruptedException
+	 * @throws IOException the io exception
+	 * @throws ExecutionException the execution exception
+	 * @throws InterruptedException the interrupted exception
 	 */
 	public static <T extends NativeType<T>> void saveRegion(
 			final RandomAccessibleInterval<T> source,
@@ -1450,13 +1466,14 @@ public class N5Utils {
 	 * Warning! Avoid calling this method in parallel for multiple sources that have
 	 * blocks in common. This risks invalid or corrupting data blocks.
 	 *
+	 * @param <T> the type parameter
 	 * @param source the source image to write
 	 * @param n5 the n5 writer
 	 * @param dataset the dataset
 	 * @param exec executor service
-	 * @throws IOException
-	 * @throws ExecutionException
-	 * @throws InterruptedException
+	 * @throws IOException the io exception
+	 * @throws ExecutionException the execution exception
+	 * @throws InterruptedException the interrupted exception
 	 */
 	public static <T extends NativeType<T>> void saveRegion(
 			final RandomAccessibleInterval<T> source,
@@ -1475,13 +1492,14 @@ public class N5Utils {
 	 * Warning! Avoid calling this method in parallel for multiple sources that have
 	 * blocks in common. This risks invalid or corrupting data blocks.
 	 *
+	 * @param <T> the type parameter
 	 * @param source the source image to write
 	 * @param n5 the n5 writer
 	 * @param dataset the dataset
 	 * @param attributes dataset attributes
-	 * @throws IOException
-	 * @throws ExecutionException
-	 * @throws InterruptedException
+	 * @throws IOException the io exception
+	 * @throws ExecutionException the execution exception
+	 * @throws InterruptedException the interrupted exception
 	 */
 	public static <T extends NativeType<T>> void saveRegion(
 			final RandomAccessibleInterval<T> source,
@@ -1557,14 +1575,16 @@ public class N5Utils {
 	 * Warning! Avoid calling this method in parallel for multiple sources that have
 	 * blocks in common. This risks invalid or corrupting data blocks.
 	 *
+	 * @param <T> the type parameter
 	 * @param source the source image to write
 	 * @param n5 the n5 writer
 	 * @param dataset the dataset
 	 * @param attributes dataset attributes
 	 * @param exec the executor
-	 * @throws IOException
-	 * @throws ExecutionException
-	 * @throws InterruptedException
+	 * @throws IOException the io exception
+	 * @throws ExecutionException the execution exception
+	 * @throws InterruptedException the interrupted exception
+     *
 	 */
 	public static <T extends NativeType<T>> void saveRegion(
 			final RandomAccessibleInterval<T> source,
@@ -1658,6 +1678,7 @@ public class N5Utils {
 	/**
 	 * Performs checks, and determine if padding is necessary.
 	 * 
+	 * @param <T> the type parameter
 	 * @param source the source image to write
 	 * @param attributes n5 dataset attributes
 	 * @return new dataset dimensions if padding necessary, empty optional otherwise
@@ -1724,12 +1745,12 @@ public class N5Utils {
 	 * is given in {@link DataBlock} grid coordinates and the interval is
 	 * assumed to align with the {@link DataBlock} grid of the dataset.
 	 *
-	 * @param interval
-	 * @param n5
-	 * @param dataset
-	 * @param attributes
-	 * @param gridOffset
-	 * @throws IOException
+	 * @param interval the interval
+	 * @param n5 the n5 writer 
+	 * @param dataset the dataset path
+	 * @param attributes dataset attributes
+	 * @param gridOffset the position in the block grid
+	 * @throws IOException the io exception
 	 */
 	public static final void deleteBlock(
 			final Interval interval,
@@ -1771,11 +1792,11 @@ public class N5Utils {
 	 * determined by the interval position, and the interval is assumed to align
 	 * with the {@link DataBlock} grid of the dataset.
 	 *
-	 * @param interval
-	 * @param n5
-	 * @param dataset
-	 * @param attributes
-	 * @throws IOException
+	 * @param interval the interval
+	 * @param n5 the n5 writer 
+	 * @param dataset the dataset path
+	 * @param attributes dataset attributes
+	 * @throws IOException the io exception
 	 */
 	public static final void deleteBlock(
 			final Interval interval,
@@ -1794,10 +1815,10 @@ public class N5Utils {
 	 * determined by the interval position, and the interval is assumed to align
 	 * with the {@link DataBlock} grid of the dataset.
 	 *
-	 * @param interval
-	 * @param n5
-	 * @param dataset
-	 * @throws IOException
+	 * @param interval the interval
+	 * @param n5 the n5 writer 
+	 * @param dataset the dataset path
+	 * @throws IOException the io exception
 	 */
 	public static final void deleteBlock(
 			final Interval interval,
@@ -1817,11 +1838,11 @@ public class N5Utils {
 	 * is given in {@link DataBlock} grid coordinates and the interval is
 	 * assumed to align with the {@link DataBlock} grid of the dataset.
 	 *
-	 * @param interval
-	 * @param n5
-	 * @param dataset
-	 * @param gridOffset
-	 * @throws IOException
+	 * @param interval the interval
+	 * @param n5 the n5 writer
+	 * @param dataset the dataset path
+	 * @param gridOffset the position in the block grid
+	 * @throws IOException the io exception
 	 */
 	public static final void deleteBlock(
 			final Interval interval,

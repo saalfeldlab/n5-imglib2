@@ -57,8 +57,12 @@ public class SpatialTransformAdapter //implements JsonDeserializer<SpatialTransf
 			out = context.deserialize( jobj, SequenceSpatialTransform.class );
 			break;
 		}
-		readTransformParameters(out);
-		
+		/*
+		 * Not necessary, since parsers or consuming code are responsible for calling
+		 * getParameters and buildTransform
+		 */
+		//readTransformParameters(out);
+
 		return out;
 	}
 

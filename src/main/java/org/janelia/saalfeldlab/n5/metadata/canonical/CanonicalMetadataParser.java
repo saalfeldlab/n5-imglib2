@@ -1,5 +1,6 @@
 package org.janelia.saalfeldlab.n5.metadata.canonical;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -8,7 +9,6 @@ import java.util.function.Predicate;
 
 import org.janelia.saalfeldlab.n5.Bzip2Compression;
 import org.janelia.saalfeldlab.n5.Compression;
-import org.janelia.saalfeldlab.n5.CompressionAdapter;
 import org.janelia.saalfeldlab.n5.DataType;
 import org.janelia.saalfeldlab.n5.DatasetAttributes;
 import org.janelia.saalfeldlab.n5.GsonAttributesParser;
@@ -18,17 +18,20 @@ import org.janelia.saalfeldlab.n5.N5Reader;
 import org.janelia.saalfeldlab.n5.N5TreeNode;
 import org.janelia.saalfeldlab.n5.RawCompression;
 import org.janelia.saalfeldlab.n5.XzCompression;
+import org.janelia.saalfeldlab.n5.metadata.ColorMetadata;
+import org.janelia.saalfeldlab.n5.metadata.IntColorMetadata;
 import org.janelia.saalfeldlab.n5.metadata.N5MetadataParser;
+import org.janelia.saalfeldlab.n5.metadata.RGBAColorMetadata;
+import org.janelia.saalfeldlab.n5.metadata.canonical.CanonicalDatasetMetadata.IntensityLimits;
 import org.janelia.saalfeldlab.n5.container.ContainerMetadataNode;
-import org.janelia.saalfeldlab.n5.metadata.transforms.LinearSpatialTransform;
+import org.janelia.saalfeldlab.n5.metadata.transforms.ParametrizedTransform;
+import org.janelia.saalfeldlab.n5.metadata.transforms.SequenceSpatialTransform;
 import org.janelia.saalfeldlab.n5.metadata.transforms.SpatialTransform;
-import org.janelia.saalfeldlab.n5.metadata.transforms.SpatialTransformAdapter;
 import org.janelia.saalfeldlab.n5.translation.JqUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonElement;
 
@@ -62,25 +65,16 @@ public class CanonicalMetadataParser implements N5MetadataParser<CanonicalMetada
 
 	public CanonicalMetadataParser( final Predicate<CanonicalMetadata> filter) {
 		this.filter = filter;
-
 	}
 
 	public void setFilter(final Predicate<CanonicalMetadata> filter) {
 		this.filter = filter;
 	}
 
+	@Deprecated
 	public CanonicalMetadataParser( final N5Reader n5, final String n5Tree, final String translation) {
-
-		final GsonBuilder gsonBuilder = new GsonBuilder();
-		gsonBuilder.registerTypeAdapter( SpatialTransform.class, new SpatialTransformAdapter( n5 ) );
-		gsonBuilder.registerTypeAdapter( LinearSpatialTransform.class, new SpatialTransformAdapter( n5 ) );
-		gsonBuilder.registerTypeAdapter( CanonicalMetadata.class, new CanonicalMetadataAdapter() );
-		gsonBuilder.registerTypeAdapter( DataType.class, new DataType.JsonAdapter());
-		gsonBuilder.registerTypeHierarchyAdapter( Compression.class, CompressionAdapter.getJsonAdapter());
-		gsonBuilder.disableHtmlEscaping();
-		gson = gsonBuilder.create();
-
-		root = gson.fromJson( n5Tree, ContainerMetadataNode.class );
+		gson = JqUtils.buildGson(n5);
+//		root = gson.fromJson( n5Tree, ContainerMetadataNode.class );
 	}
 
 	public Gson getGson() {
@@ -91,6 +85,7 @@ public class CanonicalMetadataParser implements N5MetadataParser<CanonicalMetada
 		this.gson = gson;
 	}
 	
+	@Deprecated
 	protected void setup( final N5Reader n5 ) {
 		// TODO rebuilding gson and root is the safest thing to do, but possibly inefficient
 
@@ -100,21 +95,84 @@ public class CanonicalMetadataParser implements N5MetadataParser<CanonicalMetada
 		root.addPathsRecursive();
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public Optional<CanonicalMetadata> parseMetadata(N5Reader n5, N5TreeNode node) {
-		setup( n5 );
-		return parseMetadata( node, n5.getGroupSeparator());
+
+		final String path = node.getPath();
+
+		DatasetAttributes attrs = null;
+		SpatialMetadataCanonical spatial = null;
+		MultiResolutionSpatialMetadataCanonical multiscale = null;
+		MultiChannelMetadataCanonical multichannel = null;
+		IntensityLimits intensityLimits = null;
+		ColorMetadata color = null;
+		try {
+			attrs = n5.getDatasetAttributes( path );
+			spatial = n5.getAttribute(path, "spatialTransform", SpatialMetadataCanonical.class);
+			multiscale = n5.getAttribute(path, "multiscales", MultiResolutionSpatialMetadataCanonical.class);
+			multichannel = n5.getAttribute(path, "multichannel", MultiChannelMetadataCanonical.class);
+			intensityLimits = n5.getAttribute(path, "intensityLimits", IntensityLimits.class);
+
+			color = n5.getAttribute(path, "color", IntColorMetadata.class);
+			if( color == null )
+				color = n5.getAttribute(path, "color", RGBAColorMetadata.class);
+
+		} catch (IOException e) {
+		}
+
+		if( spatial != null ) {
+			SpatialTransform transform = spatial.transform();
+			if( transform instanceof ParametrizedTransform ) {
+				@SuppressWarnings("rawtypes")
+				ParametrizedTransform pt = (ParametrizedTransform)transform;
+				if( pt.getParameterPath() != null ) {
+					pt.buildTransform( pt.getParameters(n5));
+				}
+			}
+			else if ( transform instanceof SequenceSpatialTransform ) {
+				SequenceSpatialTransform seq = (SequenceSpatialTransform)transform;
+				for( SpatialTransform t : seq.getTransformations())
+				{
+					if( t instanceof ParametrizedTransform ) {
+						@SuppressWarnings("rawtypes")
+						ParametrizedTransform pt = (ParametrizedTransform)t;
+						if( pt.getParameterPath() != null ) {
+							pt.buildTransform( pt.getParameters(n5));
+						}
+					}
+				}
+			}
+		}
+
+		if( spatial == null && multichannel == null && multiscale == null &&
+				color == null && intensityLimits == null ) {
+			return Optional.empty();
+		}
+
+		if (attrs != null ) {
+			if( spatial != null )
+				return Optional.of(new CanonicalSpatialDatasetMetadata(path, spatial, attrs, intensityLimits, color ));
+			else
+				return Optional.of(new CanonicalDatasetMetadata(path, attrs, intensityLimits, color ));
+		} else if( spatial != null ) {
+			return Optional.of(new CanonicalSpatialMetadata( path, spatial, intensityLimits ));
+		} else if (multiscale != null && multiscale.getChildrenMetadata() != null) {
+			return Optional.of(new CanonicalMultiscaleMetadata(path, multiscale ));
+		} else if (multichannel != null && multichannel.getPaths() != null) {
+			return Optional.of(new CanonicalMultichannelMetadata(path, multichannel ));
+		} else {
+			// if lots of things are present
+			return Optional.empty();
+		}
 	}
 
-	@Override
-	public Optional<CanonicalMetadata> parseMetadata(final N5Reader n5, final String dataset) {
-		return parseMetadata( n5, new N5TreeNode( dataset ));
-	}
-
+	@Deprecated
 	public Optional<CanonicalMetadata> parseMetadata(final String dataset, final String groupSep ) {
 		return parseMetadata( new N5TreeNode( dataset ), groupSep );
 	}
 
+	@Deprecated
 	public Optional<CanonicalMetadata> parseMetadata(N5TreeNode node, String groupSep) {
 		if (root == null)
 			return Optional.empty();
@@ -129,6 +187,12 @@ public class CanonicalMetadataParser implements N5MetadataParser<CanonicalMetada
 		return gson.fromJson(gson.toJson(attrMap), CanonicalMetadata.class);
 	}
 
+	/**
+	 * Use {@link JqUtils} instead.
+	 * 
+	 * @return Scope
+	 */
+	@Deprecated
 	public static Scope buildRootScope() {
 		// First of all, you have to prepare a Scope which s a container of
 		// built-in/user-defined functions and variables.

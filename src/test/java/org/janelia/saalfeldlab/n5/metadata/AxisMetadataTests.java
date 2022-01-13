@@ -50,8 +50,8 @@ public class AxisMetadataTests {
 
 		try {
 
-			n5 = new N5FSReader( n5rootF.getCanonicalPath() );
-			n5w = new N5FSWriter( containerDir.getCanonicalPath() );
+			n5 = new N5FSReader( n5rootF.getCanonicalPath(), JqUtils.gsonBuilder(null));
+			n5w = new N5FSWriter( containerDir.getCanonicalPath(), JqUtils.gsonBuilder(null));
 
 		}catch( IOException e ) {
 			e.printStackTrace();

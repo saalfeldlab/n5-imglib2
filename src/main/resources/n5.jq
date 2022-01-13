@@ -258,7 +258,9 @@ def ijToTransform: ([ijAffineNd, null] | arrayAndUnitToTransform) as $transform 
 
 def hasMultiscales: type == "object" and has("children") and ( numTformChildren > 1 );
 
-def buildMultiscale: [(.children | keys | .[]) as $k | .children |  {"path": (.[$k].attributes.path | split("/") |.[-1]), "spatialTransform" : .[$k].attributes.spatialTransform }];
+def buildMultiscale: [(.children | keys | .[]) as $k | .children |  {"path": (.[$k].attributes.path | split("/") |.[-1]) } + .[$k].attributes ];
+
+def buildMultiscaleST: [(.children | keys | .[]) as $k | .children |  {"path": (.[$k].attributes.path | split("/") |.[-1]), "spatialTransform" : .[$k].attributes.spatialTransform }];
 
 def addMultiscale: buildMultiscale as $ms | .attributes |= . + { "multiscales": { "datasets": $ms , "path": .path }};
 
@@ -326,7 +328,7 @@ def isNgffMultiscale:
 def ngffAxesFromMultiscale( $unit; $rev ): ( .axes | if $rev then reverse else . end) as $axLabels | axesFromLabels($axLabels; $unit );
 
 def ngffTransformsFromMultiscale( $unit; $i; $rev ):
-    ngffAxesFromMultiscale( "pixels"; $rev ) as $axes |
+    ngffAxesFromMultiscale( $unit; $rev ) as $axes |
     (.metadata | .scale | if $rev then reverse else . end) as $scales |
     reduce (.datasets | .[]) as $d (
         [ {}, $scales, $scales ];
@@ -409,3 +411,53 @@ def rgbaColor( $r; $g; $b; $a ): {
 def intColor( $rgba ): {
     "rgba" : $rgba
 };
+
+def affineDiagonalIndexes( $nd ):  [range( $nd )] | map( (. * ($nd + 1)) + . );
+
+def affineTranslationIndexes( $nd ):  [range($nd)] | map( ($nd+1) * . + $nd);
+
+def spatialTransformNdims:
+    (.transform.type) as $type |
+    if $type == "affine" then
+        (.transform.affine | length) as $len |
+        (if $len == 2 then 1
+        elif $len == 6 then 2
+        elif $len == 12 then 3
+        else null end)
+    elif ($type == "scale") or ($type == "scale_translation") then
+        (.transform.scale | length)
+    elif ($type == "translation") then
+        (.transform.translation | length)
+    else null end;
+
+def scaleFromSpatialTransform: (.transform.type) as $type |
+    spatialTransformNdims as $nd |
+    if $type == "affine" then (.transform.affine[ (affineDiagonalIndexes($nd) | .[]) ])
+    elif ($type == "scale") or ($type == "scale_translation") then .transform.scale
+    else [range($nd)] | map(1) end;
+
+def translationFromSpatialTransform: (.transform.type) as $type |
+    spatialTransformNdims as $nd |
+    if $type == "affine" then (.transform.affine[ (affineTranslationIndexes($nd) | .[]) ])
+    elif ($type == "translation") or ($type == "scale_translation") then .transform.translation
+    else [range($nd)] | map(0) end;
+
+def canonicalToCosemTransform: .spatialTransform as $st |
+    ($st | spatialTransformNdims) as $nd |
+    {
+        "transform" : {
+            "units" : ( [range($nd)] | map( $st | .unit  )),
+            "scale" : ( $st | scaleFromSpatialTransform),
+            "translate" : ( $st | translationFromSpatialTransform),
+            "axes" : [ "z", "y", "x" ]
+        }
+    };
+
+def canonicalToN5v: .spatialTransform as $st |
+    {
+        "pixelResolution" : {
+            "unit" : ( $st | .unit ),
+            "dimension" : ( $st | scaleFromSpatialTransform)
+        }
+    };
+

@@ -19,6 +19,7 @@ import org.janelia.saalfeldlab.n5.metadata.transforms.ScaleSpatialTransform;
 import org.janelia.saalfeldlab.n5.metadata.transforms.SequenceSpatialTransform;
 import org.janelia.saalfeldlab.n5.metadata.transforms.SpatialTransform;
 import org.janelia.saalfeldlab.n5.metadata.transforms.TranslationSpatialTransform;
+import org.janelia.saalfeldlab.n5.translation.JqUtils;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -63,7 +64,7 @@ public class TransformTests {
 		containerDir = new File( baseDir, "transforms.n5" );
 
 		try {
-			n5 = new N5FSWriter( containerDir.getCanonicalPath() );
+			n5 = new N5FSWriter( containerDir.getCanonicalPath(), JqUtils.gsonBuilder(null) );
 
 			int v = 0;
 			img = ArrayImgs.unsignedBytes( 3, 4, 5);
@@ -143,7 +144,6 @@ public class TransformTests {
 	private void testParsedTransformSeq( String dataset )
 	{
 		// canonical parser
-//		final TranslatedTreeMetadataParser parser = new TranslatedTreeMetadataParser( n5, "." );
 		final CanonicalMetadataParser parser = new CanonicalMetadataParser();
 		Optional<CanonicalMetadata> metaOpt = parser.parseMetadata(n5, dataset);
 		CanonicalMetadata meta = metaOpt.get();
