@@ -3,12 +3,14 @@ package org.janelia.saalfeldlab.n5.translation;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.Random;
 
 import org.janelia.saalfeldlab.n5.DataType;
 import org.janelia.saalfeldlab.n5.DatasetAttributes;
 import org.janelia.saalfeldlab.n5.N5FSWriter;
 import org.janelia.saalfeldlab.n5.RawCompression;
+import org.janelia.saalfeldlab.n5.container.ContainerMetadataNode;
 import org.janelia.saalfeldlab.n5.imglib2.N5Utils;
 import org.janelia.saalfeldlab.n5.metadata.TransformTests;
 import org.junit.After;
@@ -66,6 +68,61 @@ public class TranslatedN5Tests {
 		} catch (IOException e) { }
 	}
 	
+	@Test
+	public void testPathTokens() {
+
+		try {
+			n5.createGroup("/pathTokens");
+			n5.createDataset("/pathTokens/src", 
+					new DatasetAttributes( new long[]{16,16}, new int[]{16,16}, DataType.UINT8, new RawCompression()));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		Assert.assertTrue("pathTokens src exists", n5.exists("/pathTokens/src"));
+
+		/*
+		 *  this works too, but maybe better to addPathTokens in the java rather than the jq, not sure
+		 */
+//		final String translation = "include \"n5\"; addPathTokens | moveSubTree( \"/pathTokens/src\"; \"/pathTokens/dst\" )";
+//		final TranslatedN5Reader n5Xlated = new TranslatedN5Reader(n5, translation, ".");
+//		System.out.println( n5Xlated.exists("pathTokens/dst"));
+
+
+//		final String translation = "include \"n5\"; moveSubTree( \"/pathTokens/src\"; \"/pathTokens/dst\" )";
+//		final TranslatedN5Reader n5Xlated = new TranslatedN5Reader(n5, translation, ".");
+//
+//		final ContainerMetadataNode xlatedTree = n5Xlated.getTranslation().getTranslated();
+//		final HashMap<String, String> pathMap = xlatedTree.buildPathMap();
+//
+//		Assert.assertTrue("pathMap has dst key", pathMap.keySet().contains("pathTokens/dst") );
+//		Assert.assertEquals("pathMap has dst key", "pathTokens/src", pathMap.get("pathTokens/dst") );
+//
+//		// move "img" dataset to "data"
+//		final String fwdTranslation = "include \"n5\"; moveSubTree( \"/img\"; \"data\" )";
+//		final TranslatedN5Reader n5Xlated = new TranslatedN5Reader(n5, fwdTranslation, "." );
+//		Assert.assertTrue("translated dataset exists", n5Xlated.exists("data"));
+
+		final String fwdTranslation = "include \"n5\"; moveSubTree( \"/img\"; \"data\" )";
+		final TranslatedN5Reader n5Xlated = new TranslatedN5Reader(n5, fwdTranslation );
+		Assert.assertTrue("translated dataset exists", n5Xlated.exists("data"));
+
+		DatasetAttributes attrs;
+		try {
+			attrs = n5Xlated.getDatasetAttributes("data");
+			Assert.assertNotNull("translated dataset attributes exist", attrs);
+
+			CachedCellImg<UnsignedByteType, ?> imgFromXlated = N5Utils.open(n5Xlated, "data");
+			System.out.println( Intervals.toString(imgFromXlated));
+			Assert.assertNotNull("translated img readable", attrs);
+
+			boolean imgsAreEqual = equal(img, imgFromXlated);
+			Assert.assertTrue("translated img correct", imgsAreEqual );
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
 	@Test
 	public void testPathTranslation() {
 

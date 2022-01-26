@@ -16,6 +16,13 @@ def attrPaths: paths | select(.[-1] == "attributes");
 
 def addPaths: reduce attrPaths as $path ( . ; setpath( [ ($path | .[]), "path"]; ( $path | parentPath )));
 
+def isNode: type == "object" and has("attributes") and has("children");
+
+def addPathTokens: 
+    reduce attrPaths as $path ( .;
+        ($path | .[0:-1]) as $p |
+            setpath( $p  + ["pathToken"]; $p | [.[range(1; (.|length); 2)]] | join("/") ));
+
 def id3d: [1,0,0,0, 0,1,0,0, 0,0,1,0];
 
 def id2d: [1,0,0, 0,1,0];

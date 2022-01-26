@@ -35,30 +35,50 @@ import com.google.gson.reflect.TypeToken;
  * 
  * @author John Bogovic
  */
-
 public class ContainerMetadataNode implements N5Writer {
+
 	protected HashMap<String, JsonElement> attributes;
 	protected Map<String, ContainerMetadataNode> children;
+	protected String pathToken;
 	protected final transient Gson gson;
+	protected transient HashMap<String,String> pathMap;
 
-	public ContainerMetadataNode() {
+	public ContainerMetadataNode( final String pathToken ) {
+		this.pathToken = pathToken;
 		gson = JqUtils.buildGson(null);
 		attributes = new HashMap<String, JsonElement>();
 		children = new HashMap<String, ContainerMetadataNode >();
 		addPathsRecursive();
 	}
 
-	public ContainerMetadataNode(final HashMap<String, JsonElement> attributes,
+	public ContainerMetadataNode(
+			final String pathToken,
+			final HashMap<String, JsonElement> attributes,
 			final Map<String, ContainerMetadataNode> children, final Gson gson) {
+		this.pathToken = pathToken;
 		this.attributes = attributes;
 		this.children = children;
 		this.gson = gson;
 	}
 
-	public ContainerMetadataNode( ContainerMetadataNode other) {
+	public ContainerMetadataNode( String pathToken, ContainerMetadataNode other) {
+		this.pathToken = pathToken;
 		gson = other.gson;
 		attributes = other.attributes;
 		children = other.children;
+	}
+
+	public ContainerMetadataNode() {
+		this("");
+	}
+
+	public ContainerMetadataNode(final HashMap<String, JsonElement> attributes,
+			final Map<String, ContainerMetadataNode> children, final Gson gson) {
+		this("", attributes, children, gson );
+	}
+
+	public ContainerMetadataNode( ContainerMetadataNode other) {
+		this( "", other );
 	}
 
 	public HashMap<String, JsonElement> getAttributes() {
@@ -121,6 +141,11 @@ public class ContainerMetadataNode implements N5Writer {
 			return "";
 	}
 
+	public String getPathToken()
+	{
+		return pathToken;
+	}
+
 	public Stream<String> getChildPathsRecursive( String thisPath ) {
 		return Stream.concat( Stream.of( thisPath ),
 			this.children.keySet().stream().flatMap( k -> 
@@ -143,6 +168,51 @@ public class ContainerMetadataNode implements N5Writer {
 		attributes.put("path", new JsonPrimitive( thisPath ));
 		for ( String childPath : children.keySet() )
 			children.get(childPath).addPathsRecursive( thisPath + "/" + childPath );
+	}
+
+	/**
+	 * Adds path tokens to this node and recursively to its children.
+	 */
+	public void addPathTokensRecursive() {
+		addPathTokensRecursive(getPath());
+	}
+
+	/**
+	 * Adds path tokens to this node and recursively to its children.
+	 * 
+	 * @param thisPath path to this
+	 */
+	public void addPathTokensRecursive( String thisPath ) {
+		pathToken = thisPath;
+		for ( String childPath : children.keySet() )
+			children.get(childPath).addPathTokensRecursive( thisPath + "/" + childPath );
+	}
+
+	/**
+	 * Get the path map: 
+	 * a map from pathTokens to paths.
+	 * 
+	 * @return the path map
+	 */
+	public HashMap<String, String> getPathMap() {
+		if( pathMap == null )
+			return buildPathMap();
+		else
+			return pathMap;
+	}
+
+	public HashMap<String, String> buildPathMap() {
+		if( pathMap == null )
+			pathMap = new HashMap<>();
+		else
+			pathMap.clear();
+
+		addPathsRecursive();
+		N5TreeNode p;
+		flatten().forEach( n -> { pathMap.put( 
+				normalDatasetName( n.getPath(), "/"), 
+				normalDatasetName( n.getPathToken(), "/" )); });
+		return pathMap;
 	}
 
 	public Optional<ContainerMetadataNode> getParent( final String path ) {
@@ -516,6 +586,10 @@ public class ContainerMetadataNode implements N5Writer {
 		} catch (JsonSyntaxException e) {
 			return Optional.empty();
 		}
+	}
+
+	private static String normalDatasetName(final String fullPath, final String groupSeparator) {
+		return fullPath.replaceAll("(^" + groupSeparator + "*)|(" + groupSeparator + "*$)", "");
 	}
 
 }
