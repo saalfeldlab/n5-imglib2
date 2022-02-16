@@ -1,0 +1,50 @@
+import ij.*;
+import ij.plugin.*;
+
+import org.janelia.saalfeldlab.n5.*;
+import org.janelia.saalfeldlab.n5.imglib2.*;
+import net.imglib2.img.display.imagej.*;
+
+/*
+ * Demonstration on writing and reading n5 programically.
+ * 
+ * This script:
+ * 1) Loads an n5 as an imglib2 image, wraps it as an ImagePlus
+ * 2) Processes it with ImageJ
+ * 3) Writes the result to the n5
+ * 4) Opens the result we just wrote.
+ * 
+ * Test data used are are available here:
+ * https://figshare.com/s/bb156ad5a4288cdc65a2
+ * 
+ * John Bogovic
+ */
+
+// n5 writers can both read and write
+n5 = new N5FSWriter ( "/groups/saalfeld/home/bogovicj/tmp/jrc2018.n5" );
+
+
+// open an ImagePlus with N5Utils
+// it is lazily loaded, so is a virtual ImagePlus
+image = N5Utils.open( n5, "jrc2018F_small");
+impVirtual = ImageJFunctions.show(image);
+
+
+// make an in-memory copy of the virtual image so we can process it
+imp = new Duplicator().run(impVirtual, 1, 147, 1, 1, 1, 1);
+imp.show();
+
+// process the stack
+IJ.run(imp, "Find Edges", "stack");
+
+
+// save the ImagePlus to an n5 with N5Utils
+// wrapping to an imglib2 image
+blockSize = new int[]{ 64, 64, 64 };
+compression = new GzipCompression();
+N5Utils.save( ImageJFunctions.wrap(imp), n5, "jrc2018F_small_edges", blockSize, compression );
+
+
+// open the processed, saved image, to check that it worked
+edges = N5Utils.open( n5, "jrc2018F_small_edges" );
+impEdges = ImageJFunctions.show(edges);
