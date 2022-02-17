@@ -13,4 +13,6 @@ img = N5Utils.open(new N5FSReader("/home/saalfelds/example.n5"), "/volumes/raw")
 
 Will open the `/volumes/raw` dataset from the filesystem based N5 container (directory) `/home/saalfelds/example.n5` as a lazy cell image, i.e. no data is loaded initially, but as you access pixels, the necessary blocks will be loaded and cached in memory.
 
-Please add more examples as required.
+See also scripts demonstrating
+* [how to read and write imglib2 images with the methods in `N5Utils`](https://github.com/saalfeldlab/n5-imglib2/blob/master/scripts/readProcessWriteDemo.bsh)
+* [how to read and write ImageJ images with the methods in `N5IJUtils`](https://github.com/saalfeldlab/n5-ij/blob/master/scripts/readProcessWriteIJDemo.bsh)
