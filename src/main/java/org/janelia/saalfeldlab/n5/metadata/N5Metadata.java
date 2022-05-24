@@ -19,6 +19,9 @@ public interface N5Metadata {
   default String getName() {
 
 	String[] split = getPath().split("/");
+	if (split.length == 0 && getPath().trim().equals("/")) {
+	  return getPath().trim();
+	}
 	return split[split.length - 1];
   }
 }
