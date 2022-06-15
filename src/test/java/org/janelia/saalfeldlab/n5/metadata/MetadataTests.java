@@ -343,6 +343,15 @@ public class MetadataTests {
 	  try {
 		final N5TreeNode n5root = discoverer.discoverAndParseRecursive(base);
 
+		if (n5root.getMetadata() == null) {
+		  System.err.println("Base: " + base);
+		  System.err.println("Path: " + n5root.getPath());
+		  System.err.println("Node Name: " + n5root.getNodeName());
+		  System.err.println("Children: " + n5root.childrenList().stream()
+				  .map(N5TreeNode::getPath)
+				  .reduce((l, r) -> l + "\n" + r)
+				  .orElse(""));
+		}
 		Assert.assertNotNull(n5root.getPath(), n5root.getMetadata());
 		Assert.assertTrue("is multiscale cosem", n5root.getMetadata() instanceof N5CosemMultiScaleMetadata);
 
