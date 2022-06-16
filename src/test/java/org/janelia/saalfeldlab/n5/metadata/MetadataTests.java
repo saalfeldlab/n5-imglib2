@@ -326,15 +326,15 @@ public class MetadataTests {
   @Test
   public void testEmptyBase() throws IOException {
 
-	final String n5Root = "src/test/resources/root_dataset.n5";
-	File n5rootF = new File(n5Root);
-	final N5FSReader rootDataSetN5 = new N5FSReader(n5Root);
 
 	final N5MetadataParser<?>[] parsers = new N5MetadataParser[]{new N5CosemMetadataParser()};
 	final N5MetadataParser<?>[] grpparsers = new N5MetadataParser[]{new N5CosemMultiScaleMetadata.CosemMultiScaleParser()};
 
 	for (String base : new String[]{"", "   ", "\n", "\t\n\t \t"}) {
 
+	  final String n5Root = "src/test/resources/root_dataset.n5";
+	  File n5rootF = new File(n5Root);
+	  final N5FSReader rootDataSetN5 = new N5FSReader(n5Root);
 	  final N5DatasetDiscoverer discoverer = new N5DatasetDiscoverer(
 			  rootDataSetN5,
 			  Arrays.asList(parsers),
