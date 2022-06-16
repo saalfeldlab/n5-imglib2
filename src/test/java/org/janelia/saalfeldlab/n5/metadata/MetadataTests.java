@@ -286,12 +286,12 @@ public class MetadataTests {
 	final N5MetadataParser<?>[] parsers = new N5MetadataParser[]{new N5CosemMetadataParser()};
 	final N5MetadataParser<?>[] grpparsers = new N5MetadataParser[]{new N5CosemMultiScaleMetadata.CosemMultiScaleParser()};
 
-	final N5DatasetDiscoverer discoverer = new N5DatasetDiscoverer(
-			rootDataSetN5,
-			Arrays.asList(parsers),
-			Arrays.asList(grpparsers));
-
 	for (String base : new String[]{"/", "   /   ", "/\n", "\t\n\t/\t"}) {
+
+	  final N5DatasetDiscoverer discoverer = new N5DatasetDiscoverer(
+			  rootDataSetN5,
+			  Arrays.asList(parsers),
+			  Arrays.asList(grpparsers));
 
 	  try {
 		final N5TreeNode n5root = discoverer.discoverAndParseRecursive(base);
@@ -332,13 +332,13 @@ public class MetadataTests {
 
 	final N5MetadataParser<?>[] parsers = new N5MetadataParser[]{new N5CosemMetadataParser()};
 	final N5MetadataParser<?>[] grpparsers = new N5MetadataParser[]{new N5CosemMultiScaleMetadata.CosemMultiScaleParser()};
-
-	final N5DatasetDiscoverer discoverer = new N5DatasetDiscoverer(
-			rootDataSetN5,
-			Arrays.asList(parsers),
-			Arrays.asList(grpparsers));
-
+	
 	for (String base : new String[]{"", "   ", "\n", "\t\n\t \t"}) {
+
+	  final N5DatasetDiscoverer discoverer = new N5DatasetDiscoverer(
+			  rootDataSetN5,
+			  Arrays.asList(parsers),
+			  Arrays.asList(grpparsers));
 
 	  try {
 		final N5TreeNode n5root = discoverer.discoverAndParseRecursive(base);
