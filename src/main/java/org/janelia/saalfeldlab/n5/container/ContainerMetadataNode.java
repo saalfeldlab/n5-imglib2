@@ -32,13 +32,19 @@ import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 
 /**
+ * A tree node representing a group or dataset in an N5 container.
+ * <p>
+ * Holds attributes in memory; is used by {@link TranslatedN5Reader}s.
  * 
  * @author John Bogovic
  */
 
 public class ContainerMetadataNode implements N5Writer {
+
 	protected HashMap<String, JsonElement> attributes;
 	protected Map<String, ContainerMetadataNode> children;
+	protected String path;
+	protected String sourcePath;
 	protected final transient Gson gson;
 
 	public ContainerMetadataNode() {
@@ -115,10 +121,31 @@ public class ContainerMetadataNode implements N5Writer {
 	 * @return the path to this node from the root.
 	 */
 	public String getPath() {
+		if( path != null )
+			return path;
+
 		if( attributes.containsKey("path"))
 			return attributes.get("path").getAsString();
 		else
 			return "";
+	}
+
+	/**
+	 * Returns the path in the original container where the array data are stored.
+	 * <p>
+	 * This could differ from the output of {@link getPath} if a translation is applied
+	 * that changes the tree structure.
+	 *
+	 * @return the data path
+	 */
+	public String getDataPath()
+	{
+		if( sourcePath != null )
+			return sourcePath;
+		else if( attributes.containsKey("sourcePath"))
+			return attributes.get("sourcePath").getAsString();
+		else
+			return null;
 	}
 
 	public Stream<String> getChildPathsRecursive( String thisPath ) {
@@ -140,7 +167,8 @@ public class ContainerMetadataNode implements N5Writer {
 	 * @param thisPath path to a node
 	 */
 	public void addPathsRecursive( String thisPath ) {
-		attributes.put("path", new JsonPrimitive( thisPath ));
+//		attributes.put("path", new JsonPrimitive( thisPath ));
+		path = thisPath;
 		for ( String childPath : children.keySet() )
 			children.get(childPath).addPathsRecursive( thisPath + "/" + childPath );
 	}

@@ -14,7 +14,11 @@ def parentPath: if length <= 1 then "" elif length == 2 then .[0] else .[0:-1] |
 
 def attrPaths: paths | select(.[-1] == "attributes");
 
+def pathPaths: paths | select(.[-1] == "path");
+
 def addPaths: reduce attrPaths as $path ( . ; setpath( [ ($path | .[]), "path"]; ( $path | parentPath )));
+
+def pathsToSourcePaths: reduce pathPaths as $path ( . ; getpath($path) as $val | setpath( ( $path | .[0:-1] + ["sourcePath"]); $val ));
 
 def id3d: [1,0,0,0, 0,1,0,0, 0,0,1,0];
 
@@ -290,8 +294,8 @@ def toTreePath: ltrimstr( "/") | split("/") | map_values( ["children", . ] ) | f
 
 def getSubTree( $path ): getpath( $path | toTreePath );
 
-def moveSubTree( $srcPath; $dstPath ): getSubTree( $srcPath ) as $subTree | setpath( $dstPath | toTreePath; $subTree ) 
-    | delpaths([$srcPath | toTreePath]);
+def moveSubTree( $srcPath; $dstPath ): addPaths | getSubTree( $srcPath ) as $subTree | setpath( $dstPath | toTreePath; $subTree ) 
+    | delpaths([$srcPath | toTreePath]) | pathsToSourcePaths | addPaths;
 
 def canonicalAxis( $type; $lbl; $unit ): {
     "type" : $type,

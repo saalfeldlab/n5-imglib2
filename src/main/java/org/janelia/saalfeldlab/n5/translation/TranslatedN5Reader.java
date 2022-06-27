@@ -20,24 +20,38 @@ public class TranslatedN5Reader extends AbstractGsonReader {
 
 	protected final InvertibleTreeTranslation translation;
 
-	public TranslatedN5Reader( final N5Reader n5Base, 
+	public TranslatedN5Reader( final N5Reader n5Base,
 			final Gson gson,
-			final String fwdTranslation, 
+			final String fwdTranslation,
 			final String invTranslation ) {
 		this.n5 = n5Base;
 		ContainerMetadataNode root = ContainerMetadataNode.build(n5Base, gson);
 		root.addPathsRecursive();
 		translation = new InvertibleTreeTranslation(root, gson, fwdTranslation, invTranslation);
 	}
-	
+
+	public TranslatedN5Reader( final N5Reader n5Base,
+			final Gson gson,
+			final String fwdTranslation ) {
+		this.n5 = n5Base;
+		ContainerMetadataNode root = ContainerMetadataNode.build(n5Base, gson);
+		root.addPathsRecursive();
+		translation = new InvertibleTreeTranslation(root, gson, fwdTranslation, "." );
+	}
+
 	public InvertibleTreeTranslation getTranslation() {
 		return translation;
 	}
 
-	public TranslatedN5Reader( final AbstractGsonReader n5Base, 
+	public TranslatedN5Reader( final AbstractGsonReader n5Base,
 			final String fwdTranslation,
 			final String invTranslation ) {
 		this( n5Base, n5Base.getGson(), fwdTranslation, invTranslation );
+	}
+
+	public TranslatedN5Reader( final AbstractGsonReader n5Base,
+			final String fwdTranslation ) {
+		this( n5Base, n5Base.getGson(), fwdTranslation );
 	}
 
 	@Override
@@ -58,13 +72,17 @@ public class TranslatedN5Reader extends AbstractGsonReader {
 	 */
 	public String originalPath( String pathName )
 	{
-		ContainerMetadataNode pathNode = new ContainerMetadataNode();
-		pathNode.createGroup(pathName);
-		pathNode.addPathsRecursive();
-		ContainerMetadataNode translatedPathNode = translation.getInverseTranslationFunction().apply(pathNode);
-		translatedPathNode.addPathsRecursive();
-		final String path = translatedPathNode.flattenLeaves().findFirst().get().getPath();
-		return path;
+		return translation.getTranslated().getChild( pathName ).map( ContainerMetadataNode::getDataPath )
+			.orElseGet( () -> {
+				ContainerMetadataNode pathNode = new ContainerMetadataNode();
+				pathNode.createGroup(pathName);
+				pathNode.addPathsRecursive();
+
+				ContainerMetadataNode translatedPathNode = translation.getInverseTranslationFunction().apply(pathNode);
+				translatedPathNode.addPathsRecursive();
+
+				return translatedPathNode.flattenLeaves().findFirst().get().getPath();
+			});
 	}
 
 	@Override

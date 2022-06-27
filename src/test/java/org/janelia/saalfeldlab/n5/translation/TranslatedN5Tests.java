@@ -1,5 +1,9 @@
 package org.janelia.saalfeldlab.n5.translation;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -76,18 +80,51 @@ public class TranslatedN5Tests {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		Assert.assertTrue("pathXlation src exists", n5.exists("/pathXlation/src"));
-
-//		final String translation = "include \"n5\"; moveSubTree( \"/pathXlation/src\"; \"/pathXlation/dst\" )";
-//		final TranslatedN5Reader n5Xlated = new TranslatedN5Reader(n5, translation, ".");
-//		System.out.println( n5Xlated.exists("pathXlation/dst"));
-
+		assertTrue("pathXlation src exists", n5.exists("/pathXlation/src"));
 
 		// move "img" dataset to "data"
 		final String fwdTranslation = "include \"n5\"; moveSubTree( \"/img\"; \"data\" )";
 		final String invTranslation = "include \"n5\"; moveSubTree( \"/data\"; \"img\" )";
 		final TranslatedN5Reader n5Xlated = new TranslatedN5Reader(n5, fwdTranslation, invTranslation );
-		Assert.assertTrue("translated dataset exists", n5Xlated.exists("data"));
+		assertTrue("translated dataset exists", n5Xlated.exists("data"));
+
+		DatasetAttributes attrs;
+		try {
+			attrs = n5Xlated.getDatasetAttributes("data");
+			Assert.assertNotNull("translated dataset attributes exist", attrs);
+
+			CachedCellImg<UnsignedByteType, ?> imgFromXlated = N5Utils.open(n5Xlated, "data");
+			System.out.println( Intervals.toString(imgFromXlated));
+			assertNotNull("translated img readable", attrs);
+
+			boolean imgsAreEqual = equal(img, imgFromXlated);
+			assertTrue("translated img correct", imgsAreEqual );
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	@Test
+	public void testPathTranslationNoInv() {
+
+		try {
+			n5.createGroup("/px");
+			n5.createDataset("/px/src",
+					new DatasetAttributes( new long[]{16,16}, new int[]{16,16}, DataType.UINT8, new RawCompression()));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		assertTrue("pathXlation src exists", n5.exists("/px/src"));
+
+		// move "img" dataset to "data"
+		final String fwdTranslation = "include \"n5\"; moveSubTree( \"/img\"; \"data\" )";
+		final TranslatedN5Reader n5Xlated = new TranslatedN5Reader(n5, fwdTranslation, "." );
+
+		assertNotNull( n5Xlated.getTranslation().getTranslated().getChild( "data" ).get() );
+		assertEquals( "data", n5Xlated.getTranslation().getTranslated().getChild( "data" ).get().getPath() );
+		assertEquals( "img", n5Xlated.getTranslation().getTranslated().getChild( "data" ).get().getDataPath() );
+		assertEquals( "img", n5Xlated.originalPath( "data" ) );
 
 		DatasetAttributes attrs;
 		try {
@@ -97,13 +134,14 @@ public class TranslatedN5Tests {
 			CachedCellImg<UnsignedByteType, ?> imgFromXlated = N5Utils.open(n5Xlated, "data");
 			System.out.println( Intervals.toString(imgFromXlated));
 			Assert.assertNotNull("translated img readable", attrs);
-			
+
 			boolean imgsAreEqual = equal(img, imgFromXlated);
 			Assert.assertTrue("translated img correct", imgsAreEqual );
 
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+
 	}
 
 	public static < T extends RealType< T > & NativeType< T > > boolean equal( final Img<T> imgA, final Img<T> imgB ) {
