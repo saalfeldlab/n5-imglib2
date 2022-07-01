@@ -37,7 +37,7 @@ import java.util.Objects;
  * @author Caleb Hulbert
  * @author John Bogovic
  */
-public class N5SingleScaleMetadata extends AbstractN5DatasetMetadata implements SpatialMetadata, IntensityMetadata {
+public class N5SingleScaleMetadata extends AbstractN5SpatialDatasetMetadata implements IntensityMetadata {
 
   private final AffineTransform3D transform;
   private final String unit;
