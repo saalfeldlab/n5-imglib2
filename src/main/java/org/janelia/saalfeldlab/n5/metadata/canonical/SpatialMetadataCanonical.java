@@ -49,7 +49,7 @@ public class SpatialMetadataCanonical implements SpatialMetadata, AxisMetadata {
 	@Override
 	public AffineGet spatialTransform() {
 		if (transform instanceof LinearSpatialTransform) {
-			return ((LinearSpatialTransform) transform).getTransform();
+		  return ((LinearSpatialTransform)transform).getTransform().copy();
 		} else
 			return null;
 	}

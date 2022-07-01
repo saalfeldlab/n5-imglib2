@@ -35,7 +35,7 @@ public class CalibratedTransformMetadata implements SpatialMetadata, AxisMetadat
 	@Override
 	public AffineGet spatialTransform() {
 		if( spatialTransform.getTransform() instanceof LinearSpatialTransform ) {
-			return ((LinearSpatialTransform) spatialTransform.getTransform()).getTransform();
+		  return ((LinearSpatialTransform)spatialTransform.getTransform()).getTransform().copy();
 		}
 		else
 			return null;

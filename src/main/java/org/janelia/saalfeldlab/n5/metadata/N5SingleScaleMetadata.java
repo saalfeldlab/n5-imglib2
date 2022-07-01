@@ -104,7 +104,7 @@ public class N5SingleScaleMetadata extends AbstractN5SpatialDatasetMetadata impl
   @Override
   public AffineGet spatialTransform() {
 
-	return transform;
+	return transform.copy();
   }
 
   @Override

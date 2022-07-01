@@ -17,7 +17,7 @@ import java.util.List;
  * @author Caleb Hulbert
  * @author John Bogovic
  */
-public interface SpatialMetadataGroup<T extends SpatialMetadata> extends N5MetadataGroup<T> {
+public interface SpatialMetadataGroup<T extends SpatialMetadata> extends N5MetadataGroup<T>, SpatialMetadata {
 
   default AffineGet[] spatialTransforms() {
 
@@ -60,6 +60,21 @@ public interface SpatialMetadataGroup<T extends SpatialMetadata> extends N5Metad
 		transforms.add(transform3d);
 	  }
 	}
-	return transforms.toArray(new AffineTransform3D[]{});
+	return transforms.stream().map(AffineTransform3D::copy).toArray(AffineTransform3D[]::new);
+  }
+
+  @Override default AffineGet spatialTransform() {
+
+	return getChildrenMetadata()[0].spatialTransform();
+  }
+
+  @Override default String unit() {
+
+	return getChildrenMetadata()[0].unit();
+  }
+
+  @Override default AffineTransform3D spatialTransform3d() {
+
+	return getChildrenMetadata()[0].spatialTransform3d();
   }
 }
