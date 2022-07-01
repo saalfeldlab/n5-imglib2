@@ -65,9 +65,10 @@ public class SpatialMetadataCanonical implements SpatialMetadata, AxisMetadata {
 		return path;
 	}
 
-	public Axis[] getAxes() {
-		return axes;
-	}
+  @Override public Axis[] getAxes() {
+
+	return axes;
+  }
 
 	@Override
 	public String[] getAxisLabels() {
