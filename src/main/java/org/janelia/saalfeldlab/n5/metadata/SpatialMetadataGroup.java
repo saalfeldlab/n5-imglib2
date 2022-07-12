@@ -7,13 +7,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 /**
- * Interface for a metadata whose children are each {@link SpatialMetadata}.
+ * Interface for a metadata whose children are each {@link SpatialMetadata}, and is itslef {@link SpatialMetadata}.
  * <p>
  * The children metadata are usually related in some way. For example, a
  * {@link MultiscaleMetadata} is a set of SpatialMetadata where each
- * child is a resampling of the same underlying data at a different spatial 
+ * child is a resampling of the same underlying data at a different spatial
  * resolution.
- * 
+ * <p>
+ * By default, the Group itself will delegate the {@link SpatialMetadata} calls to it's first child (e.g. s0)
+ *
  * @author Caleb Hulbert
  * @author John Bogovic
  */
