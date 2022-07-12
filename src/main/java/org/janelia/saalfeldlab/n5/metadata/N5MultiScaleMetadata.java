@@ -38,6 +38,7 @@ import java.util.Optional;
  *
  * @author Caleb Hulbert
  * @author John Bogovic
+ *
  */
 public class N5MultiScaleMetadata extends SpatialMultiscaleMetadata<N5SingleScaleMetadata> {
 
