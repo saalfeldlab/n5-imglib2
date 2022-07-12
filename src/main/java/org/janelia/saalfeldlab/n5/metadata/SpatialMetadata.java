@@ -12,12 +12,15 @@ import net.imglib2.realtransform.AffineTransform3D;
 public interface SpatialMetadata extends N5Metadata {
 
   /**
-   * @return the transformation from pixel to physical space.
+   * @return a copy of the transformation from pixel to physical space.
    */
   AffineGet spatialTransform();
 
   String unit();
 
+  /**
+   * @return a copy of the transformation from pixel to physical 3D space.
+   */
   default AffineTransform3D spatialTransform3d() {
 
 	final AffineGet transform = spatialTransform();

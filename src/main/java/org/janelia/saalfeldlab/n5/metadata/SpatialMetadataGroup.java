@@ -7,17 +7,19 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 /**
- * Interface for a metadata whose children are each {@link SpatialMetadata}.
+ * Interface for a metadata whose children are each {@link SpatialMetadata}, and is itslef {@link SpatialMetadata}.
  * <p>
  * The children metadata are usually related in some way. For example, a
  * {@link MultiscaleMetadata} is a set of SpatialMetadata where each
- * child is a resampling of the same underlying data at a different spatial 
+ * child is a resampling of the same underlying data at a different spatial
  * resolution.
- * 
+ * <p>
+ * By default, the Group itself will delegate the {@link SpatialMetadata} calls to it's first child (e.g. s0)
+ *
  * @author Caleb Hulbert
  * @author John Bogovic
  */
-public interface SpatialMetadataGroup<T extends SpatialMetadata> extends N5MetadataGroup<T> {
+public interface SpatialMetadataGroup<T extends SpatialMetadata> extends N5MetadataGroup<T>, SpatialMetadata {
 
   default AffineGet[] spatialTransforms() {
 
@@ -60,6 +62,21 @@ public interface SpatialMetadataGroup<T extends SpatialMetadata> extends N5Metad
 		transforms.add(transform3d);
 	  }
 	}
-	return transforms.toArray(new AffineTransform3D[]{});
+	return transforms.stream().map(AffineTransform3D::copy).toArray(AffineTransform3D[]::new);
+  }
+
+  @Override default AffineGet spatialTransform() {
+
+	return getChildrenMetadata()[0].spatialTransform();
+  }
+
+  @Override default String unit() {
+
+	return getChildrenMetadata()[0].unit();
+  }
+
+  @Override default AffineTransform3D spatialTransform3d() {
+
+	return getChildrenMetadata()[0].spatialTransform3d();
   }
 }

@@ -1,7 +1,6 @@
 package org.janelia.saalfeldlab.n5.metadata.canonical;
 
-import java.util.Arrays;
-
+import net.imglib2.realtransform.AffineGet;
 import org.janelia.saalfeldlab.n5.metadata.SpatialMetadata;
 import org.janelia.saalfeldlab.n5.metadata.axes.Axis;
 import org.janelia.saalfeldlab.n5.metadata.axes.AxisMetadata;
@@ -9,7 +8,7 @@ import org.janelia.saalfeldlab.n5.metadata.transforms.CalibratedSpatialTransform
 import org.janelia.saalfeldlab.n5.metadata.transforms.LinearSpatialTransform;
 import org.janelia.saalfeldlab.n5.metadata.transforms.SpatialTransform;
 
-import net.imglib2.realtransform.AffineGet;
+import java.util.Arrays;
 
 /**
  * Interface for metadata describing how spatial data are oriented in physical
@@ -49,7 +48,7 @@ public class SpatialMetadataCanonical implements SpatialMetadata, AxisMetadata {
 	@Override
 	public AffineGet spatialTransform() {
 		if (transform instanceof LinearSpatialTransform) {
-			return ((LinearSpatialTransform) transform).getTransform();
+			return ((LinearSpatialTransform)transform).getTransform().copy();
 		} else
 			return null;
 	}
@@ -62,21 +61,25 @@ public class SpatialMetadataCanonical implements SpatialMetadata, AxisMetadata {
 
 	@Override
 	public String getPath() {
+
 		return path;
 	}
 
-	public Axis[] getAxes() {
+	@Override public Axis[] getAxes() {
+
 		return axes;
 	}
 
 	@Override
 	public String[] getAxisLabels() {
-		return Arrays.stream( axes ).map( Axis::getLabel).toArray( String[]::new );
+
+		return Arrays.stream(axes).map(Axis::getLabel).toArray(String[]::new);
 	}
 
 	@Override
 	public String[] getAxisTypes() {
-		return Arrays.stream( axes ).map( Axis::getType ).toArray( String[]::new );
+
+		return Arrays.stream(axes).map(Axis::getType).toArray(String[]::new);
 	}
 
 	@Override
