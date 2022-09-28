@@ -53,6 +53,10 @@ import net.imglib2.realtransform.RealViews;
 import net.imglib2.realtransform.Scale;
 import net.imglib2.realtransform.Scale2D;
 import net.imglib2.realtransform.Scale3D;
+import net.imglib2.realtransform.ScaleAndTranslation;
+import net.imglib2.realtransform.Translation;
+import net.imglib2.realtransform.Translation2D;
+import net.imglib2.realtransform.Translation3D;
 import net.imglib2.transform.integer.MixedTransform;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.IntegerType;
@@ -85,6 +89,7 @@ public class N5DisplacementField {
 	public static final String MULTIPLIER_ATTR = "quantization_multiplier";
 	public static final String AFFINE_ATTR = "affine";
 	public static final String SPACING_ATTR = "spacing";
+	public static final String OFFSET_ATTR = "offset";
 	public static final String FORWARD_ATTR = "dfield";
 	public static final String INVERSE_ATTR = "invdfield";
 
@@ -163,6 +168,45 @@ public class N5DisplacementField {
 	}
 
 	/**
+	 * Saves an affine transform and deformation field into a specified n5
+	 * dataset.
+	 *
+	 * @param <T> the type parameter
+	 * @param n5Writer the n5 writer
+	 * @param dataset the dataset path
+	 * @param affine the affine transform
+	 * @param dfield the displacement field
+	 * @param spacing
+	 *            the pixel spacing (resolution) of the deformation field
+	 * @param offset
+	 *            the location of the origin of the deformation field.
+	 * @param blockSize the block size
+	 * @param compression the compression type
+	 * @throws IOException the exception
+	 */
+	public static final <T extends NativeType<T> & RealType<T>> void save(
+			final N5Writer n5Writer,
+			final String dataset,
+			final AffineGet affine,
+			final RandomAccessibleInterval<T> dfield,
+			final double[] spacing,
+			final double[] offset,
+			final int[] blockSize,
+			final Compression compression) throws IOException {
+
+		N5Utils.save(dfield, n5Writer, dataset, blockSize, compression);
+
+		if (affine != null)
+			saveAffine(affine, n5Writer, dataset);
+
+		if (spacing != null)
+			n5Writer.setAttribute(dataset, SPACING_ATTR, spacing);
+
+		if (offset != null)
+			n5Writer.setAttribute(dataset, OFFSET_ATTR, offset);
+	}
+
+	/**
 	 * Saves an affine transform and quantized deformation field into a
 	 * specified n5 dataset.
 	 *
@@ -200,6 +244,51 @@ public class N5DisplacementField {
 		saveAffine(affine, n5Writer, dataset);
 		if (spacing != null)
 			n5Writer.setAttribute(dataset, SPACING_ATTR, spacing);
+	}
+
+	/**
+	 * Saves an affine transform and quantized deformation field into a
+	 * specified n5 dataset.
+	 *
+	 * The deformation field here is saved as an {@link IntegerType} which could
+	 * compress better in some cases. The multiplier from original values to
+	 * compressed values is chosen as the smallest value that keeps the error
+	 * (L2) between quantized and original vectors.
+	 *
+     * @param <T> the type parameter of the original displacement field
+     * @param <Q> the type parameter of the quantized displacement field
+	 * @param n5Writer the n5 writer
+	 * @param dataset the dataset path
+	 * @param affine the affine transform
+	 * @param dfield the displacement field
+	 * @param spacing
+	 *            the pixel spacing (resolution) of the deformation field
+	 * @param offset
+	 *            the location of the origin of the deformation field.
+	 * @param blockSize the block size
+	 * @param compression the compression type
+	 * @param outputType the type of the quantized output
+	 * @param maxError the desired maximum quantization error
+     * @throws Exception the exception
+	 */
+	public static final <T extends NativeType<T> & RealType<T>, Q extends NativeType<Q> & IntegerType<Q>> void save(
+			final N5Writer n5Writer,
+			final String dataset,
+			final AffineGet affine,
+			final RandomAccessibleInterval<T> dfield,
+			final double[] spacing,
+			final double[] offset,
+			final int[] blockSize,
+			final Compression compression,
+			final Q outputType,
+			final double maxError) throws Exception {
+
+		saveQuantized(n5Writer, dataset, dfield, blockSize, compression, outputType, maxError);
+		saveAffine(affine, n5Writer, dataset);
+		if (spacing != null)
+			n5Writer.setAttribute(dataset, SPACING_ATTR, spacing);
+		if (offset != null)
+			n5Writer.setAttribute(dataset, OFFSET_ATTR, offset);
 	}
 
 	/**
@@ -410,23 +499,35 @@ public class N5DisplacementField {
 	public static final AffineGet openPixelToPhysical(final N5Reader n5, final String dataset) throws Exception {
 
 		final double[] spacing = n5.getAttribute(dataset, SPACING_ATTR, double[].class);
-		if (spacing == null)
+		final double[] offset = n5.getAttribute(dataset, OFFSET_ATTR, double[].class);
+		if (spacing == null && offset == null )
+		{
 			return null;
-
-		// have to bump the dimension up by one to apply it to the displacement
-		// field
-		final int N = spacing.length;
-		final AffineGet affineMtx;
-		if (N == 1)
-			affineMtx = new Scale(spacing[0]);
-		else if (N == 2)
-			affineMtx = new Scale2D(spacing);
-		else if (N == 3)
-			affineMtx = new Scale3D(spacing);
+		}
+		else if( offset == null )
+		{
+			final int N = spacing.length;
+			if (N == 2)
+				return new Scale2D(spacing);
+			else if (N == 3)
+				return new Scale3D(spacing);
+			else
+				return new Scale(spacing);
+		}
+		else if( spacing == null )
+		{
+			final int N = offset.length;
+			if (N == 2)
+				return new Translation2D(offset);
+			else if (N == 3)
+				return new Translation3D(offset);
+			else
+				return new Translation(offset);
+		}
 		else
-			return null;
-
-		return affineMtx;
+		{
+			return new ScaleAndTranslation( spacing, offset );
+		}
 	}
 
 	/**
