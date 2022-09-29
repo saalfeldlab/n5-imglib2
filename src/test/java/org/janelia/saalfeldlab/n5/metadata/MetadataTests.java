@@ -276,4 +276,99 @@ public class MetadataTests {
 
   }
 
+  @Test
+  public void testRootDataset() throws IOException {
+
+	final String n5Root = "src/test/resources/root_dataset.n5";
+	File n5rootF = new File(n5Root);
+	final N5FSReader rootDataSetN5 = new N5FSReader(n5Root);
+
+	final N5MetadataParser<?>[] parsers = new N5MetadataParser[]{new N5CosemMetadataParser()};
+	final N5MetadataParser<?>[] grpparsers = new N5MetadataParser[]{new N5CosemMultiScaleMetadata.CosemMultiScaleParser()};
+
+	for (String base : new String[]{"/", "   /   ", "/\n", "\t\n\t/\t"}) {
+
+	  final N5DatasetDiscoverer discoverer = new N5DatasetDiscoverer(
+			  rootDataSetN5,
+			  Arrays.asList(parsers),
+			  Arrays.asList(grpparsers));
+
+	  try {
+		final N5TreeNode n5root = discoverer.discoverAndParseRecursive(base);
+
+		Assert.assertNotNull(n5root.getPath(), n5root.getMetadata());
+		Assert.assertTrue("is multiscale cosem", n5root.getMetadata() instanceof N5CosemMultiScaleMetadata);
+
+		N5CosemMultiScaleMetadata grpMeta = (N5CosemMultiScaleMetadata)n5root.getMetadata();
+		/* Check that root path works */
+		Assert.assertEquals(n5root.getMetadata().getName(), "/");
+		// check ordering of paths
+		Assert.assertEquals("cosem s0", "/s0", grpMeta.getPaths()[0]);
+		Assert.assertEquals("cosem s1", "/s1", grpMeta.getPaths()[1]);
+		Assert.assertEquals("cosem s2", "/s2", grpMeta.getPaths()[2]);
+
+		List<N5TreeNode> children = n5root.childrenList();
+		Assert.assertEquals("discovery node count", 3, children.size());
+
+		children.forEach(n -> {
+		  final String dname = n.getPath();
+
+		  Assert.assertNotNull(dname, n.getMetadata());
+		  Assert.assertTrue("is cosem", n.getMetadata() instanceof N5CosemMetadata);
+		});
+	  } catch (IOException e) {
+		fail("Discovery failed");
+		e.printStackTrace();
+	  }
+	}
+  }
+
+  @Test
+  public void testEmptyBase() throws IOException {
+
+	final String n5Root = "src/test/resources/root_dataset.n5";
+	File n5rootF = new File(n5Root);
+	final N5FSReader rootDataSetN5 = new N5FSReader(n5Root);
+
+	final N5MetadataParser<?>[] parsers = new N5MetadataParser[]{new N5CosemMetadataParser()};
+	final N5MetadataParser<?>[] grpparsers = new N5MetadataParser[]{new N5CosemMultiScaleMetadata.CosemMultiScaleParser()};
+	
+	for (String base : new String[]{"", "   ", "\n", "\t\n\t \t"}) {
+
+	  final N5DatasetDiscoverer discoverer = new N5DatasetDiscoverer(
+			  rootDataSetN5,
+			  Arrays.asList(parsers),
+			  Arrays.asList(grpparsers));
+
+	  try {
+		final N5TreeNode n5root = discoverer.discoverAndParseRecursive(base);
+
+		Assert.assertNotNull(n5root.getPath(), n5root.getMetadata());
+		Assert.assertTrue("is multiscale cosem", n5root.getMetadata() instanceof N5CosemMultiScaleMetadata);
+
+		N5CosemMultiScaleMetadata grpMeta = (N5CosemMultiScaleMetadata)n5root.getMetadata();
+		/* Check that root path works */
+		Assert.assertEquals(n5root.getMetadata().getName(), "");
+		// check ordering of paths
+		Assert.assertEquals("cosem s0", "/s0", grpMeta.getPaths()[0]);
+		Assert.assertEquals("cosem s1", "/s1", grpMeta.getPaths()[1]);
+		Assert.assertEquals("cosem s2", "/s2", grpMeta.getPaths()[2]);
+
+		List<N5TreeNode> children = n5root.childrenList();
+		Assert.assertEquals("discovery node count", 3, children.size());
+
+		children.forEach(n -> {
+		  final String dname = n.getPath();
+
+		  Assert.assertNotNull(dname, n.getMetadata());
+		  Assert.assertTrue("is cosem", n.getMetadata() instanceof N5CosemMetadata);
+		});
+	  } catch (IOException e) {
+		fail("Discovery failed");
+		e.printStackTrace();
+	  }
+	}
+
+  }
+
 }

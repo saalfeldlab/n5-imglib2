@@ -40,7 +40,7 @@ import java.util.Optional;
  * @author John Bogovic
  *
  */
-public class N5MultiScaleMetadata extends MultiscaleMetadata<N5SingleScaleMetadata> implements N5Metadata {
+public class N5MultiScaleMetadata extends SpatialMultiscaleMetadata<N5SingleScaleMetadata> {
 
   public N5MultiScaleMetadata(final String basePath, final N5SingleScaleMetadata[] childrenMetadata) {
 

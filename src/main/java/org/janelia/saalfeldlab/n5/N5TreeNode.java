@@ -57,7 +57,7 @@ public class N5TreeNode {
 
   public N5TreeNode(final String path) {
 
-	this.path = path;
+	this.path = path.trim();
 	children = new ArrayList<>();
   }
 

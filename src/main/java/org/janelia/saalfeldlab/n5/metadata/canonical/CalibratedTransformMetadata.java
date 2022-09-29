@@ -1,21 +1,20 @@
 package org.janelia.saalfeldlab.n5.metadata.canonical;
 
-import java.util.Arrays;
-
+import net.imglib2.realtransform.AffineGet;
 import org.janelia.saalfeldlab.n5.metadata.SpatialMetadata;
 import org.janelia.saalfeldlab.n5.metadata.axes.Axis;
 import org.janelia.saalfeldlab.n5.metadata.axes.AxisMetadata;
 import org.janelia.saalfeldlab.n5.metadata.transforms.CalibratedSpatialTransform;
 import org.janelia.saalfeldlab.n5.metadata.transforms.LinearSpatialTransform;
 
-import net.imglib2.realtransform.AffineGet;
+import java.util.Arrays;
 
 public class CalibratedTransformMetadata implements SpatialMetadata, AxisMetadata {
 
 	private final String path;
 	private final CalibratedSpatialTransform spatialTransform;
 	private final Axis[] axes;
-	
+
 	public CalibratedTransformMetadata(final String path, final CalibratedSpatialTransform spatialTransform, final Axis[] axes)
 	{
 		this.path = path;
@@ -35,7 +34,7 @@ public class CalibratedTransformMetadata implements SpatialMetadata, AxisMetadat
 	@Override
 	public AffineGet spatialTransform() {
 		if( spatialTransform.getTransform() instanceof LinearSpatialTransform ) {
-			return ((LinearSpatialTransform) spatialTransform.getTransform()).getTransform();
+			return ((LinearSpatialTransform)spatialTransform.getTransform()).getTransform().copy();
 		}
 		else
 			return null;

@@ -40,7 +40,7 @@ import java.util.Optional;
  * 
  * @author John Bogovic
  */
-public class N5CosemMultiScaleMetadata extends MultiscaleMetadata<N5CosemMetadata> implements SpatialMetadataGroup<N5CosemMetadata> {
+public class N5CosemMultiScaleMetadata extends SpatialMultiscaleMetadata<N5CosemMetadata> {
 
   public N5CosemMultiScaleMetadata(String basePath, N5CosemMetadata[] childMetadata) {
 
