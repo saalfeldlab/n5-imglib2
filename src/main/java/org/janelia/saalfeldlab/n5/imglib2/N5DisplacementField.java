@@ -27,13 +27,24 @@
 package org.janelia.saalfeldlab.n5.imglib2;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.function.BiFunction;
 
 import org.janelia.saalfeldlab.n5.Compression;
 import org.janelia.saalfeldlab.n5.DatasetAttributes;
 import org.janelia.saalfeldlab.n5.N5Reader;
 import org.janelia.saalfeldlab.n5.N5Writer;
+import org.janelia.saalfeldlab.n5.metadata.graph.TransformGraph;
+import org.janelia.saalfeldlab.n5.metadata.omengff.NgffCoordinateTransformation;
+import org.janelia.saalfeldlab.n5.metadata.omengff.NgffDisplacementsTransformation;
+
+import com.google.gson.GsonBuilder;
 
 import net.imglib2.Cursor;
+import net.imglib2.Interval;
 import net.imglib2.IterableInterval;
 import net.imglib2.RandomAccessible;
 import net.imglib2.RandomAccessibleInterval;
@@ -54,6 +65,7 @@ import net.imglib2.realtransform.Scale;
 import net.imglib2.realtransform.Scale2D;
 import net.imglib2.realtransform.Scale3D;
 import net.imglib2.realtransform.ScaleAndTranslation;
+import net.imglib2.realtransform.TransformUtils;
 import net.imglib2.realtransform.Translation;
 import net.imglib2.realtransform.Translation2D;
 import net.imglib2.realtransform.Translation3D;
@@ -70,12 +82,20 @@ import net.imglib2.type.numeric.integer.UnsignedIntType;
 import net.imglib2.type.numeric.integer.UnsignedLongType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.type.numeric.real.DoubleType;
-import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.view.IntervalView;
 import net.imglib2.view.MixedTransformView;
 import net.imglib2.view.Views;
 import net.imglib2.view.composite.CompositeIntervalView;
 import net.imglib2.view.composite.RealComposite;
+import ome.ngff.axes.Axis;
+import ome.ngff.axes.CoordinateSystem;
+import ome.ngff.transformations.CoordinateTransformation;
+import ome.ngff.transformations.CoordinateTransformationAdapter;
+import ome.ngff.transformations.DisplacementsTransformation;
+import ome.ngff.transformations.IdentityTransformation;
+import ome.ngff.transformations.ScaleTransformation;
+import ome.ngff.transformations.SequenceTransformation;
+import ome.ngff.transformations.TranslationTransformation;
 
 /**
  * Class with helper methods for saving displacement field transformations as N5
@@ -165,6 +185,199 @@ public class N5DisplacementField {
 
 		if (spacing != null)
 			n5Writer.setAttribute(dataset, SPACING_ATTR, spacing);
+	}
+
+	/**
+	 * Saves an arbitrary {@link RealTransform} as a deformation field 
+	 * into a specified n5 dataset.
+	 *
+	 * @param <T> the type parameter
+	 * @param n5Writer the n5 writer
+	 * @param dataset the dataset path
+	 * @param metadataDataset the path for transformation metadata
+	 * @param inputCoordinates input coordinate system
+	 * @param outputCoordinates output coordinate system
+	 * @param transformation the transformation
+	 * @param spacing
+	 *            the pixel spacing (resolution) of the deformation field
+	 * @param offset
+	 *            the origin of the displacement field
+	 * @param blockSize the block size
+	 * @param compression the compression type
+	 * @param exec the executor service
+	 * @throws IOException the exception
+	 */
+	public static final <T extends NativeType<T> & RealType<T>> void saveDisplacementFieldNgff(
+			final N5Writer n5Writer,
+			final String dataset,
+			final String metadataDataset,
+			final CoordinateSystem inputCoordinates,
+			final CoordinateSystem outputCoordinates,
+			final RealTransform transformation,
+			final Interval interval,
+			final double[] spacing,
+			final double[] offset,
+			final int[] blockSize,
+			final Compression compression,
+			ExecutorService exec ) throws IOException {
+
+		RandomAccessibleInterval< DoubleType > dfield = DisplacementFieldTransform.createDisplacementField( transformation, interval, spacing, offset );
+		saveDisplacementFieldNgff( n5Writer, dataset, metadataDataset, inputCoordinates, outputCoordinates, dfield, spacing, offset, blockSize, compression, exec );
+	}
+	
+	/*
+	 * Saves an arbitrary {@link RealTransform} as a deformation field 
+	 * into a specified n5 dataset.
+	 *
+	 * @param <T> the type parameter
+	 * @param n5Writer the n5 writer
+	 * @param dataset the dataset path
+	 * @param metadataDataset the path for transformation metadata
+	 * @param inputCoordinates input coordinate system
+	 * @param outputCoordinates output coordinate system
+	 * @param dfield the displacement field
+	 * @param spacing
+	 *            the pixel spacing (resolution) of the deformation field
+	 * @param offset
+	 *            the origin of the displacement field
+	 * @param blockSize the block size
+	 * @param compression the compression type
+	 * @param exec the executor service
+	 * @throws IOException the exception
+	 */
+	public static final <T extends NativeType<T> & RealType<T>> NgffDisplacementsTransformation saveDisplacementFieldNgff(
+			final N5Writer n5Writer,
+			final String dataset,
+			final String metadataDataset,
+			final CoordinateSystem inputCoordinates,
+			final CoordinateSystem outputCoordinates,
+			final RandomAccessibleInterval<T> dfield,
+			final double[] spacing,
+			final double[] offset,
+			final int[] blockSize,
+			final Compression compression,
+			ExecutorService exec ) throws IOException {
+
+		int[] vecBlkSz;
+		if( blockSize.length >= dfield.numDimensions() )
+			vecBlkSz = blockSize; 
+		else {
+			vecBlkSz = new int[ blockSize.length + 1 ];
+			vecBlkSz[ 0 ] = (int)dfield.dimension( 0 );
+			for( int i = 1; i < vecBlkSz.length; i++ )
+			{
+				vecBlkSz[ i ] = blockSize[ i - 1 ];
+			}
+		}
+
+		try
+		{
+			N5Utils.save(dfield, n5Writer, dataset, vecBlkSz, compression, exec);
+		}
+		catch ( IOException e )
+		{
+			e.printStackTrace();
+		}
+		catch ( InterruptedException e )
+		{
+			e.printStackTrace();
+		}
+		catch ( ExecutionException e )
+		{
+			e.printStackTrace();
+		}
+
+		String vecFieldCsName =  inputCoordinates.getName() + "_dfield";
+		final CoordinateSystem[] cs = new CoordinateSystem[] { 
+				createVectorFieldCoordinateSystem( vecFieldCsName, inputCoordinates ) };
+		n5Writer.setAttribute(dataset, CoordinateSystem.KEY, cs);
+
+		final CoordinateTransformation[] ct = new CoordinateTransformation[] { 
+				createTransformation( "", spacing, offset, dataset, cs[0] ) };
+		n5Writer.setAttribute(dataset, CoordinateTransformation.KEY, ct );
+
+		return new NgffDisplacementsTransformation( inputCoordinates.getName(), outputCoordinates.getName(), dataset, "linear" );
+	}
+
+	public static final <T extends NativeType<T> & RealType<T>> void displacementFieldNgffMetadata(
+			final N5Writer n5Writer,
+			final String dataset,
+			final String metadataDataset,
+			final CoordinateSystem inputCoordinates,
+			final CoordinateSystem outputCoordinates
+			) throws IOException {
+
+		if ( !n5Writer.exists( metadataDataset ))
+			n5Writer.createGroup( metadataDataset );
+
+		n5Writer.setAttribute(metadataDataset, CoordinateSystem.KEY, new CoordinateSystem[] { inputCoordinates, outputCoordinates } );
+		final DisplacementsTransformation dfieldCt = new DisplacementsTransformation( inputCoordinates.getName(), outputCoordinates.getName(), dataset, "linear" );
+		n5Writer.setAttribute(metadataDataset, CoordinateTransformation.KEY, new CoordinateTransformation[] { dfieldCt } );
+	}
+	
+	public static final <T extends NativeType<T> & RealType<T>> void addCoordinateSystems(
+			final N5Writer n5,
+			final String metadataDataset,
+			final CoordinateSystem... coordinateSystems ) throws IOException
+	{
+		if ( !n5.exists( metadataDataset ))
+			n5.createGroup( metadataDataset );
+
+		final TransformGraph tg = new TransformGraph( n5, metadataDataset );
+		final Set< CoordinateSystem > css = tg.getCoordinateSystems();
+		boolean added = false;
+		for( CoordinateSystem cs : coordinateSystems )
+		{
+			added |= css.add( cs );
+		}
+
+		if( added )
+			n5.setAttribute( metadataDataset, CoordinateSystem.KEY, css );
+	}
+
+	public static final <T extends NativeType<T> & RealType<T>> void addCoordinateTransformations(
+			final N5Writer n5,
+			final String metadataDataset,
+			final NgffCoordinateTransformation<?>... coordinateTransforms ) throws IOException
+	{
+		if ( !n5.exists( metadataDataset ))
+			n5.createGroup( metadataDataset );
+
+		final TransformGraph tg = new TransformGraph( n5, metadataDataset );
+		ArrayList< NgffCoordinateTransformation< ? > > cts = tg.getTransforms();
+		boolean added = false;
+		for( NgffCoordinateTransformation<?> ct : coordinateTransforms )
+		{
+			if( !cts.contains( ct ))
+			{
+				cts.add( ct );
+				added = true;
+			}
+		}
+
+		if( added )
+			n5.setAttribute( metadataDataset, CoordinateTransformation.KEY, cts );
+	}
+	
+	public static final <T extends NativeType<T> & RealType<T>> void addTransformMetadata(
+			final N5Writer n5,
+			final String metadataDataset,
+			final CoordinateSystem inputCoordinates,
+			final CoordinateSystem outputCoordinates,
+			final CoordinateTransformation transform
+			) throws IOException {
+
+		if ( !n5.exists( metadataDataset ))
+			n5.createGroup( metadataDataset );
+
+		
+		TransformGraph tg = new TransformGraph( n5, metadataDataset );
+		Set< CoordinateSystem > css = tg.getCoordinateSystems();
+		boolean added = false || css.add( inputCoordinates ) || css.add( outputCoordinates );
+		if( added )
+			n5.setAttribute( metadataDataset, CoordinateSystem.KEY, css );
+
+		n5.setAttribute(metadataDataset, CoordinateTransformation.KEY, new CoordinateTransformation[] { transform } );
 	}
 
 	/**
@@ -531,6 +744,75 @@ public class N5DisplacementField {
 	}
 
 	/**
+	 * Returns an {@link AffineGet} transform from pixel space to physical
+	 * space, for the given n5 dataset, if present, null otherwise.
+	 *
+	 * @param n5 the n5 reader
+	 * @param dataset the dataset path
+	 * @param limit if true, limits output to not discrete axes
+	 * @return the affine transform
+     * @throws Exception the exception
+	 */
+	public static final AffineGet openPixelToPhysicalNgff(final N5Reader n5, final String dataset,
+			final boolean limit ) throws Exception {
+
+		// TODO fancify like the above
+		GsonBuilder gb = new GsonBuilder();
+		gb.registerTypeAdapter(CoordinateTransformation.class, new CoordinateTransformationAdapter() );
+
+		// TODO would be good to generalize
+		final TransformGraph tg = new TransformGraph( n5, dataset );
+		NgffCoordinateTransformation< ? > t = tg.getTransforms().get( 0 );
+		final int nd = tg.getInput( t ).getAxes().length;
+		AffineGet outWhole = TransformUtils.toAffine( t, nd );
+		
+		if( limit )
+		{
+			CoordinateSystem cs = tg.getOutput( t );
+			int ndOut = cs.getAxes().length;
+			int N = 0;
+			for( int i = 0; i < ndOut; i++ )
+			{
+				if( !cs.getAxes()[i].isDiscrete())
+					N++;
+			}
+			
+			if( N == ndOut )
+				return outWhole;
+			else
+			{
+				int[] indexes = new int[ N ];
+				int j = 0;
+				for( int i = 0; i < ndOut; i++ )
+				{
+					if( !cs.getAxes()[i].isDiscrete())
+						indexes[j++] = i;
+				}
+				return TransformUtils.subAffine( outWhole, indexes );
+			}
+		}
+		else
+			return outWhole;
+
+//		CoordinateTransformation[] cts = n5.getAttribute( dataset, CoordinateTransformation.KEY, CoordinateTransformation[].class );
+//		CoordinateSystem[] css = n5.getAttribute( dataset, CoordinateSystem.KEY, CoordinateSystem[].class );
+//		CoordinateTransformation ctParsed = null;
+//		for ( CoordinateTransformation ct : cts )
+//		{
+//			if( ct.getInput().equals( css[0] ) )
+//			{
+//				ctParsed = ct;
+//				break;
+//			}
+//		}
+//		
+//		if( ctParsed.getType().equals( SequenceTransformation.TYPE ) )
+//			return (( NgffSequenceTransformation ) NgffCoordinateTransformation.create( ctParsed )).asAffine( new CoordinateSystems( css ) );
+//		else
+//			return ( AffineGet ) NgffCoordinateTransformation.create( ctParsed ).getTransform();
+	}
+
+	/**
 	 * Returns and affine transform stored as an attribute in an n5 dataset.
 	 *
 	 * @param n5 the n5 reader
@@ -653,6 +935,8 @@ public class N5DisplacementField {
 	 *            the type of out-of-bounds extension
 	 * @param defaultType
 	 *            the type
+	 * @param metadata
+	 * 			  a function that returns an affine from the metdata        
 	 * @return the coordinate displacements
      * @throws Exception the exception
 	 */
@@ -661,7 +945,8 @@ public class N5DisplacementField {
 			final String dataset,
 			final InterpolatorFactory< RealComposite< T >, RandomAccessible< RealComposite< T > > > interpolator,
 			final String extensionType,
-			final T defaultType ) throws Exception
+			final T defaultType,
+			final BiFunction<N5Reader,String,AffineGet> metadata ) throws Exception
 	{
 
 		final RandomAccessibleInterval<T> dfieldRai = openField(n5, dataset, defaultType);
@@ -683,7 +968,7 @@ public class N5DisplacementField {
 		}
 
 		final RealRandomAccessible<RealComposite<T>> displacements;
-		final AffineGet pix2Phys = openPixelToPhysical(n5, dataset);
+		final AffineGet pix2Phys = metadata.apply(n5, dataset);
 		if (pix2Phys != null)
 			displacements = RealViews.affine(dfieldReal, pix2Phys);
 		else
@@ -691,6 +976,142 @@ public class N5DisplacementField {
 
 		return displacements;
 	}
+
+	/**
+	 * Returns coordinate displacements in physical coordinates as a
+	 * {@link RealRandomAccessible} from an n5 dataset.
+	 *
+	 * Internally, opens the given n5 dataset as a
+	 * {@link RandomAccessibleInterval}, un-quantizes if necessary, uses the
+	 * input {@link InterpolatorFactory} for interpolation, and transforms to
+	 * physical coordinates using the pixel spacing stored in the "spacing"
+	 * attribute, if present.
+	 *
+	 * The ith {@link RealRandomAccessible} contains the displacements for the
+	 * ith coordinate. The output of this method can be passed directly to the
+	 * constructor of {@link DisplacementFieldTransform}.
+	 *
+	 * @param <T> the type parameter for the underlying data
+	 * @param n5
+	 *            the n5 reader
+	 * @param dataset
+	 *            the n5 dataset
+	 * @param interpolator
+	 *            the type of interpolation
+	 * @param extensionType
+	 *            the type of out-of-bounds extension
+	 * @param defaultType
+	 *            the type
+	 * @return the coordinate displacements
+     * @throws Exception the exception
+	 */
+	public static <T extends NativeType< T > & RealType< T >> RealRandomAccessible< RealComposite< T > > openCalibratedField(
+			final N5Reader n5,
+			final String dataset,
+			final InterpolatorFactory< RealComposite< T >, RandomAccessible< RealComposite< T > > > interpolator,
+			final String extensionType,
+			final T defaultType ) throws Exception
+	{
+		return openCalibratedField( n5, dataset, interpolator, extensionType, defaultType, 
+			(n,d) -> { 
+				try { return openPixelToPhysical(n, d); }
+				catch( Exception e ) { return null; }
+			});
+	}
+
+	/**
+	 * Returns coordinate displacements in physical coordinates as a
+	 * {@link RealRandomAccessible} from an n5 dataset.
+	 *
+	 * Internally, opens the given n5 dataset as a
+	 * {@link RandomAccessibleInterval}, un-quantizes if necessary, uses the
+	 * input {@link InterpolatorFactory} for interpolation, and transforms to
+	 * physical coordinates using the pixel spacing stored in the "spacing"
+	 * attribute, if present.
+	 *
+	 * The ith {@link RealRandomAccessible} contains the displacements for the
+	 * ith coordinate. The output of this method can be passed directly to the
+	 * constructor of {@link DisplacementFieldTransform}.
+	 *
+	 * @param <T> the type parameter for the underlying data
+	 * @param n5
+	 *            the n5 reader
+	 * @param dataset
+	 *            the n5 dataset
+	 * @param interpolator
+	 *            the type of interpolation
+	 * @param extensionType
+	 *            the type of out-of-bounds extension
+	 * @param defaultType
+	 *            the type
+	 * @return the coordinate displacements
+     * @throws Exception the exception
+	 */
+	public static <T extends NativeType< T > & RealType< T >> RealRandomAccessible< RealComposite< T > > openCalibratedFieldNgff(
+			final N5Reader n5,
+			final String dataset,
+			final InterpolatorFactory< RealComposite< T >, RandomAccessible< RealComposite< T > > > interpolator,
+			final String extensionType,
+			final T defaultType ) throws Exception
+	{
+		return openCalibratedField( n5, dataset, interpolator, extensionType, defaultType, 
+				(n,d) -> {
+					try { return openPixelToPhysicalNgff(n, d, true); }
+					catch( Exception e ) { 
+						e.printStackTrace();
+						return null; }
+				});
+	}
+
+//	public static final <T extends NativeType<T> & RealType<T>> RealTransform openDisplacementField(
+//			final N5Reader n5,
+//			final String dataset,
+//			final String coordSysName,
+//			ExecutorService exec ) throws IOException {
+//
+////		GsonBuilder gb = new GsonBuilder();
+////		gb.registerTypeAdapter(CoordinateTransformation.class, new CoordinateTransformationAdapter() );
+//
+//		CoordinateTransformation[] cts = n5.getAttribute( dataset, CoordinateTransformation.KEY, CoordinateTransformation[].class );
+//		CoordinateSystems css = n5.getAttribute( dataset, CoordinateSystem.KEY, CoordinateSystems.class );
+//
+//		if( !css.get( coordSysName ).isPresent() )
+//			return null;
+//
+//		CoordinateTransformation ct = null;
+//		for ( CoordinateTransformation c : cts )
+//		{
+//			if( c.getInput().equals( dataset ) && c.getOutput().equals( coordSysName ))
+//			{
+//				ct = c;
+//				break;
+//			}
+//		}
+//		if( ct == null )
+//			return null;
+//
+//		
+//		return null;
+////
+////		final CoordinateSystem[] cs = new CoordinateSystem[] { createVectorFieldCoordinateSystem( dataset + "_dfield", inputCoordinates ) };
+////		n5Writer.setAttribute(dataset, CoordinateSystem.KEY, cs);
+////
+////		final CoordinateTransformation[] ct = new CoordinateTransformation[] { createTransformation( "", spacing, offset, dataset, inputCoordinates ) };
+////		n5Writer.setAttribute(dataset, CoordinateTransformation.KEY, ct );
+////
+////		n5Writer.setAttribute(metadataDataset, CoordinateSystem.KEY, new CoordinateSystem[] { inputCoordinates, outputCoordinates } );
+////		final DisplacementsTransformation dfieldCt = new DisplacementsTransformation( inputCoordinates.getName(), outputCoordinates.getName(), dataset );
+////		n5Writer.setAttribute(metadataDataset, CoordinateTransformation.KEY, new CoordinateTransformation[] { dfieldCt } );
+//	}
+	
+	public static final <T extends NativeType<T> & RealType<T>> DisplacementFieldTransform openDisplacementFieldNgff(
+			final N5Reader n5,
+			final String dataset,
+			ExecutorService exec ) throws IOException {
+
+		return null;
+	}
+
 
 	/**
 	 * Opens a transform from an n5 dataset using linear interpolation for the
@@ -706,7 +1127,7 @@ public class N5DisplacementField {
 	public static <T extends NativeType<T> & RealType<T>> RealTransform open(
 			final N5Reader n5, final String dataset, final boolean inverse) throws Exception {
 
-		return open(n5, dataset, inverse, new FloatType(), new NLinearInterpolatorFactory<RealComposite<FloatType>>());
+		return open(n5, dataset, inverse, new DoubleType(), new NLinearInterpolatorFactory<RealComposite<DoubleType>>());
 	}
 
 	/**
@@ -887,6 +1308,48 @@ public class N5DisplacementField {
 				min = v;
 		}
 		return new double[]{min, max};
+	}
+	
+	public static CoordinateSystem createVectorFieldCoordinateSystem( final String name, final CoordinateSystem input )
+	{
+		final Axis[] vecAxes = new Axis[ input.getAxes().length + 1 ];
+		vecAxes[0] = new Axis( "d", "displacement", null, true );
+		for( int i = 1; i < vecAxes.length; i++ )
+			vecAxes[i] = input.getAxes()[i-1];
+
+		return new CoordinateSystem( name, vecAxes );
+	}
+
+	public static CoordinateTransformation createTransformation( final String name, 
+			final double[] scale, final double[] offset,
+			final String dataset, final CoordinateSystem output )
+	{
+		CoordinateTransformation ct;
+		if( scale != null && offset != null )
+		{
+			ct = new SequenceTransformation( name, dataset, output.getName(),
+					new CoordinateTransformation[] { 
+							new ScaleTransformation( prepend( 1, scale ) ), 
+							new TranslationTransformation( prepend( 0, offset ) )});
+		}
+		else if ( offset != null )
+			ct = new TranslationTransformation( name, dataset, output.getName(), prepend( 0, offset ) );
+		else if ( scale != null )
+			ct = new ScaleTransformation( name, dataset, output.getName(), prepend( 1, scale ) );
+		else
+			ct = new IdentityTransformation( name, dataset, output.getName() );
+
+		return ct;
+	}
+	
+	public static double[] prepend( double val, double[] array ) {
+		final double[] out = new double[ array.length + 1 ];
+		out[ 0 ] = val;
+		for( int i = 1; i < out.length; i++ )
+		{
+			out[ i ] = array[ i - 1 ];
+		}
+		return out;
 	}
 
 }
