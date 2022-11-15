@@ -11,8 +11,10 @@ import java.util.stream.Collectors;
 
 import org.janelia.saalfeldlab.n5.DatasetAttributes;
 import org.janelia.saalfeldlab.n5.N5Reader;
+import org.janelia.saalfeldlab.n5.metadata.omengff.InverseNgffCoordinateTransformation;
 import org.janelia.saalfeldlab.n5.metadata.omengff.NgffCoordinateTransformation;
 import org.janelia.saalfeldlab.n5.metadata.omengff.NgffIdentityTransformation;
+import org.janelia.saalfeldlab.n5.metadata.omengff.NgffInvertibleCoordinateTransformation;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -146,9 +148,17 @@ public class TransformGraph
 		addTransform( t, true );
 	}
 
+	@SuppressWarnings( { "rawtypes", "unchecked" } )
 	private void addTransform( NgffCoordinateTransformation<?> t, boolean addInverse ) {
-		if( transforms.stream().anyMatch( x -> x.getName().equals(t.getName())) )
+		if( transforms.stream().anyMatch( x -> {
+			if( x.getName() != null  )
+				return x.getName().equals(t.getName());
+			else
+				return false;
+		}))
+		{
 			return;
+		}
 
 		if ( hasSpace( t.getInput() ) && hasSpace( t.getOutput() ) )
 		{
@@ -169,10 +179,13 @@ public class TransformGraph
 //			spaces.makeDefault( t.getInputAxes() )
 			transforms.add( t );
 		}
-		
-		// TODO add inverse paths
-//		if( addInverse && t instanceof InvertibleCoordinateTransform )
-//			addTransform( new InverseCT( (InvertibleCoordinateTransform) t ), false );
+
+
+//		// TODO add inverse paths
+		if( addInverse && t.isInvertible() )
+		{
+			addTransform( new InverseNgffCoordinateTransformation( t ), false );
+		}
 	}
 	
 //	public void updateTransforms()
@@ -275,41 +288,4 @@ public class TransformGraph
 		System.out.print( sb );
 	}
 
-//	private static class InverseCT extends AbstractCoordinateTransform<InvertibleRealTransform>
-//		implements InvertibleCoordinateTransform<InvertibleRealTransform> {
-//
-//		InvertibleCoordinateTransform<?> ict;
-//		
-//		public InverseCT( InvertibleCoordinateTransform<?> ict ) {
-//			super("invWrap", "inv-" + ict.getName(), ict.getOutputSpace(), ict.getInputSpace());
-//			this.ict = ict;
-//		}
-//
-//		public InverseCT(String type, String name, String inputSpace, String outputSpace, 
-//				InvertibleCoordinateTransform<?> ict ) {
-//			super(type, name, inputSpace, outputSpace);
-//			this.ict = ict;
-//		}
-//
-//		@Override
-//		public InvertibleRealTransform getTransform() {
-//			return ict.getInverseTransform();
-//		} 
-//
-//		@Override
-//		public InvertibleRealTransform getTransform( final N5Reader n5 ) {
-//			return ict.getInverseTransform( n5 );
-//		} 
-//
-//		@Override
-//		public InvertibleRealTransform getInverseTransform() {
-//			return ict.getTransform();
-//		} 
-//
-//		@Override
-//		public InvertibleRealTransform getInverseTransform( N5Reader n5 ) {
-//			return ict.getTransform( n5 );
-//		}
-//	}
-	
 }

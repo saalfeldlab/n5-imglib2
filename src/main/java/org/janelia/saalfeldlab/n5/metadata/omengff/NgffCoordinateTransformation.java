@@ -3,6 +3,7 @@ package org.janelia.saalfeldlab.n5.metadata.omengff;
 import org.janelia.saalfeldlab.n5.N5Reader;
 import org.janelia.saalfeldlab.n5.metadata.transforms.SpatialTransform;
 
+import net.imglib2.realtransform.InvertibleRealTransform;
 import net.imglib2.realtransform.RealTransform;
 import ome.ngff.transformations.AffineTransformation;
 import ome.ngff.transformations.BijectionTransformation;
@@ -42,7 +43,23 @@ public interface NgffCoordinateTransformation<T extends RealTransform> extends S
 		}
 		return null;
 	}
-	
-	public RealTransform getTransform( N5Reader n5 );
+
+	public T getTransform( N5Reader n5 );
+
+	public default boolean isInvertible() {
+		return false;
+	}
+
+	/**
+	 * Returns an {@link InvertibleRealTransform} if the transformation is invertible,
+	 * otherwise, returns null.
+	 *
+	 * @param n5 the n5 reader
+	 * @return the invertible transform or null
+	 */
+	public default InvertibleRealTransform getInvertibleTransform( N5Reader n5 )
+	{
+		return null;
+	}
 
 }

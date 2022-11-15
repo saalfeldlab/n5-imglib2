@@ -1,0 +1,15 @@
+[
+    {
+        "type" : "translation",
+        "translation" : [ -100, -100, -14],
+        "input" : "mri-stack",
+        "output" : "mri-stack_translated"
+    },
+    {
+        "name" : "scale",
+        "type" : "scale",
+        "scale" : [ 2, 2, 8 ], 
+        "input" : "mri-stack",
+        "output" : "mri-stack-scaled"
+    }
+]

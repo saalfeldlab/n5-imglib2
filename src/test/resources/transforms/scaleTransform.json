@@ -1,0 +1,7 @@
+{
+    "name" : "scale",
+    "type" : "scale",
+    "scale" : [ 2, 2, 8 ], 
+    "input" : "mri-stack",
+    "output" : "mri-stack-scaled"
+}

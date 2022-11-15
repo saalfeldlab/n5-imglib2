@@ -1,10 +1,11 @@
 package org.janelia.saalfeldlab.n5.metadata.omengff;
 
-import net.imglib2.realtransform.RealTransform;
-import net.imglib2.realtransform.RealTransformSequence;
+import org.janelia.saalfeldlab.n5.N5Reader;
+
+import net.imglib2.realtransform.InvertibleRealTransformSequence;
 import ome.ngff.transformations.IdentityTransformation;
 
-public class NgffIdentityTransformation extends IdentityTransformation implements NgffCoordinateTransformation< RealTransform >
+public class NgffIdentityTransformation extends IdentityTransformation implements NgffInvertibleCoordinateTransformation< InvertibleRealTransformSequence >
 {
 	public NgffIdentityTransformation( IdentityTransformation other )
 	{
@@ -17,10 +18,16 @@ public class NgffIdentityTransformation extends IdentityTransformation implement
 	}
 
 	@Override
-	public RealTransform getTransform()
+	public InvertibleRealTransformSequence getTransform()
 	{
 		// an empty sequence is the identity
-		return new RealTransformSequence();
+		return new InvertibleRealTransformSequence();
+	}
+
+	@Override
+	public InvertibleRealTransformSequence getTransform( N5Reader n5 )
+	{
+		return getTransform();
 	}
 
 }

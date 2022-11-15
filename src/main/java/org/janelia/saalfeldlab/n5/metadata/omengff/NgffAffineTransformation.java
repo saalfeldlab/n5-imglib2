@@ -1,5 +1,7 @@
 package org.janelia.saalfeldlab.n5.metadata.omengff;
 
+import org.janelia.saalfeldlab.n5.N5Reader;
+
 import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform;
 import net.imglib2.realtransform.AffineTransform2D;
@@ -7,7 +9,7 @@ import net.imglib2.realtransform.AffineTransform3D;
 import ome.ngff.transformations.AffineTransformation;
 
 public class NgffAffineTransformation extends AffineTransformation
-		implements NgffCoordinateTransformation< AffineGet >
+		implements NgffInvertibleCoordinateTransformation< AffineGet >
 {
 
 	public NgffAffineTransformation( String input, String output, double[] affine )
@@ -23,6 +25,12 @@ public class NgffAffineTransformation extends AffineTransformation
 	public NgffAffineTransformation( AffineTransformation other )
 	{
 		super( other );
+	}
+
+	@Override
+	public AffineGet getTransform( N5Reader n5 )
+	{
+		return getTransform();
 	}
 
 	@Override

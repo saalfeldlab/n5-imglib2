@@ -7,7 +7,7 @@ import ome.ngff.transformations.BijectionTransformation;
 import ome.ngff.transformations.CoordinateTransformation;
 
 public class NgffBijectionTransformation extends BijectionTransformation
-	implements NgffCoordinateTransformation< ExplicitInvertibleRealTransform >
+	implements NgffInvertibleCoordinateTransformation< ExplicitInvertibleRealTransform >
 {
 
 	public NgffBijectionTransformation( final String name, final String input, final String output,

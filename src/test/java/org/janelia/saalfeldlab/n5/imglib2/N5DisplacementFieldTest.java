@@ -83,7 +83,7 @@ public class N5DisplacementFieldTest
 				transform.apply( it, qTrue );
 				readTransform.apply( it, qXfm );
 				final double err = distance( qTrue, qXfm );
-				assertTrue( "error check", err < 1e-3 );
+				assertTrue( "error check", err < 1e-5 );
 			}
 		} catch ( Exception e )
 		{

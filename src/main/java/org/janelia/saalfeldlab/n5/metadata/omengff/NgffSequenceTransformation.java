@@ -3,10 +3,10 @@ package org.janelia.saalfeldlab.n5.metadata.omengff;
 import java.util.Arrays;
 
 import org.janelia.saalfeldlab.n5.N5Reader;
-import org.janelia.saalfeldlab.n5.metadata.transforms.RealCoordinateTransform;
 
 import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform;
+import net.imglib2.realtransform.InvertibleRealTransformSequence;
 import net.imglib2.realtransform.RealTransformSequence;
 import ome.ngff.transformations.CoordinateTransformation;
 import ome.ngff.transformations.SequenceTransformation;
@@ -70,6 +70,24 @@ public class NgffSequenceTransformation extends SequenceTransformation
 //			.forEach( x -> affine.preConcatenate( ( AffineGet ) x.getTransform() ));
 
 		return affine;
+	}
+
+	@Override
+	public boolean isInvertible()
+	{
+		return Arrays.stream( transformations )
+			.map( NgffCoordinateTransformation::create )
+			.allMatch( x -> x.isInvertible() );
+	}
+
+	@Override
+	public InvertibleRealTransformSequence getInvertibleTransform( N5Reader n5 )
+	{
+		final InvertibleRealTransformSequence seq = new InvertibleRealTransformSequence();
+		Arrays.stream( transformations )
+			.map( NgffCoordinateTransformation::create )
+			.forEach( x -> seq.add( x.getInvertibleTransform( n5 ) ));
+		return seq;
 	}
 	
 }

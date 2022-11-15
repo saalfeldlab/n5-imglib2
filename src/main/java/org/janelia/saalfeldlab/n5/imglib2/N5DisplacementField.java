@@ -855,32 +855,56 @@ public class N5DisplacementField {
 	 * @return the deformation field as a RandomAccessibleInterval
      * @throws Exception the exception
 	 */
-	@SuppressWarnings("unchecked")
 	public static final <T extends NativeType<T> & RealType<T>, Q extends NativeType<Q> & IntegerType<Q>> RandomAccessibleInterval<T> openField(
 			final N5Reader n5,
 			final String dataset,
 			final T defaultType) throws Exception {
 
+		return openField( n5, dataset, defaultType, true );
+	}
+
+	/**
+	 * Returns a deformation field from the given n5 dataset.
+	 *
+	 * If the data is an {@link IntegerType}, returns an un-quantized view of
+	 * the dataset, otherwise, returns the raw {@link RandomAccessibleInterval}.
+	 *
+     * @param <T> the type parameter
+     * @param <Q> the quantized type parameter
+	 * @param n5 the n5 reader
+	 * @param dataset the dataset path
+	 * @param defaultType the default type
+	 * @param permute whether to permute the axes
+	 * @return the deformation field as a RandomAccessibleInterval
+     * @throws Exception the exception
+	 */
+	@SuppressWarnings("unchecked")
+	public static final <T extends NativeType<T> & RealType<T>, Q extends NativeType<Q> & IntegerType<Q>> RandomAccessibleInterval<T> openField(
+			final N5Reader n5,
+			final String dataset,
+			final T defaultType,
+			final boolean permute ) throws Exception {
+
 		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
 		switch (attributes.getDataType()) {
 		case INT8:
-			return openQuantized(n5, dataset, (Q)new ByteType(), defaultType);
+			return openQuantized(n5, dataset, (Q)new ByteType(), defaultType, permute );
 		case UINT8:
-			return openQuantized(n5, dataset, (Q)new UnsignedByteType(), defaultType);
+			return openQuantized(n5, dataset, (Q)new UnsignedByteType(), defaultType, permute );
 		case INT16:
-			return openQuantized(n5, dataset, (Q)new ShortType(), defaultType);
+			return openQuantized(n5, dataset, (Q)new ShortType(), defaultType, permute );
 		case UINT16:
-			return openQuantized(n5, dataset, (Q)new UnsignedShortType(), defaultType);
+			return openQuantized(n5, dataset, (Q)new UnsignedShortType(), defaultType, permute );
 		case INT32:
-			return openQuantized(n5, dataset, (Q)new IntType(), defaultType);
+			return openQuantized(n5, dataset, (Q)new IntType(), defaultType, permute );
 		case UINT32:
-			return openQuantized(n5, dataset, (Q)new UnsignedIntType(), defaultType);
+			return openQuantized(n5, dataset, (Q)new UnsignedIntType(), defaultType, permute );
 		case INT64:
-			return openQuantized(n5, dataset, (Q)new LongType(), defaultType);
+			return openQuantized(n5, dataset, (Q)new LongType(), defaultType, permute );
 		case UINT64:
-			return openQuantized(n5, dataset, (Q)new UnsignedLongType(), defaultType);
+			return openQuantized(n5, dataset, (Q)new UnsignedLongType(), defaultType, permute );
 		default:
-			return openRaw(n5, dataset, defaultType);
+			return openRaw(n5, dataset, defaultType, permute );
 		}
 	}
 
@@ -935,8 +959,10 @@ public class N5DisplacementField {
 	 *            the type of out-of-bounds extension
 	 * @param defaultType
 	 *            the type
+	 * @param permute	
+	 * 			  whether to permute the axes
 	 * @param metadata
-	 * 			  a function that returns an affine from the metdata        
+	 * 			  a function that returns an affine from the metadata
 	 * @return the coordinate displacements
      * @throws Exception the exception
 	 */
@@ -946,10 +972,10 @@ public class N5DisplacementField {
 			final InterpolatorFactory< RealComposite< T >, RandomAccessible< RealComposite< T > > > interpolator,
 			final String extensionType,
 			final T defaultType,
+			final boolean permute,
 			final BiFunction<N5Reader,String,AffineGet> metadata ) throws Exception
 	{
-
-		final RandomAccessibleInterval<T> dfieldRai = openField(n5, dataset, defaultType);
+		final RandomAccessibleInterval<T> dfieldRai = openField(n5, dataset, defaultType, permute);
 		if (dfieldRai == null) {
 			return null;
 		}
@@ -975,6 +1001,47 @@ public class N5DisplacementField {
 			displacements = dfieldReal;
 
 		return displacements;
+	}
+
+	/**
+	 * Returns coordinate displacements in physical coordinates as a
+	 * {@link RealRandomAccessible} from an n5 dataset.
+	 *
+	 * Internally, opens the given n5 dataset as a
+	 * {@link RandomAccessibleInterval}, un-quantizes if necessary, uses the
+	 * input {@link InterpolatorFactory} for interpolation, and transforms to
+	 * physical coordinates using the pixel spacing stored in the "spacing"
+	 * attribute, if present.
+	 *
+	 * The ith {@link RealRandomAccessible} contains the displacements for the
+	 * ith coordinate. The output of this method can be passed directly to the
+	 * constructor of {@link DisplacementFieldTransform}.
+	 *
+	 * @param <T> the type parameter for the underlying data
+	 * @param n5
+	 *            the n5 reader
+	 * @param dataset
+	 *            the n5 dataset
+	 * @param interpolator
+	 *            the type of interpolation
+	 * @param extensionType
+	 *            the type of out-of-bounds extension
+	 * @param defaultType
+	 *            the type
+	 * @param metadata
+	 * 			  a function that returns an affine from the metadata
+	 * @return the coordinate displacements
+     * @throws Exception the exception
+	 */
+	public static <T extends NativeType< T > & RealType< T >> RealRandomAccessible< RealComposite< T > > openCalibratedField(
+			final N5Reader n5,
+			final String dataset,
+			final InterpolatorFactory< RealComposite< T >, RandomAccessible< RealComposite< T > > > interpolator,
+			final String extensionType,
+			final T defaultType,
+			final BiFunction<N5Reader,String,AffineGet> metadata ) throws Exception
+	{
+		return openCalibratedField( n5, dataset, interpolator, extensionType, defaultType, true, metadata );
 	}
 
 	/**
@@ -1138,6 +1205,31 @@ public class N5DisplacementField {
 	 * @param n5 the n5 reader
 	 * @param dataset the dataset path 
 	 * @param defaultType the default type
+	 * @param permute whether to permute the axes
+	 * @return the deformation field
+	 * @throws Exception the exception
+	 */
+	public static final <T extends RealType<T> & NativeType<T>> RandomAccessibleInterval<T> openRaw(
+			final N5Reader n5,
+			final String dataset,
+			final T defaultType,
+			final boolean permute ) throws Exception {
+
+		final RandomAccessibleInterval<T> src = N5Utils.open(n5, dataset, defaultType);
+		if( permute )
+			return vectorAxisLast(src);
+		else
+			return src;
+	}
+
+	/**
+	 * Returns a deformation field as a {@link RandomAccessibleInterval},
+	 * ensuring that the vector is stored in the last dimension.
+	 *
+	 * @param <T> the type parameter
+	 * @param n5 the n5 reader
+	 * @param dataset the dataset path 
+	 * @param defaultType the default type
 	 * @return the deformation field
 	 * @throws Exception the exception
 	 */
@@ -1146,8 +1238,7 @@ public class N5DisplacementField {
 			final String dataset,
 			final T defaultType) throws Exception {
 
-		final RandomAccessibleInterval<T> src = N5Utils.open(n5, dataset, defaultType);
-		return vectorAxisLast(src);
+		return openRaw( n5, dataset, defaultType, true );
 	}
 
 	/**
@@ -1167,7 +1258,31 @@ public class N5DisplacementField {
 			final N5Reader n5,
 			final String dataset,
 			final Q defaultQuantizedType,
-			final T defaultType) throws Exception {
+			final T defaultType ) throws Exception {
+
+		return openQuantized( n5, dataset, defaultQuantizedType, defaultType, true );
+	}
+
+	/**
+	 * Open a quantized (integer) {@link RandomAccessibleInterval} from an n5
+	 * dataset.
+	 *
+	 * @param <T> the type parameter
+	 * @param <Q> the quantized type parameter
+	 * @param n5 the n5 reader
+	 * @param dataset the dataset path
+	 * @param defaultQuantizedType the quantized type
+	 * @param defaultType the original type
+	 * @param permute whether to permute the output array
+	 * @return the un-quantized data
+	 * @throws Exception the exception
+	 */
+	public static final <Q extends RealType<Q> & NativeType<Q>, T extends RealType<T>> RandomAccessibleInterval<T> openQuantized(
+			final N5Reader n5,
+			final String dataset,
+			final Q defaultQuantizedType,
+			final T defaultType,
+			final boolean permute ) throws Exception {
 
 		final RandomAccessibleInterval<Q> src = N5Utils.open(n5, dataset, defaultQuantizedType);
 
@@ -1179,9 +1294,14 @@ public class N5DisplacementField {
 		else
 			m = 1.0;
 
-		final RandomAccessibleInterval<Q> src_perm = vectorAxisLast(src);
+		final RandomAccessibleInterval<Q> srcP;
+		if( permute )
+			srcP = vectorAxisLast(src);
+		else
+			srcP = src;
+
 		final RandomAccessibleInterval<T> src_converted = Converters.convert(
-				src_perm,
+				srcP,
 				new Converter<Q, T>() {
 
 					@Override
