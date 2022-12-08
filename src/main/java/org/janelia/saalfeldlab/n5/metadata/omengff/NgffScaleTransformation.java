@@ -11,12 +11,16 @@ import ome.ngff.transformations.ScaleTransformation;
 public class NgffScaleTransformation extends ScaleTransformation
 		implements NgffInvertibleCoordinateTransformation<  ScaleGet >
 {
+	public NgffScaleTransformation( double[] scale )
+	{
+		super( scale );
+	}
 
 	public NgffScaleTransformation( String input, String output, double[] scale )
 	{
 		super( input, output, scale );
 	}
-	
+
 	public NgffScaleTransformation( ScaleTransformation other )
 	{
 		super( other );

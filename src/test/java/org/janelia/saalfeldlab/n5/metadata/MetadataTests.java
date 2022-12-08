@@ -130,9 +130,9 @@ public class MetadataTests {
 	  long childrenNoMetadataCount = n5root.childrenList().stream()
 			  .filter(x -> Objects.isNull(x.getMetadata()))
 			  .count();
-	  Assert.assertEquals("discovery node count with single scale metadata", 4, childrenWithMetadata.size());
+	  Assert.assertEquals("discovery node count with single scale metadata", 6, childrenWithMetadata.size());
 	  /* discoverAndParse trims children that have no metadata in their trees (coserm, cosem_ms, n5v_ds, others)*/
-	  Assert.assertEquals("discovery node count without single scale metadata", 1, childrenNoMetadataCount);
+	  Assert.assertEquals("discovery node count without single scale metadata", 3, childrenNoMetadataCount);
 
 	  childrenWithMetadata.stream().filter(x -> datasetSet.contains(x.getPath())).forEach(n -> {
 

@@ -1445,16 +1445,16 @@ public class N5DisplacementField {
 			final String dataset, final CoordinateSystem output )
 	{
 		CoordinateTransformation ct;
-		if( scale != null && offset != null )
+		if( ( scale != null || allOnes( scale ))  && ( offset != null || allZeros( offset )) )
 		{
 			ct = new SequenceTransformation( name, dataset, output.getName(),
 					new CoordinateTransformation[] { 
 							new ScaleTransformation( prepend( 1, scale ) ), 
 							new TranslationTransformation( prepend( 0, offset ) )});
 		}
-		else if ( offset != null )
+		else if ( offset != null || !allZeros( offset ) )
 			ct = new TranslationTransformation( name, dataset, output.getName(), prepend( 0, offset ) );
-		else if ( scale != null )
+		else if ( scale != null || !allOnes( scale ) )
 			ct = new ScaleTransformation( name, dataset, output.getName(), prepend( 1, scale ) );
 		else
 			ct = new IdentityTransformation( name, dataset, output.getName() );
@@ -1462,6 +1462,39 @@ public class N5DisplacementField {
 		return ct;
 	}
 	
+	public static boolean allZeros( final double[] x )
+	{
+		for ( int i = 0; i < x.length; i++ )
+			if ( x[ i ] != 0.0 )
+				return false;
+
+		return true;
+	}
+
+	public static boolean allOnes( final double[] x )
+	{
+		for ( int i = 0; i < x.length; i++ )
+			if ( x[ i ] != 1.0 )
+				return false;
+
+		return true;
+	}
+
+	/**
+	 * 
+	 * @param x array
+	 * @param thresh positive threshold
+	 * @return 
+	 */
+	public static boolean allZeros( final double[] x, double thresh )
+	{
+		for ( int i = 0; i < x.length; i++ )
+			if ( x[ i ] > thresh || x[ i ] < -thresh )
+				return false;
+
+		return true;
+	}
+
 	public static double[] prepend( double val, double[] array ) {
 		final double[] out = new double[ array.length + 1 ];
 		out[ 0 ] = val;

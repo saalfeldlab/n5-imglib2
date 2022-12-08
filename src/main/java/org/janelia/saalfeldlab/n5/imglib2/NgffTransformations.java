@@ -1,37 +1,37 @@
 package org.janelia.saalfeldlab.n5.imglib2;
 
+import java.io.FileWriter;
 import java.io.IOException;
-import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.Optional;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
-import org.janelia.saalfeldlab.n5.DatasetAttributes;
+import org.janelia.saalfeldlab.n5.Compression;
 import org.janelia.saalfeldlab.n5.N5FSReader;
 import org.janelia.saalfeldlab.n5.N5Reader;
+import org.janelia.saalfeldlab.n5.N5URL;
+import org.janelia.saalfeldlab.n5.N5Writer;
 import org.janelia.saalfeldlab.n5.metadata.graph.TransformGraph;
-import org.janelia.saalfeldlab.n5.metadata.graph.TransformPath;
+import org.janelia.saalfeldlab.n5.metadata.omengff.NgffAffineTransformation;
 import org.janelia.saalfeldlab.n5.metadata.omengff.NgffCoordinateTransformation;
-import org.janelia.saalfeldlab.n5.metadata.omengff.NgffCoordinateTransformationAdapter;
+import org.janelia.saalfeldlab.n5.metadata.omengff.NgffScaleTransformation;
 import org.janelia.saalfeldlab.n5.metadata.omengff.NgffTranslationTransformation;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 
-import net.imglib2.img.array.ArrayImg;
-import net.imglib2.img.array.ArrayImgs;
-import net.imglib2.img.basictypeaccess.array.IntArray;
+import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.RealTransform;
-import net.imglib2.realtransform.RealTransformSequence;
-import net.imglib2.realtransform.TransformUtils;
+import net.imglib2.realtransform.ScaleGet;
+import net.imglib2.realtransform.TranslationGet;
+import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
-import net.imglib2.type.numeric.integer.IntType;
-import net.imglib2.util.Intervals;
-import net.imglib2.view.IntervalView;
 import ome.ngff.axes.Axis;
 import ome.ngff.axes.CoordinateSystem;
 import ome.ngff.transformations.CoordinateTransformation;
@@ -122,13 +122,30 @@ public class NgffTransformations
 		return (T)g.path( input, output ).get().totalTransform( n5, g );
 	}
 	
-	public static RealTransform open( final String url )
+	public static NgffCoordinateTransformation open( final String url )
 	{
-		// TODO
-		return null;
+		try
+		{
+			final N5URL n5url = new N5URL( url );
+			final String loc = n5url.getContainerPath();
+			if( loc.endsWith( ".json" ))
+			{
+				return openJson( url );
+			}
+			else
+			{
+//				new N5Factory();
+				return null;
+			}
+		}
+		catch ( URISyntaxException e )
+		{
+			e.printStackTrace();
+			return null;
+		}
 	}
-	
-	public static RealTransform openJson( final String url )
+
+	public static NgffCoordinateTransformation openJson( final String url )
 	{
 		final Path path = Paths.get( url );
 		String string;
@@ -145,18 +162,46 @@ public class NgffTransformations
 		gb.registerTypeAdapter(CoordinateTransformation.class, new CoordinateTransformationAdapter() );
 		final Gson gson = gb.create();
 		
-		JsonElement elem = gson.fromJson( string, JsonElement.class );
-//		System.out.println( elem );
-		
-//		final CoordinateTransformation ct = gson.fromJson( elem.getAsJsonArray().get( 0 ), CoordinateTransformation.class );
+		final JsonElement elem = gson.fromJson( string, JsonElement.class );
 		final CoordinateTransformation ct = gson.fromJson( elem, CoordinateTransformation.class );
-//		System.out.println( ct );
-		
-		NgffCoordinateTransformation< ? > nct = NgffCoordinateTransformation.create( ct );
-		final RealTransform tform = nct.getTransform( null );
-		System.out.println( tform );
 
-		return tform;
+		final NgffCoordinateTransformation< ? > nct = NgffCoordinateTransformation.create( ct );
+		return nct;
+	}
+
+	public static void save( String jsonFile, NgffCoordinateTransformation<?> transform )
+	{
+		final GsonBuilder gb = new GsonBuilder();
+		gb.registerTypeAdapter(CoordinateTransformation.class, new CoordinateTransformationAdapter() );
+		final Gson gson = gb.create();
+		try( FileWriter writer = new FileWriter( jsonFile ))
+		{
+			gson.toJson( transform, writer );
+			writer.close();
+		}
+		catch ( IOException e )
+		{
+			e.printStackTrace();
+		}
+	}
+
+	public static < T extends NativeType< T > & RealType< T > > void save(
+			final String n5Root,
+			final String dataset,
+			final RandomAccessibleInterval< T > dfield,
+			final double[] spacing,
+			final double[] offset,
+			final int[] blockSize,
+			final Compression compression,
+			int nThreads ) throws IOException
+	{
+		N5Writer n5 = null;
+		CoordinateSystem inputCoordinates = null;
+		CoordinateSystem outputCoordinates = null;
+
+		final ThreadPoolExecutor threadPool = new ThreadPoolExecutor( nThreads, nThreads, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>()	);
+		N5DisplacementField.saveDisplacementFieldNgff( n5, dataset, "/", inputCoordinates, outputCoordinates, 
+				dfield, spacing, offset, blockSize, compression, threadPool );
 	}
 
 	/**
@@ -176,15 +221,6 @@ public class NgffTransformations
 		else 
 		{
 			int vecDim = -1;
-//			for( int i = 0; i < n; i++ )
-//				{
-//					vecDim = i;
-//					break;
-//				}
-//	
-//			if( vecDim < 0 )
-//				return null;
-
 			final int[] permutation = new int[ n ];
 
 			int k = 0;
@@ -217,6 +253,22 @@ public class NgffTransformations
 		// TODO need to be smarter about which coordinate system to get
 		CoordinateSystem cs = g.getCoordinateSystems().iterator().next();
 		return vectorAxisLastNgff( cs );
+	}
+
+	public static NgffCoordinateTransformation<?> createAffine( AffineGet transform )
+	{
+		if ( transform instanceof TranslationGet )
+		{
+			return new NgffTranslationTransformation( ( ( TranslationGet ) transform ).getTranslationCopy() );
+		}
+		else if ( transform instanceof ScaleGet )
+		{
+			return new NgffScaleTransformation( ( ( ScaleGet ) transform ).getScaleCopy() );
+		}
+		else
+		{
+			return new NgffAffineTransformation( transform.getRowPackedCopy() );
+		}
 	}
 
 

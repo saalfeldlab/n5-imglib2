@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import org.janelia.saalfeldlab.n5.AbstractGsonReader;
 import org.janelia.saalfeldlab.n5.DataBlock;
@@ -94,6 +95,14 @@ public class TranslatedN5Reader extends AbstractGsonReader {
 		return translation.getTranslated().getNode(pathName)
 				.map( ContainerMetadataNode::getAttributes )
 				.orElse( new HashMap<>());
+	}
+
+	@Override
+	public JsonElement getAttributesJson( String pathName ) throws IOException
+	{
+		// TODO untested, and not a great implementation anyway
+		Optional< ContainerMetadataNode > res = translation.getTranslated().getNode(pathName);
+		return translation.gson.toJsonTree( res.get().getAttributes() );
 	}
 
 }

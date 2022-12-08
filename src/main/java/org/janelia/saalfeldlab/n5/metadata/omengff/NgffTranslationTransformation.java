@@ -11,6 +11,15 @@ import ome.ngff.transformations.TranslationTransformation;
 public class NgffTranslationTransformation extends TranslationTransformation
 	implements NgffInvertibleCoordinateTransformation< TranslationGet >
 {
+	public NgffTranslationTransformation( final double[] translation )
+	{
+		super( translation );
+	}
+
+	public NgffTranslationTransformation( String input, String output, double[] translation )
+	{
+		super( input, output, translation );
+	}
 
 	public NgffTranslationTransformation( TranslationTransformation other )
 	{
