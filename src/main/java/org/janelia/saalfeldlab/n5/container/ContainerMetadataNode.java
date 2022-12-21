@@ -178,6 +178,18 @@ public class ContainerMetadataNode extends AbstractGsonReader implements N5Write
 		return Optional.empty();
 	}
 
+	public ContainerMetadataNode getOrCreateGroup(String pathName) {
+		Optional<ContainerMetadataNode> childOpt = getNode(pathName);
+		if (!childOpt.isPresent()) {
+			createGroup(pathName);
+			childOpt = getNode(pathName);
+		}
+
+		/* We create the group if it doesn't exist, so it should always exist at this point. */
+		//noinspection OptionalGetWithoutIsPresent
+		return childOpt.get();
+	}
+
 	public Optional<ContainerMetadataNode> getChild(final String relativePath ) {
 		return getChild(relativePath, "/");
 	}
