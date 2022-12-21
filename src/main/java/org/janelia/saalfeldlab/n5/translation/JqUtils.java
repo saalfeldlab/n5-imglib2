@@ -3,10 +3,14 @@ package org.janelia.saalfeldlab.n5.translation;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.gson.ExclusionStrategy;
+import com.google.gson.FieldAttributes;
+import org.janelia.saalfeldlab.n5.AbstractGsonReader;
 import org.janelia.saalfeldlab.n5.Compression;
 import org.janelia.saalfeldlab.n5.CompressionAdapter;
 import org.janelia.saalfeldlab.n5.DataType;
 import org.janelia.saalfeldlab.n5.N5Reader;
+import org.janelia.saalfeldlab.n5.container.ContainerMetadataNode;
 import org.janelia.saalfeldlab.n5.metadata.axisTransforms.TransformAxes;
 import org.janelia.saalfeldlab.n5.metadata.axisTransforms.TransformAxesMetadataAdapter;
 import org.janelia.saalfeldlab.n5.metadata.canonical.CanonicalMetadata;
@@ -65,14 +69,46 @@ public class JqUtils {
 		return rootScope;
 	}
 
+	private static class ExcludeParentGsonFromContainerMetadata implements ExclusionStrategy {
+
+		@Override public boolean shouldSkipField(FieldAttributes f) {
+
+			final Class<?> declaringClass = f.getDeclaringClass();
+			final boolean isContainerMetadataNode = declaringClass.equals(ContainerMetadataNode.class);
+			final boolean isAbstractGsonReader = declaringClass.equals(AbstractGsonReader.class);
+			return isAbstractGsonReader && f.getName().equals("gson");
+		}
+
+		@Override public boolean shouldSkipClass(Class<?> clazz) {
+
+			return false;
+		}
+	}
+
 	public static GsonBuilder gsonBuilder( final N5Reader n5 ) {
-		final GsonBuilder gsonBuilder = new GsonBuilder();
+		final GsonBuilder gsonBuilder;
+		if (n5 instanceof AbstractGsonReader) {
+			gsonBuilder = ((AbstractGsonReader)n5).getGson().newBuilder();
+		} else gsonBuilder = new GsonBuilder();
 		gsonBuilder.registerTypeAdapter(SpatialTransform.class, new SpatialTransformAdapter( n5 ));
 		gsonBuilder.registerTypeAdapter(CanonicalMetadata.class, new CanonicalMetadataAdapter());
 		gsonBuilder.registerTypeAdapter(DataType.class, new DataType.JsonAdapter());
 		gsonBuilder.registerTypeAdapter(TransformAxes.class, new TransformAxesMetadataAdapter());
 		gsonBuilder.registerTypeHierarchyAdapter(Compression.class, CompressionAdapter.getJsonAdapter());
+
+		gsonBuilder.setExclusionStrategies(new ExcludeParentGsonFromContainerMetadata());
 		gsonBuilder.disableHtmlEscaping();
+		return gsonBuilder;
+	}
+
+	public static GsonBuilder newBuilder( final Gson gson ) {
+		final GsonBuilder gsonBuilder = gson.newBuilder();
+		gsonBuilder.registerTypeAdapter(SpatialTransform.class, new SpatialTransformAdapter( null ));
+		gsonBuilder.registerTypeAdapter(CanonicalMetadata.class, new CanonicalMetadataAdapter());
+		gsonBuilder.registerTypeAdapter(DataType.class, new DataType.JsonAdapter());
+		gsonBuilder.registerTypeAdapter(TransformAxes.class, new TransformAxesMetadataAdapter());
+		gsonBuilder.registerTypeHierarchyAdapter(Compression.class, CompressionAdapter.getJsonAdapter());
+		gsonBuilder.setExclusionStrategies(new ExcludeParentGsonFromContainerMetadata());
 		return gsonBuilder;
 	}
 
