@@ -3,9 +3,11 @@ package org.janelia.saalfeldlab.n5;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.janelia.saalfeldlab.n5.translation.JqUtils;
 import org.janelia.saalfeldlab.n5.translation.TranslatedN5Writer;
 import org.junit.Assert;
 import org.junit.Test;
@@ -13,15 +15,17 @@ import org.junit.Test;
 import com.google.gson.reflect.TypeToken;
 
 public class IdentityTranslatedN5Tests extends AbstractN5Test {
-	
-	static private String testDirPath = System.getProperty("user.home") + "/tmp/idTranslatedTest.n5";
 
-	protected N5Writer createN5Writer() throws IOException {
-		final N5FSWriter n5Base = new N5FSWriter( testDirPath );
-		final TranslatedN5Writer n5 = new TranslatedN5Writer(n5Base, n5Base.getGson(), ".", "." );	
-		return n5;
+
+	@Override protected N5Writer createN5Writer() throws IOException {
+		final String testDirPath = Files.createTempDirectory("n5-id-translated-test-").toFile().getCanonicalPath();
+		return createN5Writer(testDirPath);
 	}
-	
+	@Override protected N5Writer createN5Writer(String location) throws IOException {
+		final N5FSWriter n5Base = new N5FSWriter( location );
+		return new TranslatedN5Writer(n5Base, JqUtils.buildGson(n5Base), ".", "." );
+	}
+
 	@Override
 	@Test
 	public void testAttributes() {

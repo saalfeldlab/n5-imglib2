@@ -5,9 +5,11 @@ import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.google.gson.JsonObject;
 import org.janelia.saalfeldlab.n5.AbstractGsonReader;
 import org.janelia.saalfeldlab.n5.DataBlock;
 import org.janelia.saalfeldlab.n5.DatasetAttributes;
+import org.janelia.saalfeldlab.n5.GsonAttributesParser;
 import org.janelia.saalfeldlab.n5.N5Reader;
 import org.janelia.saalfeldlab.n5.container.ContainerMetadataNode;
 
@@ -37,7 +39,7 @@ public class TranslatedN5Reader extends AbstractGsonReader {
 	public TranslatedN5Reader( final AbstractGsonReader n5Base, 
 			final String fwdTranslation,
 			final String invTranslation ) {
-		this( n5Base, n5Base.getGson(), fwdTranslation, invTranslation );
+		this( n5Base, JqUtils.buildGson(n5Base), fwdTranslation, invTranslation );
 	}
 
 	@Override
@@ -96,4 +98,15 @@ public class TranslatedN5Reader extends AbstractGsonReader {
 				.orElse( new HashMap<>());
 	}
 
+	@Override public JsonElement getAttributesJson(String pathName) throws IOException {
+
+		if (n5 instanceof GsonAttributesParser) {
+			return ((GsonAttributesParser)n5).getAttributesJson("/");
+		} else {
+			final JsonObject root = new JsonObject();
+			getAttributes(pathName).forEach(root::add);
+			return root;
+		}
+
+	}
 }
