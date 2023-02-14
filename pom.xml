@@ -113,11 +113,12 @@
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
 		<releaseProfiles>sign,deploy-to-scijava</releaseProfiles>
 
-		<imglib2.version>6.0.0</imglib2.version>
+		<imglib2.version>6.1.0</imglib2.version>
 		<imglib2-realtransform.version>4.0.0</imglib2-realtransform.version>
+		<imglib2-cache.version>1.0.0-beta-17</imglib2-cache.version>
 
-		<bigdataviewer-core-test.version>5.1.0</bigdataviewer-core-test.version>
-		<bigdataviewer-vistools-test.version>1.0.0-beta-11</bigdataviewer-vistools-test.version>
+		<bigdataviewer-core-test.version>10.4.6</bigdataviewer-core-test.version>
+		<bigdataviewer-vistools-test.version>1.0.0-beta-32</bigdataviewer-vistools-test.version>
 		<alphanumeric-comparator.version>1.4.1</alphanumeric-comparator.version>
 	</properties>
 
