@@ -23,7 +23,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package org.janelia.saalfeldlab.n5.metadata.ome;
+package org.janelia.saalfeldlab.n5.metadata.ome.v03;
 
 import java.util.Arrays;
 import java.util.stream.DoubleStream;
@@ -57,14 +57,12 @@ public class OmeNgffMultiScaleMetadata extends MultiscaleMetadata<N5SingleScaleM
 	public transient N5SingleScaleMetadata[] childrenMetadata;
 	public transient DatasetAttributes[] childrenAttributes;
 
-	public OmeNgffMultiScaleMetadata( 
-			final String path,
-			final String name, final String type, final String version,
-			final String[] axes, final OmeNgffDataset[] datasets, 
-			final DatasetAttributes[] childrenAttributes,
-			final OmeNgffDownsamplingMetadata metadata)
+	public OmeNgffMultiScaleMetadata( final String path, final String name,
+			final String type, final String version, final String[] axes,
+			final OmeNgffDataset[] datasets, final DatasetAttributes[] childrenAttributes,
+			final OmeNgffDownsamplingMetadata metadata )
 	{
-		super( path, buildMetadata( path, datasets, childrenAttributes, metadata ));
+		super( path, buildMetadata( path, datasets, childrenAttributes, metadata ) );
 		this.name = name;
 		this.type = type;
 		this.version = version;
@@ -75,26 +73,26 @@ public class OmeNgffMultiScaleMetadata extends MultiscaleMetadata<N5SingleScaleM
 	}
 
 	private static N5SingleScaleMetadata[] buildMetadata( 
-			final String path,
-			final OmeNgffDataset[] datasets,
+			final String path, final OmeNgffDataset[] datasets,
 			final DatasetAttributes[] childrenAttributes,
 			final OmeNgffDownsamplingMetadata metadata )
 	{
 		final int N = datasets.length;
 		final AffineTransform3D id = new AffineTransform3D();
-		final double[] pixelRes = DoubleStream.of(1).limit(N).toArray();
-		final double[] offset = DoubleStream.of(0).limit(N).toArray();
+		final double[] pixelRes = DoubleStream.of( 1 ).limit( N ).toArray();
+		final double[] offset = DoubleStream.of( 0 ).limit( N ).toArray();
 
 		final double[] factors;
-		if( metadata.scale == null)
-			factors = DoubleStream.of(1).limit(N).toArray();
+		if ( metadata.scale == null )
+			factors = DoubleStream.of( 1 ).limit( N ).toArray();
 		else
 			factors = metadata.scale;
 
 		N5SingleScaleMetadata[] childrenMetadata = new N5SingleScaleMetadata[ N ];
-		for( int i = 0; i < N; i++ ) {
-			childrenMetadata[i] = new N5SingleScaleMetadata(path, id, factors, pixelRes, offset,
-					"pixel", childrenAttributes[i]);
+		for ( int i = 0; i < N; i++ )
+		{
+			childrenMetadata[ i ] = new N5SingleScaleMetadata( path, id, factors,
+					pixelRes, offset, "pixel", childrenAttributes[ i ] );
 		}
 		return childrenMetadata;
 	}
@@ -112,25 +110,30 @@ public class OmeNgffMultiScaleMetadata extends MultiscaleMetadata<N5SingleScaleM
 	}
 
 	@Override
-	public N5SingleScaleMetadata[] getChildrenMetadata() {
+	public N5SingleScaleMetadata[] getChildrenMetadata()
+	{
 		return childrenMetadata;
 	}
 
 	@Override
-	public String getPath() {
+	public String getPath()
+	{
 		return path;
 	}
 
 	@Override
-	public String[] units() {
-		return Arrays.stream( datasets ).map( x -> "pixel").toArray( String[]::new );
+	public String[] units()
+	{
+		return Arrays.stream( datasets ).map( x -> "pixel" ).toArray( String[]::new );
 	}
 
-	public static class OmeNgffDataset {
+	public static class OmeNgffDataset
+	{
 		public String path;
 	}
 
-	public static class OmeNgffDownsamplingMetadata {
+	public static class OmeNgffDownsamplingMetadata
+	{
 		public int order;
 		public boolean preserve_range;
 		public double[] scale;
