@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>31.1.0</version>
+		<version>34.0.0</version>
 		<relativePath />
 	</parent>
 
@@ -116,7 +116,6 @@
 		<imglib2.version>6.0.0</imglib2.version>
 		<imglib2-realtransform.version>4.0.0</imglib2-realtransform.version>
 
-		<n5.version>2.5.1</n5.version>
 		<bigdataviewer-core-test.version>5.1.0</bigdataviewer-core-test.version>
 		<bigdataviewer-vistools-test.version>1.0.0-beta-11</bigdataviewer-vistools-test.version>
 		<alphanumeric-comparator.version>1.4.1</alphanumeric-comparator.version>
