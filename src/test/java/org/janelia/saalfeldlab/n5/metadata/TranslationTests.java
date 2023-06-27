@@ -3,16 +3,16 @@ package org.janelia.saalfeldlab.n5.metadata;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Files;
 import java.util.Optional;
 
 import org.janelia.saalfeldlab.n5.DataType;
 import org.janelia.saalfeldlab.n5.DatasetAttributes;
-import org.janelia.saalfeldlab.n5.GzipCompression;
+import org.janelia.saalfeldlab.n5.N5Exception;
 import org.janelia.saalfeldlab.n5.N5FSWriter;
 import org.janelia.saalfeldlab.n5.RawCompression;
 import org.janelia.saalfeldlab.n5.container.ContainerMetadataNode;
 import org.janelia.saalfeldlab.n5.container.ContainerMetadataWriter;
-import org.janelia.saalfeldlab.n5.imglib2.N5Utils;
 import org.janelia.saalfeldlab.n5.metadata.N5CosemMetadata.CosemTransform;
 import org.janelia.saalfeldlab.n5.metadata.canonical.CanonicalMetadata;
 import org.janelia.saalfeldlab.n5.metadata.canonical.CanonicalMetadataParser;
@@ -52,12 +52,18 @@ public class TranslationTests {
 	@Before
 	public void before()
 	{
-		URL configUrl = TransformTests.class.getResource( "/n5.jq" );
+		URL configUrl = TranslationTests.class.getResource( "/n5.jq" );
 		File baseDir = new File( configUrl.getFile() ).getParentFile();
 		containerDir = new File( baseDir, "translations.n5" );
-		
-		final String n5TestRoot = "src/test/resources/test.n5";
-		containerDirTest = new File(n5TestRoot);
+
+		try {
+			final File tmpFile = Files.createTempDirectory("n5-translation-test-").toFile();
+			tmpFile.deleteOnExit();
+			final String tmpPath = tmpFile.getCanonicalPath();
+			containerDirTest = new File(tmpPath);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 
 		try {
 			n5 = new N5FSWriter( containerDir.getCanonicalPath(), JqUtils.gsonBuilder(null) );
@@ -78,7 +84,7 @@ public class TranslationTests {
 	public void after() {
 		try {
 			n5.remove();
-		} catch (IOException e) {
+		} catch (Exception e) {
 		}
 	}
 
@@ -262,7 +268,7 @@ public class TranslationTests {
 			n5.createGroup("/pathXlation");
 			n5.createDataset("/pathXlation/src", 
 					new DatasetAttributes( new long[]{16,16}, new int[]{16,16}, DataType.UINT8, new RawCompression()));
-		} catch (IOException e) {
+		} catch (N5Exception e) {
 			e.printStackTrace();
 		}
 		Assert.assertTrue("pathXlation src exists", n5.exists("/pathXlation/src"));
@@ -294,7 +300,7 @@ public class TranslationTests {
 			parsedCode = n5.getAttribute( "pathXlation/dst", "secretCode", Integer.class);
 			Assert.assertEquals("parsed code dst", code, parsedCode );
 
-		} catch (IOException e) {
+		} catch (N5Exception e) {
 //			e.printStackTrace();
 			Assert.fail( e.getMessage() );
 		}

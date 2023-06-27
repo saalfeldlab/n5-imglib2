@@ -1,13 +1,8 @@
 package org.janelia.saalfeldlab.n5.translation;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-
-import org.janelia.saalfeldlab.n5.container.ContainerMetadataNode;
-
 import com.google.gson.Gson;
-import com.google.gson.JsonElement;
+import java.util.Map;
+import org.janelia.saalfeldlab.n5.container.ContainerMetadataNode;
 
 public class TreeTranslation {
 
@@ -25,6 +20,11 @@ public class TreeTranslation {
 		fwdFun = new JqContainerTranslation( fwd, gson );
 
 		updateTranslated();
+	}
+
+	public Gson getGson()
+	{
+		return gson;
 	}
 
 	public JqContainerTranslation getTranslationFunction() {
@@ -45,23 +45,13 @@ public class TreeTranslation {
 	}
 
 	public <T> void setAttribute( String pathName, String key, T attribute ) {
-		Optional<ContainerMetadataNode> childOpt = rootOrig.getNode(pathName);
-		if( childOpt.isPresent() ) { 
-			childOpt.get().getAttributes().put(key, gson.toJsonTree(attribute));
-			updateTranslated();
-		}
+		rootOrig.setAttribute(pathName, key, attribute);
+		updateTranslated();
 	}
 	
 	public <T> void setAttributes( String pathName, Map<String,?> attributes ) { 
-		Optional<ContainerMetadataNode> childOpt = rootOrig.getNode(pathName);
-		if( childOpt.isPresent() ) { 
-
-			HashMap<String, JsonElement> destAttrs = childOpt.get().getAttributes();
-			for( String k : attributes.keySet() )
-				destAttrs.put(k, gson.toJsonTree(attributes.get(k)));
-
-			updateTranslated();
-		}
+		rootOrig.setAttributes(pathName, attributes);
+		updateTranslated();
 	}
 
 }

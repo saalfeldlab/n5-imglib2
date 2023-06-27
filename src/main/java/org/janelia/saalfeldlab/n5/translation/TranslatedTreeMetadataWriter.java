@@ -6,8 +6,7 @@ import org.janelia.saalfeldlab.n5.N5Writer;
 import org.janelia.saalfeldlab.n5.container.ContainerMetadataNode;
 import org.janelia.saalfeldlab.n5.container.ContainerMetadataWriter;
 
-
-public class TranslatedTreeMetadataWriter extends TreeTranslation{
+public class TranslatedTreeMetadataWriter extends TreeTranslation {
 
 	final N5Writer n5;
 	private ContainerMetadataWriter writer;
@@ -16,7 +15,7 @@ public class TranslatedTreeMetadataWriter extends TreeTranslation{
 			final N5Writer n5,
 			final String dataset,
 			final String translation) {
-		super(	ContainerMetadataNode.build(n5, dataset, JqUtils.buildGson(n5) ), 
+		super(	ContainerMetadataNode.build(n5, dataset, JqUtils.buildGson(n5) ),
 				JqUtils.buildGson(n5), 
 				translation );
 
@@ -31,7 +30,7 @@ public class TranslatedTreeMetadataWriter extends TreeTranslation{
 		this( n5, "", translation );
 	}
 
-	public void writeAllTranslatedAttributes() throws IOException {
+	public void writeAllTranslatedAttributes() {
 		writer.setMetadataTree(rootTranslated);
 		writer.writeAllAttributes();
 	}
@@ -40,18 +39,15 @@ public class TranslatedTreeMetadataWriter extends TreeTranslation{
 	 * Writes all attributes stored in the node corresponding to the given pathName.
 	 * 
 	 * @param pathName the path
-	 * @throws IOException the exception
 	 */
 	public void writeAllTranslatedAttributes(
-			final String pathName ) throws IOException {
+			final String pathName ) {
 
 		writer.setMetadataTree(rootTranslated);
 		writer.writeAllAttributes( pathName );
 	}
 
-	public void writeTranslatedAttribute(
-			final String pathName,
-			final String key) throws IOException {
+	public void writeTranslatedAttribute( final String pathName, final String key) throws IOException {
 
 		writer.setMetadataTree(rootTranslated);
 		writer.writeAttribute( pathName, key );

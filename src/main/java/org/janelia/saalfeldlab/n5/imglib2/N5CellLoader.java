@@ -132,11 +132,7 @@ public class N5CellLoader<T extends NativeType<T>> implements CellLoader<T> {
 		for (int d = 0; d < gridPosition.length; ++d)
 			gridPosition[d] = cell.min(d) / cellDimensions[d];
 		final DataBlock<?> block;
-		try {
-			block = n5.readBlock(dataset, attributes, gridPosition);
-		} catch (final IOException e) {
-			throw new RuntimeException(e);
-		}
+		block = n5.readBlock(dataset, attributes, gridPosition);
 
 		if (block == null)
 			blockNotFoundHandler.accept(cell);

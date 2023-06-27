@@ -27,10 +27,10 @@ package org.janelia.saalfeldlab.n5.metadata;
 
 import org.janelia.saalfeldlab.n5.DataType;
 import org.janelia.saalfeldlab.n5.DatasetAttributes;
+import org.janelia.saalfeldlab.n5.N5Exception;
 import org.janelia.saalfeldlab.n5.N5Reader;
 import org.janelia.saalfeldlab.n5.N5TreeNode;
 
-import java.io.IOException;
 import java.util.Optional;
 import java.util.function.BiFunction;
 
@@ -54,7 +54,7 @@ public interface N5MetadataParser<T extends N5Metadata> extends BiFunction<N5Rea
 
 	  if (dimensions != null && dataType != null)
 		return new DatasetAttributes(dimensions, blockSize, dataType, null);
-	} catch (IOException e) {
+	} catch (N5Exception e) {
 	}
 	return null;
   }

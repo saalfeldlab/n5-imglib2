@@ -1,14 +1,12 @@
 package org.janelia.saalfeldlab.n5.container;
 
+import com.google.gson.JsonElement;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Optional;
-
 import org.janelia.saalfeldlab.n5.N5Writer;
 import org.janelia.saalfeldlab.n5.translation.JqUtils;
-
-import com.google.gson.JsonElement;
 
 public class ContainerMetadataWriter {
 
@@ -48,7 +46,7 @@ public class ContainerMetadataWriter {
 		this.n5 = n5;
 	}
 
-	public void writeAllAttributes() throws IOException {
+	public void writeAllAttributes() {
 
 		Iterator<String> it = metadataTree.getChildPathsRecursive(metadataTree.getPath()).iterator();
 		while( it.hasNext() )
@@ -59,10 +57,9 @@ public class ContainerMetadataWriter {
 	 * Writes all attributes stored in the tree.
 	 * 
 	 * @param pathName the path
-	 * @throws IOException the exception
 	 */
 	public void writeAllAttributes(
-			final String pathName ) throws IOException {
+			final String pathName ) {
 
 		if( !n5.exists(pathName))
 			n5.createGroup(pathName);
@@ -72,7 +69,7 @@ public class ContainerMetadataWriter {
 			return;
 
 		String path = nopt.get().getPath();
-		HashMap<String, JsonElement> attrs = nopt.get().getAttributes();
+		HashMap<String, JsonElement> attrs = nopt.get().getContainerAttributes();
 		for( String key : attrs.keySet())
 		if( attrs.containsKey(key))
 			n5.setAttribute(path, key, attrs.get(key));
@@ -86,7 +83,7 @@ public class ContainerMetadataWriter {
 		if( !nopt.isPresent())
 			return;
 
-		HashMap<String, JsonElement> attrs = nopt.get().getAttributes();
+		HashMap<String, JsonElement> attrs = nopt.get().getContainerAttributes();
 		if( attrs.containsKey(key))
 			n5.setAttribute(pathName, key, attrs.get(key));
 	}

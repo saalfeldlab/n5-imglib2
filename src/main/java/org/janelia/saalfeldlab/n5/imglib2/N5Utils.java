@@ -1108,11 +1108,7 @@ public class N5Utils {
 											longCroppedBlockSize,
 											gridPosition);
 
-									try {
-										n5.writeBlock(dataset, attributes, dataBlock);
-									} catch (final IOException e) {
-										e.printStackTrace();
-									}
+									n5.writeBlock(dataset, attributes, dataBlock);
 								}));
 
 				for (d = 0; d < n; ++d) {
@@ -1414,11 +1410,7 @@ public class N5Utils {
 										longCroppedBlockSize,
 										gridPosition);
 
-								try {
-									n5.writeBlock(dataset, attributes, dataBlock);
-								} catch (final IOException e) {
-									e.printStackTrace();
-								}
+								n5.writeBlock(dataset, attributes, dataBlock);
 							}));
 
 			for (d = 0; d < n; ++d) {
