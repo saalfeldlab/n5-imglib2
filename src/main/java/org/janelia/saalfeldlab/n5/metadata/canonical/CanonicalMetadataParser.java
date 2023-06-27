@@ -1,40 +1,16 @@
 package org.janelia.saalfeldlab.n5.metadata.canonical;
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
-import java.util.function.Predicate;
-
-import org.janelia.saalfeldlab.n5.Bzip2Compression;
-import org.janelia.saalfeldlab.n5.Compression;
-import org.janelia.saalfeldlab.n5.DataType;
-import org.janelia.saalfeldlab.n5.DatasetAttributes;
-import org.janelia.saalfeldlab.n5.GsonAttributesParser;
-import org.janelia.saalfeldlab.n5.GzipCompression;
-import org.janelia.saalfeldlab.n5.Lz4Compression;
-import org.janelia.saalfeldlab.n5.N5Reader;
-import org.janelia.saalfeldlab.n5.N5TreeNode;
-import org.janelia.saalfeldlab.n5.RawCompression;
-import org.janelia.saalfeldlab.n5.XzCompression;
-import org.janelia.saalfeldlab.n5.metadata.ColorMetadata;
-import org.janelia.saalfeldlab.n5.metadata.IntColorMetadata;
-import org.janelia.saalfeldlab.n5.metadata.N5MetadataParser;
-import org.janelia.saalfeldlab.n5.metadata.RGBAColorMetadata;
-import org.janelia.saalfeldlab.n5.metadata.canonical.CanonicalDatasetMetadata.IntensityLimits;
-import org.janelia.saalfeldlab.n5.container.ContainerMetadataNode;
-import org.janelia.saalfeldlab.n5.metadata.transforms.ParametrizedTransform;
-import org.janelia.saalfeldlab.n5.metadata.transforms.SequenceSpatialTransform;
-import org.janelia.saalfeldlab.n5.metadata.transforms.SpatialTransform;
-import org.janelia.saalfeldlab.n5.translation.JqUtils;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.gson.Gson;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonElement;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.Predicate;
 import net.thisptr.jackson.jq.BuiltinFunctionLoader;
 import net.thisptr.jackson.jq.Expression;
 import net.thisptr.jackson.jq.Function;
@@ -45,13 +21,34 @@ import net.thisptr.jackson.jq.Versions;
 import net.thisptr.jackson.jq.exception.JsonQueryException;
 import net.thisptr.jackson.jq.internal.misc.Strings;
 import net.thisptr.jackson.jq.path.Path;
+import org.janelia.saalfeldlab.n5.Bzip2Compression;
+import org.janelia.saalfeldlab.n5.Compression;
+import org.janelia.saalfeldlab.n5.DataType;
+import org.janelia.saalfeldlab.n5.DatasetAttributes;
+import org.janelia.saalfeldlab.n5.GzipCompression;
+import org.janelia.saalfeldlab.n5.Lz4Compression;
+import org.janelia.saalfeldlab.n5.N5Exception;
+import org.janelia.saalfeldlab.n5.N5Reader;
+import org.janelia.saalfeldlab.n5.N5TreeNode;
+import org.janelia.saalfeldlab.n5.RawCompression;
+import org.janelia.saalfeldlab.n5.XzCompression;
+import org.janelia.saalfeldlab.n5.container.ContainerMetadataNode;
+import org.janelia.saalfeldlab.n5.metadata.ColorMetadata;
+import org.janelia.saalfeldlab.n5.metadata.IntColorMetadata;
+import org.janelia.saalfeldlab.n5.metadata.N5MetadataParser;
+import org.janelia.saalfeldlab.n5.metadata.RGBAColorMetadata;
+import org.janelia.saalfeldlab.n5.metadata.canonical.CanonicalDatasetMetadata.IntensityLimits;
+import org.janelia.saalfeldlab.n5.metadata.transforms.ParametrizedTransform;
+import org.janelia.saalfeldlab.n5.metadata.transforms.SequenceSpatialTransform;
+import org.janelia.saalfeldlab.n5.metadata.transforms.SpatialTransform;
+import org.janelia.saalfeldlab.n5.translation.JqUtils;
 
 /**
  * A parser for the "canonical" metadata dialect.
  * 
  * @author John Bogovic
  */
-public class CanonicalMetadataParser implements N5MetadataParser<CanonicalMetadata> {
+public class CanonicalMetadataParser implements N5MetadataParser< CanonicalMetadata > {
 
 	protected Gson gson;
 
@@ -118,7 +115,7 @@ public class CanonicalMetadataParser implements N5MetadataParser<CanonicalMetada
 			if( color == null )
 				color = n5.getAttribute(path, "color", RGBAColorMetadata.class);
 
-		} catch (IOException e) {
+		} catch (N5Exception e) {
 		}
 
 		if( spatial != null ) {
@@ -178,7 +175,7 @@ public class CanonicalMetadataParser implements N5MetadataParser<CanonicalMetada
 			return Optional.empty();
 
 		return root.getNode(node.getPath())
-				.map(ContainerMetadataNode::getAttributes)
+				.map(ContainerMetadataNode::getContainerAttributes)
 				.map(this::canonicalMetadata)
 				.filter(filter);
 	}
@@ -212,57 +209,6 @@ public class CanonicalMetadataParser implements N5MetadataParser<CanonicalMetada
 			}
 		});
 		return rootScope;
-	}
-	
-	public static Optional<DatasetAttributes> datasetAttributes(final Gson gson,
-			HashMap<String, JsonElement> attributeMap) {
-
-		try {
-
-			final long[] dimensions = GsonAttributesParser.parseAttribute(attributeMap, "dimensions", long[].class,
-					gson);
-			if (dimensions == null)
-				return Optional.empty();
-
-			final DataType dataType = GsonAttributesParser.parseAttribute(attributeMap, "dataType", DataType.class,
-					gson);
-			if (dataType == null)
-				return Optional.empty();
-
-			int[] blockSize = GsonAttributesParser.parseAttribute(attributeMap, "blockSize", int[].class, gson);
-			if (blockSize == null)
-				blockSize = Arrays.stream(dimensions).mapToInt(a -> (int) a).toArray();
-
-			Compression compression = GsonAttributesParser.parseAttribute(attributeMap, "compression",
-					Compression.class, gson);
-
-			/* version 0 */
-			if (compression == null) {
-				switch (GsonAttributesParser.parseAttribute(attributeMap, "compression", String.class, gson)) {
-				case "raw":
-					compression = new RawCompression();
-					break;
-				case "gzip":
-					compression = new GzipCompression();
-					break;
-				case "bzip2":
-					compression = new Bzip2Compression();
-					break;
-				case "lz4":
-					compression = new Lz4Compression();
-					break;
-				case "xz":
-					compression = new XzCompression();
-					break;
-				}
-			}
-
-			return Optional.of(new DatasetAttributes(dimensions, blockSize, dataType, compression));
-
-		} catch (Exception e) {
-		}
-
-		return Optional.empty();
 	}
 
 	public static Optional<DatasetAttributes> datasetAttributes(final JsonDeserializationContext context, JsonElement elem ) {

@@ -1,16 +1,14 @@
 package org.janelia.saalfeldlab.n5.translation;
 
+import com.google.gson.JsonElement;
 import java.util.HashMap;
 import java.util.Optional;
 import java.util.function.Predicate;
-
 import org.janelia.saalfeldlab.n5.N5Reader;
 import org.janelia.saalfeldlab.n5.N5TreeNode;
+import org.janelia.saalfeldlab.n5.container.ContainerMetadataNode;
 import org.janelia.saalfeldlab.n5.metadata.canonical.CanonicalMetadata;
 import org.janelia.saalfeldlab.n5.metadata.canonical.CanonicalMetadataParser;
-import org.janelia.saalfeldlab.n5.container.ContainerMetadataNode;
-
-import com.google.gson.JsonElement;
 
 /**
  * A parser for metadata that are translated into the "canonical" dialect.
@@ -73,7 +71,7 @@ public class TranslatedTreeMetadataParser extends CanonicalMetadataParser {
 			return Optional.empty();
 
 		return translatedRoot.getChild( node.getPath(), groupSep )
-				.map( ContainerMetadataNode::getAttributes )
+				.map( ContainerMetadataNode::getContainerAttributes )
 				.map( this::canonicalMetadata )
 				.filter(filter);
 	}

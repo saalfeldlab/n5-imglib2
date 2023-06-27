@@ -1,15 +1,13 @@
 package org.janelia.saalfeldlab.n5.translation;
 
-import java.io.IOException;
+import com.google.gson.Gson;
+import java.util.List;
 import java.util.Map;
-
 import org.janelia.saalfeldlab.n5.DataBlock;
 import org.janelia.saalfeldlab.n5.DatasetAttributes;
 import org.janelia.saalfeldlab.n5.N5Writer;
 import org.janelia.saalfeldlab.n5.container.ContainerMetadataNode;
 import org.janelia.saalfeldlab.n5.container.ContainerMetadataWriter;
-
-import com.google.gson.Gson;
 
 public class TranslatedN5Writer extends TranslatedN5Reader implements N5Writer {
 	
@@ -67,6 +65,40 @@ public class TranslatedN5Writer extends TranslatedN5Reader implements N5Writer {
 			translation.rootTranslated = new ContainerMetadataNode();
 		}
 		return success;
+	}
+
+	@Override
+	public boolean removeAttribute(String pathName, String key) {
+
+		final ContainerMetadataNode tlated = translation.getTranslated();
+		if (tlated.removeAttribute(pathName, key)) {
+			translation.updateOriginal();
+			return true;
+		}
+		return false;
+	}
+
+	@Override
+	public <T> T removeAttribute(String pathName, String key, Class<T> clazz) {
+
+		final ContainerMetadataNode tlated = translation.getTranslated();
+		final T t = tlated.removeAttribute(pathName, key, clazz);
+		if (t != null) {
+			translation.updateOriginal();
+			return t;
+		}
+		return null;
+	}
+
+	@Override
+	public boolean removeAttributes(String pathName, List<String> attributes) {
+
+		final ContainerMetadataNode tlated = translation.getTranslated();
+		if (tlated.removeAttributes(pathName, attributes)) {
+			translation.updateOriginal();
+			return true;
+		}
+		return false;
 	}
 
 	@Override
