@@ -1,11 +1,11 @@
 package org.janelia.saalfeldlab.n5.metadata;
 
 import org.janelia.saalfeldlab.n5.DatasetAttributes;
+import org.janelia.saalfeldlab.n5.N5Exception;
 import org.janelia.saalfeldlab.n5.N5Reader;
 import org.janelia.saalfeldlab.n5.N5TreeNode;
 import org.janelia.saalfeldlab.n5.N5Writer;
 
-import java.io.IOException;
 import java.util.Optional;
 
 /**
@@ -31,7 +31,7 @@ public class N5CosemMetadataParser implements N5MetadataParser<N5CosemMetadata>,
 			  node.getPath(), N5CosemMetadata.CosemTransform.KEY, N5CosemMetadata.CosemTransform.class));
 
 	  return cosemTransform.map(t -> new N5CosemMetadata(path, t, attributes));
-	} catch (IOException e) {
+	} catch (N5Exception e) {
 	  return Optional.empty();
 	}
   }

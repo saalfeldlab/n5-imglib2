@@ -3,13 +3,8 @@ package org.janelia.saalfeldlab.n5.metadata.canonical;
 import java.util.HashMap;
 import java.util.Optional;
 
-import org.janelia.saalfeldlab.n5.DatasetAttributes;
-import org.janelia.saalfeldlab.n5.GsonAttributesParser;
-
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
-
-import net.imglib2.realtransform.AffineTransform3D;
 
 
 /**

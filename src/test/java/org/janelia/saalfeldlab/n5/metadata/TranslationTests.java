@@ -8,6 +8,7 @@ import java.util.Optional;
 import org.janelia.saalfeldlab.n5.DataType;
 import org.janelia.saalfeldlab.n5.DatasetAttributes;
 import org.janelia.saalfeldlab.n5.GzipCompression;
+import org.janelia.saalfeldlab.n5.N5Exception;
 import org.janelia.saalfeldlab.n5.N5FSWriter;
 import org.janelia.saalfeldlab.n5.RawCompression;
 import org.janelia.saalfeldlab.n5.container.ContainerMetadataNode;
@@ -78,7 +79,7 @@ public class TranslationTests {
 	public void after() {
 		try {
 			n5.remove();
-		} catch (IOException e) {
+		} catch (N5Exception e) {
 		}
 	}
 

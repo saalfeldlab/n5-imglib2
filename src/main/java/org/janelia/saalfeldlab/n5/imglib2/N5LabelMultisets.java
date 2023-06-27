@@ -277,12 +277,7 @@ public class N5LabelMultisets {
 								final RandomAccessibleInterval<LabelMultisetType> sourceBlock = Views
 										.offsetInterval(zeroMinSource, fOffset, longCroppedBlockSize);
 								final ByteArrayDataBlock dataBlock = createDataBlock(sourceBlock, gridPosition);
-
-								try {
-									n5.writeBlock(dataset, attributes, dataBlock);
-								} catch (final IOException e) {
-									e.printStackTrace();
-								}
+								n5.writeBlock(dataset, attributes, dataBlock);
 							}));
 
 			for (d = 0; d < n; ++d) {
@@ -481,11 +476,7 @@ public class N5LabelMultisets {
 											.offsetInterval(zeroMinSource, fOffset, longCroppedBlockSize);
 									final ByteArrayDataBlock dataBlock = createDataBlock(sourceBlock, gridPosition);
 
-									try {
-										n5.writeBlock(dataset, attributes, dataBlock);
-									} catch (final IOException e) {
-										e.printStackTrace();
-									}
+									n5.writeBlock(dataset, attributes, dataBlock);
 								}));
 
 				for (d = 0; d < n; ++d) {
