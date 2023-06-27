@@ -39,7 +39,6 @@ public class TranslatedTreeMetadataWriter extends TreeTranslation {
 	 * Writes all attributes stored in the node corresponding to the given pathName.
 	 * 
 	 * @param pathName the path
-	 * @throws IOException the exception
 	 */
 	public void writeAllTranslatedAttributes(
 			final String pathName ) {

@@ -57,7 +57,6 @@ public class ContainerMetadataWriter {
 	 * Writes all attributes stored in the tree.
 	 * 
 	 * @param pathName the path
-	 * @throws IOException the exception
 	 */
 	public void writeAllAttributes(
 			final String pathName ) {
