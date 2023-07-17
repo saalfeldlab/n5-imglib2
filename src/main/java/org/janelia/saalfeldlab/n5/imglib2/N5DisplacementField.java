@@ -474,8 +474,6 @@ public class N5DisplacementField {
 	 * @param level
 	 *            the scale level to open, if present
 	 * @return the invertible transformation
-	 * @throws Exception
-	 *             the exception
 	 */
 	public static final <T extends RealType<T> & NativeType<T>> ExplicitInvertibleRealTransform openInvertible(
 			final N5Reader n5,
@@ -854,8 +852,6 @@ public class N5DisplacementField {
 	 * @param source
 	 *            the source displacement field
 	 * @return the possibly permuted deformation field
-	 * @throws Exception
-	 *             the exception
 	 */
 	public static final <T extends RealType<T>> RandomAccessibleInterval<T> vectorAxisLast(final RandomAccessibleInterval<T> source) {
 
@@ -886,8 +882,6 @@ public class N5DisplacementField {
 	 * @param source
 	 *            the source displacement field
 	 * @return the possibly permuted deformation field
-	 * @throws Exception
-	 *             the exception
 	 */
 	public static final <T extends RealType<T>> RandomAccessibleInterval<T> vectorAxisFirst(final RandomAccessibleInterval<T> source) {
 
