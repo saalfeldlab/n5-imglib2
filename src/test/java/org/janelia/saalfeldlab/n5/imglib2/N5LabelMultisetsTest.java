@@ -26,8 +26,6 @@
  */
 package org.janelia.saalfeldlab.n5.imglib2;
 
-import static org.junit.Assert.fail;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -104,28 +102,22 @@ public class N5LabelMultisetsTest {
 	@Test
 	public void testSaveAndOpen() throws InterruptedException, ExecutionException {
 
-		try {
-			N5LabelMultisets.saveLabelMultiset(expectedImg, n5, datasetName, blockSize, new GzipCompression());
-			RandomAccessibleInterval<LabelMultisetType> loaded = N5LabelMultisets.openLabelMultiset(n5, datasetName);
-			assertEquals(loaded);
+		N5LabelMultisets.saveLabelMultiset(expectedImg, n5, datasetName, blockSize, new GzipCompression());
+		RandomAccessibleInterval<LabelMultisetType> loaded = N5LabelMultisets.openLabelMultiset(n5, datasetName);
+		assertEquals(loaded);
 
-			ExecutorService exec = Executors.newFixedThreadPool(4);
-			N5LabelMultisets.saveLabelMultiset(expectedImg, n5, datasetName + "-1", blockSize, new GzipCompression(), exec);
-			loaded = N5LabelMultisets.openLabelMultiset(n5, datasetName + "-1");
-			assertEquals(loaded);
-			exec.shutdown();
+		ExecutorService exec = Executors.newFixedThreadPool(4);
+		N5LabelMultisets.saveLabelMultiset(expectedImg, n5, datasetName + "-1", blockSize, new GzipCompression(), exec);
+		loaded = N5LabelMultisets.openLabelMultiset(n5, datasetName + "-1");
+		assertEquals(loaded);
+		exec.shutdown();
 
-			exec = Executors.newFixedThreadPool(8);
-			final int[] differentBlockSize = {6, 10, 3};
-			N5LabelMultisets.saveLabelMultiset(loaded, n5, datasetName + "-2", differentBlockSize, new RawCompression(), exec);
-			loaded = N5LabelMultisets.openLabelMultiset(n5, datasetName + "-2");
-			assertEquals(loaded);
-			exec.shutdown();
-
-		} catch (final IOException e) {
-			fail("Failed by I/O exception.");
-			e.printStackTrace();
-		}
+		exec = Executors.newFixedThreadPool(8);
+		final int[] differentBlockSize = {6, 10, 3};
+		N5LabelMultisets.saveLabelMultiset(loaded, n5, datasetName + "-2", differentBlockSize, new RawCompression(), exec);
+		loaded = N5LabelMultisets.openLabelMultiset(n5, datasetName + "-2");
+		assertEquals(loaded);
+		exec.shutdown();
 	}
 
 	private void assertEquals(final RandomAccessibleInterval<LabelMultisetType> actualImg) {

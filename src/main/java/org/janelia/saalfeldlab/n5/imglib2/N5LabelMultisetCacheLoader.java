@@ -26,7 +26,6 @@
  */
 package org.janelia.saalfeldlab.n5.imglib2;
 
-import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -57,7 +56,7 @@ public class N5LabelMultisetCacheLoader extends AbstractLabelMultisetLoader {
 
 	public N5LabelMultisetCacheLoader(
 			final N5Reader n5,
-			final String dataset) throws IOException {
+			final String dataset) {
 
 		this(n5, dataset, (g, p) -> null);
 	}
@@ -65,7 +64,7 @@ public class N5LabelMultisetCacheLoader extends AbstractLabelMultisetLoader {
 	public N5LabelMultisetCacheLoader(
 			final N5Reader n5,
 			final String dataset,
-			final BiFunction<CellGrid, long[], byte[]> nullReplacement) throws IOException {
+			final BiFunction<CellGrid, long[], byte[]> nullReplacement) {
 
 		super(generateCellGrid(n5, dataset));
 		this.n5 = n5;
@@ -78,7 +77,7 @@ public class N5LabelMultisetCacheLoader extends AbstractLabelMultisetLoader {
 		return new ConstantNullReplacement(id);
 	}
 
-	private static CellGrid generateCellGrid(final N5Reader n5, final String dataset) throws IOException {
+	private static CellGrid generateCellGrid(final N5Reader n5, final String dataset) {
 
 		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
 

@@ -26,12 +26,20 @@
  */
 package org.janelia.saalfeldlab.n5.imglib2;
 
-import java.io.IOException;
+import static net.imglib2.img.basictypeaccess.AccessFlags.DIRTY;
+import static net.imglib2.img.basictypeaccess.AccessFlags.VOLATILE;
+
 import java.util.Arrays;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.IntFunction;
+
+import org.janelia.saalfeldlab.n5.DataBlock;
+import org.janelia.saalfeldlab.n5.DatasetAttributes;
+import org.janelia.saalfeldlab.n5.N5Exception;
+import org.janelia.saalfeldlab.n5.N5Reader;
+
 import net.imglib2.IterableInterval;
 import net.imglib2.cache.CacheLoader;
 import net.imglib2.cache.img.LoadedCellCacheLoader;
@@ -67,12 +75,6 @@ import net.imglib2.type.NativeType;
 import net.imglib2.type.PrimitiveType;
 import net.imglib2.util.Cast;
 import net.imglib2.util.Intervals;
-import org.janelia.saalfeldlab.n5.DataBlock;
-import org.janelia.saalfeldlab.n5.DatasetAttributes;
-import org.janelia.saalfeldlab.n5.N5Reader;
-
-import static net.imglib2.img.basictypeaccess.AccessFlags.DIRTY;
-import static net.imglib2.img.basictypeaccess.AccessFlags.VOLATILE;
 
 /**
  * A {@link CacheLoader} for N5 dataset blocks. Supports all primitive types.
@@ -100,7 +102,7 @@ public class N5CacheLoader<T extends NativeType<T>, A extends ArrayDataAccess<A>
 			final T type,
 			final Set<AccessFlags> accessFlags,
 			final Consumer<IterableInterval<T>> blockNotFoundHandler
-	) throws IOException {
+	) throws N5Exception {
 		this.n5 = n5;
 		this.dataset = dataset;
 		this.grid = grid;

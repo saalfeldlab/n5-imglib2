@@ -26,7 +26,6 @@
  */
 package org.janelia.saalfeldlab.n5.imglib2;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -88,9 +87,8 @@ public class N5CellLoader<T extends NativeType<T>> implements CellLoader<T> {
 	 * @param n5 the n5 reader
 	 * @param dataset the dataset path
 	 * @param cellDimensions size of the cell (block)
-	 * @throws IOException the execption
 	 */
-	public N5CellLoader(final N5Reader n5, final String dataset, final int[] cellDimensions) throws IOException {
+	public N5CellLoader(final N5Reader n5, final String dataset, final int[] cellDimensions) {
 
 		this(n5, dataset, cellDimensions, img -> {});
 	}
@@ -103,14 +101,12 @@ public class N5CellLoader<T extends NativeType<T>> implements CellLoader<T> {
 	 * @param blockNotFoundHandler
 	 *            Sets block contents if the appropriate {@link N5Reader}
 	 *            returns {@code null} for that block.
-	 * @throws IOException the exception
 	 */
 	public N5CellLoader(
 			final N5Reader n5,
 			final String dataset,
 			final int[] cellDimensions,
-			final Consumer<IterableInterval<T>> blockNotFoundHandler)
-			throws IOException {
+			final Consumer<IterableInterval<T>> blockNotFoundHandler) {
 
 		super();
 		this.n5 = n5;
@@ -255,7 +251,7 @@ public class N5CellLoader<T extends NativeType<T>> implements CellLoader<T> {
 
 	/**
 	 *
-	 * @param <T> type parameter 
+	 * @param <T> type parameter
 	 * @param <I> interval type
 	 * @param defaultValue the default value
 	 * @return {@link Consumer} that sets all values of its argument to

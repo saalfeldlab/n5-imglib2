@@ -26,7 +26,6 @@
  */
 package org.janelia.saalfeldlab.n5.imglib2;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Optional;
@@ -42,6 +41,7 @@ import org.janelia.saalfeldlab.n5.Compression;
 import org.janelia.saalfeldlab.n5.DataBlock;
 import org.janelia.saalfeldlab.n5.DataType;
 import org.janelia.saalfeldlab.n5.DatasetAttributes;
+import org.janelia.saalfeldlab.n5.N5Exception.N5IOException;
 import org.janelia.saalfeldlab.n5.N5Reader;
 import org.janelia.saalfeldlab.n5.N5Writer;
 
@@ -241,7 +241,7 @@ public class N5Utils {
 	 * source into it. This is a helper method with redundant parameters.
 	 *
 	 * @param <T> the type parameter
-	 * @param source the source block 
+	 * @param source the source block
 	 * @param dataType the data type
 	 * @param intBlockSize the block since as an int array
 	 * @param longBlockSize the block since as a long array
@@ -395,12 +395,11 @@ public class N5Utils {
 	 * @param n5 the n5 reader
 	 * @param dataset the dataset path
 	 * @return the image
-	 * @throws IOException the exception
 	 */
 	@SuppressWarnings("unchecked")
 	public static final <T extends NativeType<T>> CachedCellImg<T, ?> open(
 			final N5Reader n5,
-			final String dataset) throws IOException {
+			final String dataset) {
 
 		if (N5LabelMultisets.isLabelMultisetType(n5, dataset))
 			return (CachedCellImg<T, ?>)N5LabelMultisets.openLabelMultiset(n5, dataset);
@@ -410,18 +409,17 @@ public class N5Utils {
 
 	/**
 	 * Open an N5 dataset as a memory cached {@link LazyCellImg}.
-	 * 
+	 *
 	 * @param <T> the type parameter
 	 * @param n5 the n5 reader
 	 * @param dataset the dataset path
 	 * @param maxNumCacheEntries the max number of cache entries
 	 * @return the image
-	 * @throws IOException the exception
 	 */
 	public static final <T extends NativeType<T>> CachedCellImg<T, ?> openWithBoundedSoftRefCache(
 			final N5Reader n5,
 			final String dataset,
-			final int maxNumCacheEntries) throws IOException {
+			final int maxNumCacheEntries) {
 
 		return openWithBoundedSoftRefCache(n5, dataset, (Consumer<IterableInterval<T>>)img -> {}, maxNumCacheEntries);
 	}
@@ -435,12 +433,11 @@ public class N5Utils {
 	 * @param n5 the n5 reader
 	 * @param dataset the dataset path
 	 * @return the image
-	 * @throws IOException the exception
 	 */
 	@SuppressWarnings("unchecked")
 	public static final <T extends NativeType<T>> CachedCellImg<T, ?> openVolatile(
 			final N5Reader n5,
-			final String dataset) throws IOException {
+			final String dataset) {
 
 		if (N5LabelMultisets.isLabelMultisetType(n5, dataset))
 			return (CachedCellImg<T, ?>)N5LabelMultisets.openLabelMultiset(n5, dataset);
@@ -457,12 +454,11 @@ public class N5Utils {
 	 * @param dataset the dataset path
 	 * @param maxNumCacheEntries the max number of cache entries
 	 * @return the image
-	 * @throws IOException the exception
 	 */
 	public static final <T extends NativeType<T>> CachedCellImg<T, ?> openVolatileWithBoundedSoftRefCache(
 			final N5Reader n5,
 			final String dataset,
-			final int maxNumCacheEntries) throws IOException {
+			final int maxNumCacheEntries) {
 
 		return openVolatileWithBoundedSoftRefCache(n5, dataset, (Consumer<IterableInterval<T>>)img -> {}, maxNumCacheEntries);
 	}
@@ -476,11 +472,10 @@ public class N5Utils {
 	 * @param n5 n5 reader
 	 * @param dataset the dataset path
 	 * @return the image
-	 * @throws IOException the exception
 	 */
 	public static final <T extends NativeType<T>> CachedCellImg<T, ?> openWithDiskCache(
 			final N5Reader n5,
-			final String dataset) throws IOException {
+			final String dataset) {
 
 		return openWithDiskCache(n5, dataset, (Consumer<IterableInterval<T>>)img -> {});
 	}
@@ -493,12 +488,11 @@ public class N5Utils {
 	 * @param dataset the dataset path
 	 * @param defaultValue the default value
 	 * @return the image
-	 * @throws IOException the exception
 	 */
 	public static final <T extends NativeType<T>> CachedCellImg<T, ?> open(
 			final N5Reader n5,
 			final String dataset,
-			final T defaultValue) throws IOException {
+			final T defaultValue) {
 
 		return open(n5, dataset, N5CellLoader.setToDefaultValue(defaultValue));
 	}
@@ -512,13 +506,12 @@ public class N5Utils {
 	 * @param defaultValue the default value
 	 * @param maxNumCacheEntries the max number of cache entries
 	 * @return the image
-	 * @throws IOException the exception
 	 */
 	public static final <T extends NativeType<T>> CachedCellImg<T, ?> openWithBoundedSoftRefCache(
 			final N5Reader n5,
 			final String dataset,
 			final int maxNumCacheEntries,
-			final T defaultValue) throws IOException {
+			final T defaultValue) {
 
 		return openWithBoundedSoftRefCache(n5, dataset, N5CellLoader.setToDefaultValue(defaultValue), maxNumCacheEntries);
 	}
@@ -532,12 +525,11 @@ public class N5Utils {
 	 * @param dataset the dataset path
 	 * @param defaultValue the default value
 	 * @return the image
-	 * @throws IOException the exception
 	 */
 	public static final <T extends NativeType<T>> CachedCellImg<T, ?> openVolatile(
 			final N5Reader n5,
 			final String dataset,
-			final T defaultValue) throws IOException {
+			final T defaultValue) {
 
 		return openVolatile(n5, dataset, N5CellLoader.setToDefaultValue(defaultValue));
 	}
@@ -552,13 +544,12 @@ public class N5Utils {
 	 * @param defaultValue the default value
 	 * @param maxNumCacheEntries the maximum number of cache entries
 	 * @return the image
-	 * @throws IOException the exception
 	 */
 	public static final <T extends NativeType<T>> CachedCellImg<T, ?> openVolatileWithBoundedSoftRefCache(
 			final N5Reader n5,
 			final String dataset,
 			final int maxNumCacheEntries,
-			final T defaultValue) throws IOException {
+			final T defaultValue) {
 
 		return openVolatileWithBoundedSoftRefCache(n5, dataset, N5CellLoader.setToDefaultValue(defaultValue), maxNumCacheEntries);
 	}
@@ -573,12 +564,11 @@ public class N5Utils {
 	 * @param dataset the dataset path
 	 * @param defaultValue the default value
 	 * @return the image
-	 * @throws IOException the exception
 	 */
 	public static final <T extends NativeType<T>> CachedCellImg<T, ?> openWithDiskCache(
 			final N5Reader n5,
 			final String dataset,
-			final T defaultValue) throws IOException {
+			final T defaultValue) {
 
 		return openWithDiskCache(n5, dataset, N5CellLoader.setToDefaultValue(defaultValue));
 	}
@@ -589,14 +579,13 @@ public class N5Utils {
 	 * @param <T> the type
 	 * @param n5 n5 reader
 	 * @param dataset the dataset path
-	 * @param blockNotFoundHandler consumer handling missing blocks 
+	 * @param blockNotFoundHandler consumer handling missing blocks
 	 * @return the image
-	 * @throws IOException the exception
 	 */
 	public static final <T extends NativeType<T>> CachedCellImg<T, ?> open(
 			final N5Reader n5,
 			final String dataset,
-			final Consumer<IterableInterval<T>> blockNotFoundHandler) throws IOException {
+			final Consumer<IterableInterval<T>> blockNotFoundHandler) {
 
 		return open(n5, dataset, blockNotFoundHandler, AccessFlags.setOf());
 	}
@@ -610,13 +599,12 @@ public class N5Utils {
 	 * @param blockNotFoundHandler consumer handling missing blocks
 	 * @param accessFlags the access flag set
 	 * @return the image
-	 * @throws IOException the exception
 	 */
 	public static final <T extends NativeType<T>> CachedCellImg<T, ?> open(
 			final N5Reader n5,
 			final String dataset,
 			final Consumer<IterableInterval<T>> blockNotFoundHandler,
-			final Set<AccessFlags> accessFlags) throws IOException {
+			final Set<AccessFlags> accessFlags) {
 
 		return open(n5, dataset, blockNotFoundHandler, dataType -> new SoftRefLoaderCache<>(), accessFlags);
 	}
@@ -631,13 +619,12 @@ public class N5Utils {
 	 * @param blockNotFoundHandler consumer handling missing blocks
 	 * @param maxNumCacheEntries the maximum number of cache entries
 	 * @return the image
-	 * @throws IOException the exception
 	 */
 	public static final <T extends NativeType<T>> CachedCellImg<T, ?> openWithBoundedSoftRefCache(
 			final N5Reader n5,
 			final String dataset,
 			final Consumer<IterableInterval<T>> blockNotFoundHandler,
-			final int maxNumCacheEntries) throws IOException {
+			final int maxNumCacheEntries) {
 
 		return openWithBoundedSoftRefCache(n5, dataset, blockNotFoundHandler, maxNumCacheEntries, AccessFlags.setOf());
 	}
@@ -653,14 +640,13 @@ public class N5Utils {
 	 * @param maxNumCacheEntries the maximum number of cache entries
 	 * @param accessFlags the access flag set
 	 * @return the image
-	 * @throws IOException the exception
 	 */
 	public static final <T extends NativeType<T>> CachedCellImg<T, ?> openWithBoundedSoftRefCache(
 			final N5Reader n5,
 			final String dataset,
 			final Consumer<IterableInterval<T>> blockNotFoundHandler,
 			final int maxNumCacheEntries,
-			final Set<AccessFlags> accessFlags) throws IOException {
+			final Set<AccessFlags> accessFlags) {
 
 		return open(n5, dataset, blockNotFoundHandler, dataType -> new BoundedSoftRefLoaderCache<>(maxNumCacheEntries), accessFlags);
 	}
@@ -675,7 +661,6 @@ public class N5Utils {
 	 * @param loaderCacheFactory the cache factory
 	 * @param accessFlags the access flag set
 	 * @return the image
-	 * @throws IOException the exception
 	 */
 	@SuppressWarnings({"unchecked", "rawtypes"})
 	public static final <T extends NativeType<T>> CachedCellImg<T, ?> open(
@@ -683,7 +668,7 @@ public class N5Utils {
 			final String dataset,
 			final Consumer<IterableInterval<T>> blockNotFoundHandler,
 			final Function<DataType, LoaderCache> loaderCacheFactory,
-			final Set<AccessFlags> accessFlags) throws IOException {
+			final Set<AccessFlags> accessFlags) {
 
 		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
 		final LoaderCache loaderCache = loaderCacheFactory.apply(attributes.getDataType());
@@ -705,7 +690,6 @@ public class N5Utils {
 	 * @param accessFlags the access flag set
 	 * @param type the type
 	 * @return the image
-	 * @throws IOException the exception
 	 */
 	@SuppressWarnings({"unchecked", "rawtypes"})
 	public static final <T extends NativeType<T>, A extends ArrayDataAccess<A>> CachedCellImg<T, A> open(
@@ -714,7 +698,7 @@ public class N5Utils {
 			final Consumer<IterableInterval<T>> blockNotFoundHandler,
 			final LoaderCache<Long, Cell<A>> loaderCache,
 			final Set<AccessFlags> accessFlags,
-			final T type) throws IOException {
+			final T type) {
 
 		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
 		final long[] dimensions = attributes.getDimensions();
@@ -735,12 +719,11 @@ public class N5Utils {
 	 * @param dataset the dataset path
 	 * @param blockNotFoundHandler consumer handling missing blocks
 	 * @return the image
-	 * @throws IOException the exception
 	 */
 	public static final <T extends NativeType<T>> CachedCellImg<T, ?> openVolatile(
 			final N5Reader n5,
 			final String dataset,
-			final Consumer<IterableInterval<T>> blockNotFoundHandler) throws IOException {
+			final Consumer<IterableInterval<T>> blockNotFoundHandler) {
 
 		return open(n5, dataset, blockNotFoundHandler, AccessFlags.setOf(AccessFlags.VOLATILE));
 	}
@@ -755,13 +738,12 @@ public class N5Utils {
 	 * @param blockNotFoundHandler consumer handling missing blocks
 	 * @param maxNumCacheEntries the maximum number of cache entries
 	 * @return the image
-	 * @throws IOException the exception
 	 */
 	public static <T extends NativeType<T>> CachedCellImg<T, ?> openVolatileWithBoundedSoftRefCache(
 			final N5Reader n5,
 			final String dataset,
 			final Consumer<IterableInterval<T>> blockNotFoundHandler,
-			final int maxNumCacheEntries) throws IOException {
+			final int maxNumCacheEntries) {
 
 		return openWithBoundedSoftRefCache(n5, dataset, blockNotFoundHandler, maxNumCacheEntries, AccessFlags.setOf(AccessFlags.VOLATILE));
 	}
@@ -776,13 +758,12 @@ public class N5Utils {
 	 * @param useVolatileAccess uses volatile access if true
 	 * @param blockNotFoundHandlerSupplier supply a consumer handling missing blocks
 	 * @return the mipmap level images and their respective relative resolutions
-	 * @throws IOException the exception
 	 */
 	public static final <T extends NativeType<T>> Pair<RandomAccessibleInterval<T>[], double[][]> openMipmapsWithHandler(
 			final N5Reader n5,
 			final String group,
 			final boolean useVolatileAccess,
-			final IntFunction<Consumer<IterableInterval<T>>> blockNotFoundHandlerSupplier) throws IOException {
+			final IntFunction<Consumer<IterableInterval<T>>> blockNotFoundHandlerSupplier) {
 
 		final int numScales = n5.list(group).length;
 		@SuppressWarnings("unchecked")
@@ -826,13 +807,12 @@ public class N5Utils {
 	 * @param useVolatileAccess uses volatile access if true
 	 * @param defaultValueSupplier supplies a default value
 	 * @return the mipmap level images and their respective relative resolutions
-	 * @throws IOException the exception
 	 */
 	public static final <T extends NativeType<T>> Pair<RandomAccessibleInterval<T>[], double[][]> openMipmaps(
 			final N5Reader n5,
 			final String group,
 			final boolean useVolatileAccess,
-			final IntFunction<T> defaultValueSupplier) throws IOException {
+			final IntFunction<T> defaultValueSupplier) {
 
 		return openMipmapsWithHandler(
 				n5,
@@ -852,12 +832,11 @@ public class N5Utils {
 	 * @param group the group path
 	 * @param useVolatileAccess uses volatile access if true
 	 * @return the mipmap level images and their respective relative resolutions
-	 * @throws IOException the exception
 	 */
 	public static final <T extends NativeType<T>> Pair<RandomAccessibleInterval<T>[], double[][]> openMipmaps(
 			final N5Reader n5,
 			final String group,
-			final boolean useVolatileAccess) throws IOException {
+			final boolean useVolatileAccess) {
 
 		return openMipmapsWithHandler(
 				n5,
@@ -876,12 +855,11 @@ public class N5Utils {
 	 * @param dataset the dataset path
 	 * @param blockNotFoundHandler consumer handling missing blocks
 	 * @return the image
-	 * @throws IOException the exception
 	 */
 	public static final <T extends NativeType<T>> CachedCellImg<T, ?> openWithDiskCache(
 			final N5Reader n5,
 			final String dataset,
-			final Consumer<IterableInterval<T>> blockNotFoundHandler) throws IOException {
+			final Consumer<IterableInterval<T>> blockNotFoundHandler) {
 
 		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
 		final long[] dimensions = attributes.getDimensions();
@@ -911,17 +889,16 @@ public class N5Utils {
 	 * @param <T> the type parameter
 	 * @param source the source image
 	 * @param n5 the n5 writer
-	 * @param dataset the dataset path 
+	 * @param dataset the dataset path
 	 * @param attributes the dataset attributes
 	 * @param gridOffset the offset of the source in the larger dataset
-	 * @throws IOException the exception
 	 */
 	public static final <T extends NativeType<T>> void saveBlock(
 			RandomAccessibleInterval<T> source,
 			final N5Writer n5,
 			final String dataset,
 			final DatasetAttributes attributes,
-			final long[] gridOffset) throws IOException {
+			final long[] gridOffset) {
 
 		if (N5LabelMultisets.isLabelMultisetType(n5, dataset)) {
 			@SuppressWarnings("unchecked")
@@ -974,16 +951,15 @@ public class N5Utils {
 	 *
 	 * @param <T> the type parameter
 	 * @param source the source image
-	 * @param n5 the n5 writer 
+	 * @param n5 the n5 writer
 	 * @param dataset the dataset path
 	 * @param attributes the dataset attributes
-	 * @throws IOException the exception
 	 */
 	public static final <T extends NativeType<T>> void saveBlock(
 			final RandomAccessibleInterval<T> source,
 			final N5Writer n5,
 			final String dataset,
-			final DatasetAttributes attributes) throws IOException {
+			final DatasetAttributes attributes) {
 
 		final int[] blockSize = attributes.getBlockSize();
 		final long[] gridOffset = new long[blockSize.length];
@@ -1000,18 +976,17 @@ public class N5Utils {
 	 * @param source the image to write
 	 * @param n5 the n5 writer
 	 * @param dataset the dataset path
-	 * @throws IOException the exception
 	 */
 	public static final <T extends NativeType<T>> void saveBlock(
 			final RandomAccessibleInterval<T> source,
 			final N5Writer n5,
-			final String dataset) throws IOException {
+			final String dataset) {
 
 		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
 		if (attributes != null) {
 			saveBlock(source, n5, dataset, attributes);
 		} else {
-			throw new IOException("Dataset " + dataset + " does not exist.");
+			throw new N5IOException("Dataset " + dataset + " does not exist.");
 		}
 	}
 
@@ -1026,19 +1001,18 @@ public class N5Utils {
 	 * @param n5 the n5 writer
 	 * @param dataset the dataset path
 	 * @param gridOffset the position in the block grid
-	 * @throws IOException the exception
 	 */
 	public static final <T extends NativeType<T>> void saveBlock(
 			final RandomAccessibleInterval<T> source,
 			final N5Writer n5,
 			final String dataset,
-			final long[] gridOffset) throws IOException {
+			final long[] gridOffset) {
 
 		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
 		if (attributes != null) {
 			saveBlock(source, n5, dataset, attributes, gridOffset);
 		} else {
-			throw new IOException("Dataset " + dataset + " does not exist.");
+			throw new N5IOException("Dataset " + dataset + " does not exist.");
 		}
 	}
 
@@ -1051,7 +1025,6 @@ public class N5Utils {
 	 * @param dataset the dataset path
 	 * @param gridOffset the position in the block grid
 	 * @param exec the executor service
-	 * @throws IOException the io exception
 	 * @throws InterruptedException the interrupted exception
 	 * @throws ExecutionException the execution exception
 	 */
@@ -1060,7 +1033,7 @@ public class N5Utils {
 			final N5Writer n5,
 			final String dataset,
 			final long[] gridOffset,
-			final ExecutorService exec) throws IOException, InterruptedException, ExecutionException {
+			final ExecutorService exec) throws InterruptedException, ExecutionException {
 
 		if (N5LabelMultisets.isLabelMultisetType(n5, dataset)) {
 			@SuppressWarnings("unchecked")
@@ -1122,7 +1095,7 @@ public class N5Utils {
 			for (final Future<?> f : futures)
 				f.get();
 		} else {
-			throw new IOException("Dataset " + dataset + " does not exist.");
+			throw new N5IOException("Dataset " + dataset + " does not exist.");
 		}
 	}
 
@@ -1140,7 +1113,6 @@ public class N5Utils {
 	 * @param attributes the dataset attributes
 	 * @param gridOffset the position in the block grid
 	 * @param defaultValue the default value
-	 * @throws IOException the exception
 	 */
 	public static final <T extends NativeType<T>> void saveNonEmptyBlock(
 			RandomAccessibleInterval<T> source,
@@ -1148,7 +1120,7 @@ public class N5Utils {
 			final String dataset,
 			final DatasetAttributes attributes,
 			final long[] gridOffset,
-			final T defaultValue) throws IOException {
+			final T defaultValue) {
 
 		source = Views.zeroMin(source);
 		final int n = source.numDimensions();
@@ -1202,14 +1174,13 @@ public class N5Utils {
 	 * @param dataset the dataset path
 	 * @param attributes the dataset attributes
 	 * @param defaultValue the default value
-	 * @throws IOException the exception
 	 */
 	public static final <T extends NativeType<T>> void saveNonEmptyBlock(
 			final RandomAccessibleInterval<T> source,
 			final N5Writer n5,
 			final String dataset,
 			final DatasetAttributes attributes,
-			final T defaultValue) throws IOException {
+			final T defaultValue) {
 
 		final int[] blockSize = attributes.getBlockSize();
 		final long[] gridOffset = new long[blockSize.length];
@@ -1229,19 +1200,18 @@ public class N5Utils {
 	 * @param n5 the n5 writer
 	 * @param dataset the dataset path
 	 * @param defaultValue the default value
-	 * @throws IOException the exception
 	 */
 	public static final <T extends NativeType<T>> void saveNonEmptyBlock(
 			final RandomAccessibleInterval<T> source,
 			final N5Writer n5,
 			final String dataset,
-			final T defaultValue) throws IOException {
+			final T defaultValue) {
 
 		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
 		if (attributes != null) {
 			saveNonEmptyBlock(source, n5, dataset, attributes, defaultValue);
 		} else {
-			throw new IOException("Dataset " + dataset + " does not exist.");
+			throw new N5IOException("Dataset " + dataset + " does not exist.");
 		}
 	}
 
@@ -1258,20 +1228,19 @@ public class N5Utils {
 	 * @param dataset the dataset path
 	 * @param gridOffset the position in the block grid
 	 * @param defaultValue the default value
-	 * @throws IOException the exception
 	 */
 	public static final <T extends NativeType<T>> void saveNonEmptyBlock(
 			final RandomAccessibleInterval<T> source,
 			final N5Writer n5,
 			final String dataset,
 			final long[] gridOffset,
-			final T defaultValue) throws IOException {
+			final T defaultValue) {
 
 		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
 		if (attributes != null) {
 			saveNonEmptyBlock(source, n5, dataset, attributes, gridOffset, defaultValue);
 		} else {
-			throw new IOException("Dataset " + dataset + " does not exist.");
+			throw new N5IOException("Dataset " + dataset + " does not exist.");
 		}
 	}
 
@@ -1284,14 +1253,13 @@ public class N5Utils {
 	 * @param dataset the dataset path
 	 * @param blockSize the block size
 	 * @param compression the compression type
-	 * @throws IOException the exception
 	 */
 	public static final <T extends NativeType<T>> void save(
 			RandomAccessibleInterval<T> source,
 			final N5Writer n5,
 			final String dataset,
 			final int[] blockSize,
-			final Compression compression) throws IOException {
+			final Compression compression) {
 
 		if (Util.getTypeFromInterval(source) instanceof LabelMultisetType) {
 			@SuppressWarnings("unchecked")
@@ -1348,7 +1316,6 @@ public class N5Utils {
 	 * @param blockSize the block size
 	 * @param compression the compression type
 	 * @param exec executor for parallel writing
-	 * @throws IOException the io exception 
 	 * @throws InterruptedException the interrupted exception
 	 * @throws ExecutionException the execution exception
 	 */
@@ -1358,7 +1325,7 @@ public class N5Utils {
 			final String dataset,
 			final int[] blockSize,
 			final Compression compression,
-			final ExecutorService exec) throws IOException, InterruptedException, ExecutionException {
+			final ExecutorService exec) throws InterruptedException, ExecutionException {
 
 		if (Util.getTypeFromInterval(source) instanceof LabelMultisetType) {
 			@SuppressWarnings("unchecked")
@@ -1437,14 +1404,13 @@ public class N5Utils {
 	 * @param source the source image to write
 	 * @param n5 the n5 writer
 	 * @param dataset the dataset
-	 * @throws IOException the io exception
 	 * @throws ExecutionException the execution exception
 	 * @throws InterruptedException the interrupted exception
 	 */
 	public static <T extends NativeType<T>> void saveRegion(
 			final RandomAccessibleInterval<T> source,
 			final N5Writer n5,
-			final String dataset ) throws IOException, InterruptedException, ExecutionException
+			final String dataset ) throws InterruptedException, ExecutionException
 	{
 		saveRegion( source, n5, dataset, n5.getDatasetAttributes( dataset ) );
 	}
@@ -1463,7 +1429,6 @@ public class N5Utils {
 	 * @param n5 the n5 writer
 	 * @param dataset the dataset
 	 * @param exec executor service
-	 * @throws IOException the io exception
 	 * @throws ExecutionException the execution exception
 	 * @throws InterruptedException the interrupted exception
 	 */
@@ -1471,7 +1436,7 @@ public class N5Utils {
 			final RandomAccessibleInterval<T> source,
 			final N5Writer n5,
 			final String dataset,
-			final ExecutorService exec ) throws IOException, InterruptedException, ExecutionException
+			final ExecutorService exec ) throws InterruptedException, ExecutionException
 	{
 		saveRegion( source, n5, dataset, n5.getDatasetAttributes( dataset ), exec );
 	}
@@ -1489,7 +1454,6 @@ public class N5Utils {
 	 * @param n5 the n5 writer
 	 * @param dataset the dataset
 	 * @param attributes dataset attributes
-	 * @throws IOException the io exception
 	 * @throws ExecutionException the execution exception
 	 * @throws InterruptedException the interrupted exception
 	 */
@@ -1497,9 +1461,9 @@ public class N5Utils {
 			final RandomAccessibleInterval<T> source,
 			final N5Writer n5,
 			final String dataset,
-			final DatasetAttributes attributes ) throws IOException, InterruptedException, ExecutionException
+			final DatasetAttributes attributes ) throws InterruptedException, ExecutionException
 	{
-		Optional< long[] > newDimensionsOpt = saveRegionPreprocessing( source, attributes );
+		final Optional< long[] > newDimensionsOpt = saveRegionPreprocessing( source, attributes );
 
 		final long[] dimensions;
 		if( newDimensionsOpt.isPresent() )
@@ -1515,13 +1479,13 @@ public class N5Utils {
 		final int n = source.numDimensions();
 		final int[] blockSize = attributes.getBlockSize();
 
-		Img< T > currentImg = open( n5, dataset );
+		final Img< T > currentImg = open( n5, dataset );
 
-		long[] gridOffset = new long[ n ];
-		long[] gridMin = new long[ n ];
-		long[] gridMax = new long[ n ];
-		long[] imgMin = new long[ n ];
-		long[] imgMax = new long[ n ];
+		final long[] gridOffset = new long[ n ];
+		final long[] gridMin = new long[ n ];
+		final long[] gridMax = new long[ n ];
+		final long[] imgMin = new long[ n ];
+		final long[] imgMax = new long[ n ];
 
 		// find the grid positions bounding the source image to save
 		for (int d = 0; d < n; d++ )
@@ -1531,7 +1495,7 @@ public class N5Utils {
 		}
 
 		// iterate over those blocks
-		IntervalIterator it = new IntervalIterator( gridMin, gridMax );
+		final IntervalIterator it = new IntervalIterator( gridMin, gridMax );
 		while( it.hasNext())
 		{
 			it.fwd();
@@ -1540,18 +1504,18 @@ public class N5Utils {
 			for( int d = 0; d < n; d++ )
 			{
 				imgMin[ d ] = gridOffset[ d ] * blockSize[ d ];
-				imgMax[ d ] = Math.min( imgMin[ d ] + blockSize[ d ] - 1, 
+				imgMax[ d ] = Math.min( imgMin[ d ] + blockSize[ d ] - 1,
 						dimensions[ d ] - 1 );
 			}
 
 			//  save the block
-			IntervalView< T > currentBlock = Views.interval( currentImg, imgMin, imgMax );
-			FinalInterval intersection = Intervals.intersect( currentBlock, source );
+			final IntervalView< T > currentBlock = Views.interval( currentImg, imgMin, imgMax );
+			final FinalInterval intersection = Intervals.intersect( currentBlock, source );
 
-			IntervalView< T > srcInt = Views.interval( source, intersection );
-			IntervalView< T > blkInt = Views.interval( currentImg, intersection );
+			final IntervalView< T > srcInt = Views.interval( source, intersection );
+			final IntervalView< T > blkInt = Views.interval( currentImg, intersection );
 
-			// copy into the part of the block 
+			// copy into the part of the block
 			LoopBuilder.setImages( srcInt, blkInt ).forEachPixel( (x,y) -> y.set( x ) );
 
 			N5Utils.saveBlock( currentBlock, n5, dataset, gridOffset );
@@ -1573,7 +1537,6 @@ public class N5Utils {
 	 * @param dataset the dataset
 	 * @param attributes dataset attributes
 	 * @param exec the executor
-	 * @throws IOException the io exception
 	 * @throws ExecutionException the execution exception
 	 * @throws InterruptedException the interrupted exception
      *
@@ -1583,9 +1546,9 @@ public class N5Utils {
 			final N5Writer n5,
 			final String dataset,
 			final DatasetAttributes attributes,
-			final ExecutorService exec ) throws InterruptedException, ExecutionException, IOException
+			final ExecutorService exec ) throws InterruptedException, ExecutionException
 	{
-		Optional< long[] > newDimensionsOpt = saveRegionPreprocessing( source, attributes );
+		final Optional< long[] > newDimensionsOpt = saveRegionPreprocessing( source, attributes );
 
 		final long[] dimensions;
 		if( newDimensionsOpt.isPresent() )
@@ -1618,7 +1581,7 @@ public class N5Utils {
 
 		// iterate over those blocks
 		final ArrayList<Future<?>> futures = new ArrayList<>();
-		IntervalIterator it = new IntervalIterator( gridMin, gridMax );
+		final IntervalIterator it = new IntervalIterator( gridMin, gridMax );
 		while( it.hasNext() )
 		{
 			it.fwd();
@@ -1627,8 +1590,8 @@ public class N5Utils {
 			for( int d = 0; d < n; d++ )
 			{
 				imgMin[ d ] = gridOffset[ d ] * blockSize[ d ];
-				imgMax[ d ] = Math.min( 
-						imgMin[ d ] + blockSize[ d ] - 1, 
+				imgMax[ d ] = Math.min(
+						imgMin[ d ] + blockSize[ d ] - 1,
 						dimensions[ d ] - 1 );
 			}
 
@@ -1649,17 +1612,9 @@ public class N5Utils {
 				final IntervalView< T > srcInt = Views.interval( source, intersection );
 				final IntervalView< T > blkInt = Views.interval( currentImg, intersection );
 
-				// copy into the part of the block 
+				// copy into the part of the block
 				LoopBuilder.setImages( srcInt, blkInt ).forEachPixel( (x,y) -> y.set( x ) );
-				try
-				{
-					N5Utils.saveBlock( currentBlock, n5, dataset, gridOffsetCopy );
-				}
-				catch ( IOException e )
-				{
-					e.printStackTrace();
-				}
-
+				N5Utils.saveBlock( currentBlock, n5, dataset, gridOffsetCopy );
 			} ));
 		}
 
@@ -1669,7 +1624,7 @@ public class N5Utils {
 
 	/**
 	 * Performs checks, and determine if padding is necessary.
-	 * 
+	 *
 	 * @param <T> the type parameter
 	 * @param source the source image to write
 	 * @param attributes n5 dataset attributes
@@ -1686,7 +1641,7 @@ public class N5Utils {
 		// ensure source has the correct dimensionality
 		if( source.numDimensions() != n )
 		{
-			throw new ImgLibException( 
+			throw new ImgLibException(
 					String.format( "Image dimensions (%d) does not match n5 dataset dimensionalidy (%d)",
 							source.numDimensions(), n ));
 		}
@@ -1695,7 +1650,7 @@ public class N5Utils {
 		final DataType srcType = N5Utils.dataType( Util.getTypeFromInterval( source ));
 		if( srcType != dtype )
 		{
-			throw new ImgLibException( 
+			throw new ImgLibException(
 					String.format( "Image type (%s) does not match n5 dataset type (%s)",
 							srcType, dtype ));
 		}
@@ -1710,7 +1665,7 @@ public class N5Utils {
 		{
 			if( source.min( d ) < 0 )
 			{
-				throw new ImgLibException( 
+				throw new ImgLibException(
 						String.format( "Source interval must ",
 								source.min( d ), d ));
 			}
@@ -1738,18 +1693,17 @@ public class N5Utils {
 	 * assumed to align with the {@link DataBlock} grid of the dataset.
 	 *
 	 * @param interval the interval
-	 * @param n5 the n5 writer 
+	 * @param n5 the n5 writer
 	 * @param dataset the dataset path
 	 * @param attributes dataset attributes
 	 * @param gridOffset the position in the block grid
-	 * @throws IOException the io exception
 	 */
 	public static final void deleteBlock(
 			final Interval interval,
 			final N5Writer n5,
 			final String dataset,
 			final DatasetAttributes attributes,
-			final long[] gridOffset) throws IOException {
+			final long[] gridOffset) {
 
 		final Interval zeroMinInterval = new FinalInterval(Intervals.dimensionsAsLongArray(interval));
 		final int n = zeroMinInterval.numDimensions();
@@ -1785,16 +1739,15 @@ public class N5Utils {
 	 * with the {@link DataBlock} grid of the dataset.
 	 *
 	 * @param interval the interval
-	 * @param n5 the n5 writer 
+	 * @param n5 the n5 writer
 	 * @param dataset the dataset path
 	 * @param attributes dataset attributes
-	 * @throws IOException the io exception
 	 */
 	public static final void deleteBlock(
 			final Interval interval,
 			final N5Writer n5,
 			final String dataset,
-			final DatasetAttributes attributes) throws IOException {
+			final DatasetAttributes attributes) {
 
 		final int[] blockSize = attributes.getBlockSize();
 		final long[] gridOffset = new long[blockSize.length];
@@ -1808,20 +1761,19 @@ public class N5Utils {
 	 * with the {@link DataBlock} grid of the dataset.
 	 *
 	 * @param interval the interval
-	 * @param n5 the n5 writer 
+	 * @param n5 the n5 writer
 	 * @param dataset the dataset path
-	 * @throws IOException the io exception
 	 */
 	public static final void deleteBlock(
 			final Interval interval,
 			final N5Writer n5,
-			final String dataset) throws IOException {
+			final String dataset) {
 
 		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
 		if (attributes != null) {
 			deleteBlock(interval, n5, dataset, attributes);
 		} else {
-			throw new IOException("Dataset " + dataset + " does not exist.");
+			throw new N5IOException("Dataset " + dataset + " does not exist.");
 		}
 	}
 
@@ -1834,19 +1786,18 @@ public class N5Utils {
 	 * @param n5 the n5 writer
 	 * @param dataset the dataset path
 	 * @param gridOffset the position in the block grid
-	 * @throws IOException the io exception
 	 */
 	public static final void deleteBlock(
 			final Interval interval,
 			final N5Writer n5,
 			final String dataset,
-			final long[] gridOffset) throws IOException {
+			final long[] gridOffset) {
 
 		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
 		if (attributes != null) {
 			deleteBlock(interval, n5, dataset, attributes, gridOffset);
 		} else {
-			throw new IOException("Dataset " + dataset + " does not exist.");
+			throw new N5IOException("Dataset " + dataset + " does not exist.");
 		}
 	}
 }

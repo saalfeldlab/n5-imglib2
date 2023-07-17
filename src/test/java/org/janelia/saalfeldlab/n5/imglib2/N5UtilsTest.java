@@ -27,7 +27,6 @@
 package org.janelia.saalfeldlab.n5.imglib2;
 
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.IOException;
@@ -135,49 +134,43 @@ public class N5UtilsTest {
 	public void testSaveAndOpen() throws InterruptedException, ExecutionException {
 
 		final ArrayImg<UnsignedShortType, ?> img = ArrayImgs.unsignedShorts(data, dimensions);
-		try {
-			N5Utils.save(img, n5, datasetName, blockSize, new RawCompression());
-			RandomAccessibleInterval<UnsignedShortType> loaded = N5Utils.open(n5, datasetName);
-			for (final Pair<UnsignedShortType, UnsignedShortType> pair : Views
-					.flatIterable(Views.interval(Views.pair(img, loaded), img)))
-				Assert.assertEquals(pair.getA().get(), pair.getB().get());
+		N5Utils.save(img, n5, datasetName, blockSize, new RawCompression());
+		RandomAccessibleInterval<UnsignedShortType> loaded = N5Utils.open(n5, datasetName);
+		for (final Pair<UnsignedShortType, UnsignedShortType> pair : Views
+				.flatIterable(Views.interval(Views.pair(img, loaded), img)))
+			Assert.assertEquals(pair.getA().get(), pair.getB().get());
 
-			// test save region single thread
-			N5Utils.saveRegion( Views.translate( img, dimensions ), n5, datasetName );
-			loaded = N5Utils.open(n5, datasetName);
-			final long[] expectedPaddedDims = Arrays.stream( dimensions ).map( x -> 2 * x ).toArray();
-			final long[] newDims = Intervals.dimensionsAsLongArray( loaded  );
-			Assert.assertArrayEquals( "saveRegion padded dims", expectedPaddedDims, newDims );
+		// test save region single thread
+		N5Utils.saveRegion( Views.translate( img, dimensions ), n5, datasetName );
+		loaded = N5Utils.open(n5, datasetName);
+		final long[] expectedPaddedDims = Arrays.stream( dimensions ).map( x -> 2 * x ).toArray();
+		final long[] newDims = Intervals.dimensionsAsLongArray( loaded  );
+		Assert.assertArrayEquals( "saveRegion padded dims", expectedPaddedDims, newDims );
 
-			IntervalView< UnsignedShortType > loadedSubset = Views.offsetInterval( loaded, dimensions, dimensions );
-			for (final Pair<UnsignedShortType, UnsignedShortType> pair : Views
-					.flatIterable(Views.interval(Views.pair(img, loadedSubset), img)))
-				Assert.assertEquals(pair.getA().get(), pair.getB().get());
+		final IntervalView< UnsignedShortType > loadedSubset = Views.offsetInterval( loaded, dimensions, dimensions );
+		for (final Pair<UnsignedShortType, UnsignedShortType> pair : Views
+				.flatIterable(Views.interval(Views.pair(img, loadedSubset), img)))
+			Assert.assertEquals(pair.getA().get(), pair.getB().get());
 
-			// test multithreaded writing
-			final ExecutorService exec = Executors.newFixedThreadPool(4);
-			N5Utils.save(img, n5, datasetName, blockSize, new RawCompression(), exec);
-			loaded = N5Utils.open(n5, datasetName);
-			for (final Pair<UnsignedShortType, UnsignedShortType> pair : Views
-					.flatIterable(Views.interval(Views.pair(img, loaded), img)))
-				Assert.assertEquals(pair.getA().get(), pair.getB().get());
-			exec.shutdown();
+		// test multithreaded writing
+		final ExecutorService exec = Executors.newFixedThreadPool(4);
+		N5Utils.save(img, n5, datasetName, blockSize, new RawCompression(), exec);
+		loaded = N5Utils.open(n5, datasetName);
+		for (final Pair<UnsignedShortType, UnsignedShortType> pair : Views
+				.flatIterable(Views.interval(Views.pair(img, loaded), img)))
+			Assert.assertEquals(pair.getA().get(), pair.getB().get());
+		exec.shutdown();
 
-			// test save region single thread
-			final ExecutorService execRegion = Executors.newFixedThreadPool(4);
-			N5Utils.saveRegion( Views.translate( img, dimensions ), n5, datasetName, execRegion );
-			execRegion.shutdown();
+		// test save region single thread
+		final ExecutorService execRegion = Executors.newFixedThreadPool(4);
+		N5Utils.saveRegion( Views.translate( img, dimensions ), n5, datasetName, execRegion );
+		execRegion.shutdown();
 
-			loaded = N5Utils.open(n5, datasetName);
-			IntervalView< UnsignedShortType > loadedSubsetParallel = Views.offsetInterval( loaded, dimensions, dimensions );
-			for (final Pair<UnsignedShortType, UnsignedShortType> pair : Views
-					.flatIterable(Views.interval(Views.pair(img, loadedSubsetParallel), img)))
-				Assert.assertEquals(pair.getA().get(), pair.getB().get());
-
-		} catch (final IOException e) {
-			fail("Failed by I/O exception.");
-			e.printStackTrace();
-		}
+		loaded = N5Utils.open(n5, datasetName);
+		final IntervalView< UnsignedShortType > loadedSubsetParallel = Views.offsetInterval( loaded, dimensions, dimensions );
+		for (final Pair<UnsignedShortType, UnsignedShortType> pair : Views
+				.flatIterable(Views.interval(Views.pair(img, loadedSubsetParallel), img)))
+			Assert.assertEquals(pair.getA().get(), pair.getB().get());
 	}
 
 	@Test
@@ -262,23 +255,17 @@ public class N5UtilsTest {
 	public void testDelete() {
 
 		final ArrayImg<UnsignedShortType, ?> img = ArrayImgs.unsignedShorts(data, dimensions);
-		try {
-			N5Utils.save(img, n5, datasetName, blockSize, new RawCompression());
-			RandomAccessibleInterval<UnsignedShortType> loaded = N5Utils.open(n5, datasetName);
-			for (final Pair<UnsignedShortType, UnsignedShortType> pair : Views
-					.flatIterable(Views.interval(Views.pair(img, loaded), img)))
-				Assert.assertEquals(pair.getA().get(), pair.getB().get());
+		N5Utils.save(img, n5, datasetName, blockSize, new RawCompression());
+		RandomAccessibleInterval<UnsignedShortType> loaded = N5Utils.open(n5, datasetName);
+		for (final Pair<UnsignedShortType, UnsignedShortType> pair : Views
+				.flatIterable(Views.interval(Views.pair(img, loaded), img)))
+			Assert.assertEquals(pair.getA().get(), pair.getB().get());
 
-			N5Utils.deleteBlock(new FinalInterval(dimensions), n5, datasetName);
+		N5Utils.deleteBlock(new FinalInterval(dimensions), n5, datasetName);
 
-			loaded = N5Utils.open(n5, datasetName);
-			for (final UnsignedShortType val : Views.iterable(loaded))
-				Assert.assertEquals(0, val.get());
-
-		} catch (final IOException e) {
-			fail("Failed by I/O exception.");
-			e.printStackTrace();
-		}
+		loaded = N5Utils.open(n5, datasetName);
+		for (final UnsignedShortType val : Views.iterable(loaded))
+			Assert.assertEquals(0, val.get());
 	}
 
 	private short[] fillData(final int[] size) {

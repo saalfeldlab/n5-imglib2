@@ -26,7 +26,6 @@
  */
 package org.janelia.saalfeldlab.n5.imglib2;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Optional;
@@ -40,6 +39,7 @@ import org.janelia.saalfeldlab.n5.Compression;
 import org.janelia.saalfeldlab.n5.DataBlock;
 import org.janelia.saalfeldlab.n5.DataType;
 import org.janelia.saalfeldlab.n5.DatasetAttributes;
+import org.janelia.saalfeldlab.n5.N5Exception.N5IOException;
 import org.janelia.saalfeldlab.n5.N5Reader;
 import org.janelia.saalfeldlab.n5.N5Writer;
 
@@ -69,9 +69,8 @@ public class N5LabelMultisets {
 	 * @param n5 the n5 reader
 	 * @param dataset the dataset path
 	 * @return true of the dataset is of type LabelMultiset
-	 * @throws IOException the exception
 	 */
-	public static boolean isLabelMultisetType(final N5Reader n5, final String dataset) throws IOException {
+	public static boolean isLabelMultisetType(final N5Reader n5, final String dataset) {
 
 		return Optional
 				.ofNullable(n5.getAttribute(dataset, LABEL_MULTISETTYPE_KEY, Boolean.class))
@@ -85,11 +84,10 @@ public class N5LabelMultisets {
 	 * @param n5 the n5 reader
 	 * @param dataset the dataset path
 	 * @return the LabelMultiset image
-	 * @throws IOException the exception
 	 */
 	public static final CachedCellImg<LabelMultisetType, VolatileLabelMultisetArray> openLabelMultiset(
 			final N5Reader n5,
-			final String dataset) throws IOException {
+			final String dataset) {
 
 		return openLabelMultiset(n5, dataset, Label.BACKGROUND);
 	}
@@ -102,12 +100,11 @@ public class N5LabelMultisets {
 	 * @param dataset the dataset path
 	 * @param defaultLabelId the default label
 	 * @return the LabelMultiset image
-	 * @throws IOException the exception
 	 */
 	public static final CachedCellImg<LabelMultisetType, VolatileLabelMultisetArray> openLabelMultiset(
 			final N5Reader n5,
 			final String dataset,
-			final long defaultLabelId) throws IOException {
+			final long defaultLabelId) {
 
 		return openLabelMultiset(n5, dataset, N5LabelMultisetCacheLoader.constantNullReplacement(defaultLabelId));
 	}
@@ -120,12 +117,11 @@ public class N5LabelMultisets {
 	 * @param dataset the dataset path
 	 * @param nullReplacement a function returning data for null blocks
 	 * @return the LabelMultiset image
-	 * @throws IOException the exception
 	 */
 	public static final CachedCellImg<LabelMultisetType, VolatileLabelMultisetArray> openLabelMultiset(
 			final N5Reader n5,
 			final String dataset,
-			final BiFunction<CellGrid, long[], byte[]> nullReplacement) throws IOException {
+			final BiFunction<CellGrid, long[], byte[]> nullReplacement) {
 
 		return openLabelMultiset(n5, dataset, nullReplacement, new SoftRefLoaderCache<>());
 	}
@@ -139,16 +135,15 @@ public class N5LabelMultisets {
 	 * @param nullReplacement a function returning data for null blocks
 	 * @param loaderCache the cache
 	 * @return the LabelMultiset image
-	 * @throws IOException the exception
 	 */
 	public static final CachedCellImg<LabelMultisetType, VolatileLabelMultisetArray> openLabelMultiset(
 			final N5Reader n5,
 			final String dataset,
 			final BiFunction<CellGrid, long[], byte[]> nullReplacement,
-			final LoaderCache<Long, Cell<VolatileLabelMultisetArray>> loaderCache) throws IOException {
+			final LoaderCache<Long, Cell<VolatileLabelMultisetArray>> loaderCache) {
 
 		if (!isLabelMultisetType(n5, dataset))
-			throw new IOException(dataset + " is not a label multiset dataset.");
+			throw new N5IOException(dataset + " is not a label multiset dataset.");
 
 		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
 		final CellGrid grid = new CellGrid(attributes.getDimensions(), attributes.getBlockSize());
@@ -174,14 +169,13 @@ public class N5LabelMultisets {
 	 * @param dataset the dataset path
 	 * @param blockSize block size
 	 * @param compression compression type
-	 * @throws IOException the exception
 	 */
 	public static final void saveLabelMultiset(
 			RandomAccessibleInterval<LabelMultisetType> source,
 			final N5Writer n5,
 			final String dataset,
 			final int[] blockSize,
-			final Compression compression) throws IOException {
+			final Compression compression) {
 
 		source = Views.zeroMin(source);
 		final long[] dimensions = Intervals.dimensionsAsLongArray(source);
@@ -227,7 +221,6 @@ public class N5LabelMultisets {
 	 * @param blockSize the block size
 	 * @param compression the compression type
 	 * @param exec the executor service
-	 * @throws IOException the io exception
 	 * @throws InterruptedException interrupted exception
 	 * @throws ExecutionException execution exception
 	 */
@@ -237,7 +230,7 @@ public class N5LabelMultisets {
 			final String dataset,
 			final int[] blockSize,
 			final Compression compression,
-			final ExecutorService exec) throws IOException, InterruptedException, ExecutionException {
+			final ExecutorService exec) throws InterruptedException, ExecutionException {
 
 		final RandomAccessibleInterval<LabelMultisetType> zeroMinSource = Views.zeroMin(source);
 		final long[] dimensions = Intervals.dimensionsAsLongArray(zeroMinSource);
@@ -301,17 +294,16 @@ public class N5LabelMultisets {
 	 * @param dataset the dataset path
 	 * @param attributes dataset attributes
 	 * @param gridOffset the offset of this block in grid coordinates
-	 * @throws IOException the exception
 	 */
 	public static final void saveLabelMultisetBlock(
 			RandomAccessibleInterval<LabelMultisetType> source,
 			final N5Writer n5,
 			final String dataset,
 			final DatasetAttributes attributes,
-			final long[] gridOffset) throws IOException {
+			final long[] gridOffset) {
 
 		if (!isLabelMultisetType(n5, dataset))
-			throw new IOException(dataset + " is not a label multiset dataset.");
+			throw new N5IOException(dataset + " is not a label multiset dataset.");
 
 		source = Views.zeroMin(source);
 		final long[] dimensions = Intervals.dimensionsAsLongArray(source);
@@ -357,13 +349,12 @@ public class N5LabelMultisets {
 	 * @param n5 the n5 writer
 	 * @param dataset the dataset path
 	 * @param attributes the dataset attributes
-	 * @throws IOException the exception
 	 */
 	public static final void saveLabelMultisetBlock(
 			final RandomAccessibleInterval<LabelMultisetType> source,
 			final N5Writer n5,
 			final String dataset,
-			final DatasetAttributes attributes) throws IOException {
+			final DatasetAttributes attributes) {
 
 		final int[] blockSize = attributes.getBlockSize();
 		final long[] gridOffset = new long[blockSize.length];
@@ -380,18 +371,17 @@ public class N5LabelMultisets {
 	 * @param source the source image
 	 * @param n5 the n5 writer
 	 * @param dataset the dataset path
-	 * @throws IOException the exception
 	 */
 	public static final void saveLabelMultisetBlock(
 			final RandomAccessibleInterval<LabelMultisetType> source,
 			final N5Writer n5,
-			final String dataset) throws IOException {
+			final String dataset) {
 
 		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
 		if (attributes != null) {
 			saveLabelMultisetBlock(source, n5, dataset, attributes);
 		} else {
-			throw new IOException("Dataset " + dataset + " does not exist.");
+			throw new N5IOException("Dataset " + dataset + " does not exist.");
 		}
 	}
 
@@ -403,19 +393,18 @@ public class N5LabelMultisets {
 	 * @param n5 the n5 writer
 	 * @param dataset the dataset path
 	 * @param gridOffset the offset of the block in grid coordinates
-	 * @throws IOException the exception
 	 */
 	public static final void saveLabelMultisetBlock(
 			final RandomAccessibleInterval<LabelMultisetType> source,
 			final N5Writer n5,
 			final String dataset,
-			final long[] gridOffset) throws IOException {
+			final long[] gridOffset) {
 
 		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
 		if (attributes != null) {
 			saveLabelMultisetBlock(source, n5, dataset, attributes, gridOffset);
 		} else {
-			throw new IOException("Dataset " + dataset + " does not exist.");
+			throw new N5IOException("Dataset " + dataset + " does not exist.");
 		}
 	}
 
@@ -428,7 +417,6 @@ public class N5LabelMultisets {
 	 * @param dataset the dataset path
 	 * @param gridOffset the offset of the block in grid coordinates
 	 * @param exec the executor service
-	 * @throws IOException io exception
 	 * @throws InterruptedException interrupted exception
 	 * @throws ExecutionException execution exception
 	 */
@@ -437,10 +425,10 @@ public class N5LabelMultisets {
 			final N5Writer n5,
 			final String dataset,
 			final long[] gridOffset,
-			final ExecutorService exec) throws IOException, InterruptedException, ExecutionException {
+			final ExecutorService exec) throws InterruptedException, ExecutionException {
 
 		if (!isLabelMultisetType(n5, dataset))
-			throw new IOException(dataset + " is not a label multiset dataset.");
+			throw new N5IOException(dataset + " is not a label multiset dataset.");
 
 		final RandomAccessibleInterval<LabelMultisetType> zeroMinSource = Views.zeroMin(source);
 		final long[] dimensions = Intervals.dimensionsAsLongArray(zeroMinSource);
@@ -490,7 +478,7 @@ public class N5LabelMultisets {
 			for (final Future<?> f : futures)
 				f.get();
 		} else {
-			throw new IOException("Dataset " + dataset + " does not exist.");
+			throw new N5IOException("Dataset " + dataset + " does not exist.");
 		}
 	}
 
@@ -508,7 +496,6 @@ public class N5LabelMultisets {
 	 * @param attributes the dataset attributes
 	 * @param gridOffset the offset of the block in grid coordinates
 	 * @param defaultLabelId the default label
-	 * @throws IOException the exception
 	 */
 	public static final void saveLabelMultisetNonEmptyBlock(
 			RandomAccessibleInterval<LabelMultisetType> source,
@@ -516,10 +503,10 @@ public class N5LabelMultisets {
 			final String dataset,
 			final DatasetAttributes attributes,
 			final long[] gridOffset,
-			final long defaultLabelId) throws IOException {
+			final long defaultLabelId) {
 
 		if (!isLabelMultisetType(n5, dataset))
-			throw new IOException(dataset + " is not a label multiset dataset.");
+			throw new N5IOException(dataset + " is not a label multiset dataset.");
 
 		source = Views.zeroMin(source);
 		final long[] dimensions = Intervals.dimensionsAsLongArray(source);
@@ -568,14 +555,13 @@ public class N5LabelMultisets {
 	 * @param dataset the dataset path
 	 * @param attributes the dataset attributes
 	 * @param defaultLabelId the default label
-	 * @throws IOException the exception
 	 */
 	public static final void saveLabelMultisetNonEmptyBlock(
 			final RandomAccessibleInterval<LabelMultisetType> source,
 			final N5Writer n5,
 			final String dataset,
 			final DatasetAttributes attributes,
-			final long defaultLabelId) throws IOException {
+			final long defaultLabelId) {
 
 		final int[] blockSize = attributes.getBlockSize();
 		final long[] gridOffset = new long[blockSize.length];
@@ -594,19 +580,18 @@ public class N5LabelMultisets {
 	 * @param n5 the n5 writer
 	 * @param dataset the dataset path
 	 * @param defaultLabelId the default label
-	 * @throws IOException the exception
 	 */
 	public static final void saveLabelMultisetNonEmptyBlock(
 			final RandomAccessibleInterval<LabelMultisetType> source,
 			final N5Writer n5,
 			final String dataset,
-			final long defaultLabelId) throws IOException {
+			final long defaultLabelId) {
 
 		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
 		if (attributes != null) {
 			saveLabelMultisetNonEmptyBlock(source, n5, dataset, attributes, defaultLabelId);
 		} else {
-			throw new IOException("Dataset " + dataset + " does not exist.");
+			throw new N5IOException("Dataset " + dataset + " does not exist.");
 		}
 	}
 
@@ -620,12 +605,11 @@ public class N5LabelMultisets {
 	 * @param source the source image
 	 * @param n5 the n5 writer
 	 * @param dataset the dataset path
-	 * @throws IOException the exception
 	 */
 	public static final void saveLabelMultisetNonEmptyBlock(
 			final RandomAccessibleInterval<LabelMultisetType> source,
 			final N5Writer n5,
-			final String dataset) throws IOException {
+			final String dataset) {
 
 		saveLabelMultisetNonEmptyBlock(source, n5, dataset, Label.BACKGROUND);
 	}
@@ -643,20 +627,19 @@ public class N5LabelMultisets {
 	 * @param dataset the dataset path
 	 * @param gridOffset the offset of the block in grid coordinates
 	 * @param defaultLabelId the default label
-	 * @throws IOException the exception
 	 */
 	public static final void saveLabelMultisetNonEmptyBlock(
 			final RandomAccessibleInterval<LabelMultisetType> source,
 			final N5Writer n5,
 			final String dataset,
 			final long[] gridOffset,
-			final long defaultLabelId) throws IOException {
+			final long defaultLabelId) {
 
 		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
 		if (attributes != null) {
 			saveLabelMultisetNonEmptyBlock(source, n5, dataset, attributes, gridOffset, defaultLabelId);
 		} else {
-			throw new IOException("Dataset " + dataset + " does not exist.");
+			throw new N5IOException("Dataset " + dataset + " does not exist.");
 		}
 	}
 
@@ -672,13 +655,12 @@ public class N5LabelMultisets {
 	 * @param n5 the n5 writer
 	 * @param dataset the dataset path
 	 * @param gridOffset the offset of the block in grid coordinates
-	 * @throws IOException the exception
 	 */
 	public static final void saveLabelMultisetNonEmptyBlock(
 			final RandomAccessibleInterval<LabelMultisetType> source,
 			final N5Writer n5,
 			final String dataset,
-			final long[] gridOffset) throws IOException {
+			final long[] gridOffset) {
 
 		saveLabelMultisetNonEmptyBlock(source, n5, dataset, gridOffset, Label.BACKGROUND);
 	}
