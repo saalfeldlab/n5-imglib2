@@ -44,9 +44,8 @@ import net.imglib2.type.NativeType;
 /**
  * Simple dataset viewer example to demonstrate how {@link N5Utils} may be used.
  *
- * Parameters
- *   first N5 container path, e.g. /home/you/test.n5
- *   followed by dataset paths, e.g. /data /more/data1 /more/data2 ...
+ * Parameters first N5 container path, e.g. /home/you/test.n5 followed by
+ * dataset paths, e.g. /data /more/data1 /more/data2 ...
  *
  * @author Stephan Saalfeld
  */

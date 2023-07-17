@@ -141,13 +141,13 @@ public class N5UtilsTest {
 			Assert.assertEquals(pair.getA().get(), pair.getB().get());
 
 		// test save region single thread
-		N5Utils.saveRegion( Views.translate( img, dimensions ), n5, datasetName );
+		N5Utils.saveRegion(Views.translate(img, dimensions), n5, datasetName);
 		loaded = N5Utils.open(n5, datasetName);
-		final long[] expectedPaddedDims = Arrays.stream( dimensions ).map( x -> 2 * x ).toArray();
-		final long[] newDims = Intervals.dimensionsAsLongArray( loaded  );
-		Assert.assertArrayEquals( "saveRegion padded dims", expectedPaddedDims, newDims );
+		final long[] expectedPaddedDims = Arrays.stream(dimensions).map(x -> 2 * x).toArray();
+		final long[] newDims = Intervals.dimensionsAsLongArray(loaded);
+		Assert.assertArrayEquals("saveRegion padded dims", expectedPaddedDims, newDims);
 
-		final IntervalView< UnsignedShortType > loadedSubset = Views.offsetInterval( loaded, dimensions, dimensions );
+		final IntervalView<UnsignedShortType> loadedSubset = Views.offsetInterval(loaded, dimensions, dimensions);
 		for (final Pair<UnsignedShortType, UnsignedShortType> pair : Views
 				.flatIterable(Views.interval(Views.pair(img, loadedSubset), img)))
 			Assert.assertEquals(pair.getA().get(), pair.getB().get());
@@ -163,11 +163,11 @@ public class N5UtilsTest {
 
 		// test save region single thread
 		final ExecutorService execRegion = Executors.newFixedThreadPool(4);
-		N5Utils.saveRegion( Views.translate( img, dimensions ), n5, datasetName, execRegion );
+		N5Utils.saveRegion(Views.translate(img, dimensions), n5, datasetName, execRegion);
 		execRegion.shutdown();
 
 		loaded = N5Utils.open(n5, datasetName);
-		final IntervalView< UnsignedShortType > loadedSubsetParallel = Views.offsetInterval( loaded, dimensions, dimensions );
+		final IntervalView<UnsignedShortType> loadedSubsetParallel = Views.offsetInterval(loaded, dimensions, dimensions);
 		for (final Pair<UnsignedShortType, UnsignedShortType> pair : Views
 				.flatIterable(Views.interval(Views.pair(img, loadedSubsetParallel), img)))
 			Assert.assertEquals(pair.getA().get(), pair.getB().get());

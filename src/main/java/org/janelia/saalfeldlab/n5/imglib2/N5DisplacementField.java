@@ -102,19 +102,26 @@ public class N5DisplacementField {
 	 * Saves forward and inverse deformation fields into the default n5
 	 * datasets.
 	 *
-	 * @param <T> the type parameter
-	 * @param n5Writer the n5 writer
-	 * @param affine the affine transform
-	 * @param forwardDfield the forward displacement field
+	 * @param <T>
+	 *            the type parameter
+	 * @param n5Writer
+	 *            the n5 writer
+	 * @param affine
+	 *            the affine transform
+	 * @param forwardDfield
+	 *            the forward displacement field
 	 * @param fwdspacing
 	 *            the pixel spacing (resolution) of the forward deformation
 	 *            field
-	 * @param inverseDfield the inverse displacement field
+	 * @param inverseDfield
+	 *            the inverse displacement field
 	 * @param invspacing
 	 *            the pixel spacing (resolution) of the inverse deformation
 	 *            field
-	 * @param blockSize the block size
-	 * @param compression the compression type
+	 * @param blockSize
+	 *            the block size
+	 * @param compression
+	 *            the compression type
 	 */
 	public static final <T extends NativeType<T> & RealType<T>> void save(
 			final N5Writer n5Writer,
@@ -135,15 +142,22 @@ public class N5DisplacementField {
 	 * dataset.
 	 *
 	 *
-	 * @param <T> the type parameter
-	 * @param n5Writer the n5 writer
-	 * @param dataset the dataset path
-	 * @param affine the affine transform
-	 * @param dfield the displacement field
+	 * @param <T>
+	 *            the type parameter
+	 * @param n5Writer
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset path
+	 * @param affine
+	 *            the affine transform
+	 * @param dfield
+	 *            the displacement field
 	 * @param spacing
 	 *            the pixel spacing (resolution) of the deformation field
-	 * @param blockSize the block size
-	 * @param compression the compression type
+	 * @param blockSize
+	 *            the block size
+	 * @param compression
+	 *            the compression type
 	 */
 	public static final <T extends NativeType<T> & RealType<T>> void save(
 			final N5Writer n5Writer,
@@ -167,17 +181,24 @@ public class N5DisplacementField {
 	 * Saves an affine transform and deformation field into a specified n5
 	 * dataset.
 	 *
-	 * @param <T> the type parameter
-	 * @param n5Writer the n5 writer
-	 * @param dataset the dataset path
-	 * @param affine the affine transform
-	 * @param dfield the displacement field
+	 * @param <T>
+	 *            the type parameter
+	 * @param n5Writer
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset path
+	 * @param affine
+	 *            the affine transform
+	 * @param dfield
+	 *            the displacement field
 	 * @param spacing
 	 *            the pixel spacing (resolution) of the deformation field
 	 * @param offset
 	 *            the location of the origin of the deformation field.
-	 * @param blockSize the block size
-	 * @param compression the compression type
+	 * @param blockSize
+	 *            the block size
+	 * @param compression
+	 *            the compression type
 	 */
 	public static final <T extends NativeType<T> & RealType<T>> void save(
 			final N5Writer n5Writer,
@@ -210,18 +231,28 @@ public class N5DisplacementField {
 	 * compressed values is chosen as the smallest value that keeps the error
 	 * (L2) between quantized and original vectors.
 	 *
-     * @param <T> the type parameter of the original displacement field
-     * @param <Q> the type parameter of the quantized displacement field
-	 * @param n5Writer the n5 writer
-	 * @param dataset the dataset path
-	 * @param affine the affine transform
-	 * @param dfield the displacement field
+	 * @param <T>
+	 *            the type parameter of the original displacement field
+	 * @param <Q>
+	 *            the type parameter of the quantized displacement field
+	 * @param n5Writer
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset path
+	 * @param affine
+	 *            the affine transform
+	 * @param dfield
+	 *            the displacement field
 	 * @param spacing
 	 *            the pixel spacing (resolution) of the deformation field
-	 * @param blockSize the block size
-	 * @param compression the compression type
-	 * @param outputType the type of the quantized output
-	 * @param maxError the desired maximum quantization error
+	 * @param blockSize
+	 *            the block size
+	 * @param compression
+	 *            the compression type
+	 * @param outputType
+	 *            the type of the quantized output
+	 * @param maxError
+	 *            the desired maximum quantization error
 	 */
 	public static final <T extends NativeType<T> & RealType<T>, Q extends NativeType<Q> & IntegerType<Q>> void save(
 			final N5Writer n5Writer,
@@ -249,20 +280,30 @@ public class N5DisplacementField {
 	 * compressed values is chosen as the smallest value that keeps the error
 	 * (L2) between quantized and original vectors.
 	 *
-     * @param <T> the type parameter of the original displacement field
-     * @param <Q> the type parameter of the quantized displacement field
-	 * @param n5Writer the n5 writer
-	 * @param dataset the dataset path
-	 * @param affine the affine transform
-	 * @param dfield the displacement field
+	 * @param <T>
+	 *            the type parameter of the original displacement field
+	 * @param <Q>
+	 *            the type parameter of the quantized displacement field
+	 * @param n5Writer
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset path
+	 * @param affine
+	 *            the affine transform
+	 * @param dfield
+	 *            the displacement field
 	 * @param spacing
 	 *            the pixel spacing (resolution) of the deformation field
 	 * @param offset
 	 *            the location of the origin of the deformation field.
-	 * @param blockSize the block size
-	 * @param compression the compression type
-	 * @param outputType the type of the quantized output
-	 * @param maxError the desired maximum quantization error
+	 * @param blockSize
+	 *            the block size
+	 * @param compression
+	 *            the compression type
+	 * @param outputType
+	 *            the type of the quantized output
+	 * @param maxError
+	 *            the desired maximum quantization error
 	 */
 	public static final <T extends NativeType<T> & RealType<T>, Q extends NativeType<Q> & IntegerType<Q>> void save(
 			final N5Writer n5Writer,
@@ -287,9 +328,12 @@ public class N5DisplacementField {
 	/**
 	 * Saves an affine transform as an attribute associated with an n5 dataset.
 	 *
-	 * @param affine the affine transform
-	 * @param n5Writer the n5 writer
-	 * @param dataset the dataset path
+	 * @param affine
+	 *            the affine transform
+	 * @param n5Writer
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset path
 	 */
 	public static final void saveAffine(
 			final AffineGet affine,
@@ -309,15 +353,24 @@ public class N5DisplacementField {
 	 * compressed values is chosen as the smallest value that keeps the error
 	 * (L2) between quantized and original vectors.
 	 *
-     * @param <T> the type parameter of the original displacement field
-     * @param <Q> the type parameter of the quantized displacement field
-	 * @param n5Writer the n5 writer
-	 * @param dataset the dataset path
-	 * @param source the source image
-	 * @param blockSize the block size
-	 * @param compression the compression type
-	 * @param outputType the type of the quantized output
-	 * @param maxError the desired maximum quantization error
+	 * @param <T>
+	 *            the type parameter of the original displacement field
+	 * @param <Q>
+	 *            the type parameter of the quantized displacement field
+	 * @param n5Writer
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset path
+	 * @param source
+	 *            the source image
+	 * @param blockSize
+	 *            the block size
+	 * @param compression
+	 *            the compression type
+	 * @param outputType
+	 *            the type of the quantized output
+	 * @param maxError
+	 *            the desired maximum quantization error
 	 */
 	public static final <T extends RealType<T>, Q extends NativeType<Q> & IntegerType<Q>> void saveQuantized(
 			final N5Writer n5Writer,
@@ -332,8 +385,9 @@ public class N5DisplacementField {
 		 * To keep the max vector error below maxError, the error per coordinate
 		 * must be below m
 		 */
-		final int nd = (source.numDimensions() - 1); // vector field source has num
-												// dims + 1
+		final int nd = (source.numDimensions() - 1); // vector field source has
+														// num
+		// dims + 1
 		final double m = 2 * Math.sqrt(maxError * maxError / nd);
 
 		final RandomAccessibleInterval<T> source_permuted = vectorAxisFirst(source);
@@ -357,12 +411,18 @@ public class N5DisplacementField {
 	 * Opens an {@link InvertibleRealTransform} from an n5 object. Uses the
 	 * provided datasets as the forward and inverse transformations.
 	 *
-	 * @param <T> type parameter
-	 * @param n5 the n5 reader
-	 * @param forwardDataset dataset path for the forward transform
-	 * @param inverseDataset dataset path for the inverse transform
-	 * @param defaultType the type
-	 * @param interpolator the interpolator factory
+	 * @param <T>
+	 *            type parameter
+	 * @param n5
+	 *            the n5 reader
+	 * @param forwardDataset
+	 *            dataset path for the forward transform
+	 * @param inverseDataset
+	 *            dataset path for the inverse transform
+	 * @param defaultType
+	 *            the type
+	 * @param interpolator
+	 *            the interpolator factory
 	 * @return the invertible transformation
 	 */
 	public static final <T extends RealType<T> & NativeType<T>> ExplicitInvertibleRealTransform openInvertible(
@@ -391,8 +451,10 @@ public class N5DisplacementField {
 	 * Opens an {@link InvertibleRealTransform} from an n5 object using default
 	 * datasets and linear interpolation.
 	 *
-	 * @param <T> the type parameter
-	 * @param n5 the n5 reader
+	 * @param <T>
+	 *            the type parameter
+	 * @param n5
+	 *            the n5 reader
 	 * @return the invertible transformation
 	 */
 	public static final <T extends RealType<T> & NativeType<T>> ExplicitInvertibleRealTransform openInvertible(
@@ -405,11 +467,15 @@ public class N5DisplacementField {
 	 * Opens an {@link InvertibleRealTransform} from an multi-scale n5 object,
 	 * at the specified level, using linear interpolation.
 	 *
-	 * @param <T> the type parameter
-	 * @param n5 the n5 reader
-	 * @param level the scale level to open, if present
+	 * @param <T>
+	 *            the type parameter
+	 * @param n5
+	 *            the n5 reader
+	 * @param level
+	 *            the scale level to open, if present
 	 * @return the invertible transformation
-     * @throws Exception the exception
+	 * @throws Exception
+	 *             the exception
 	 */
 	public static final <T extends RealType<T> & NativeType<T>> ExplicitInvertibleRealTransform openInvertible(
 			final N5Reader n5,
@@ -421,17 +487,20 @@ public class N5DisplacementField {
 	/**
 	 * Opens an {@link InvertibleRealTransform} from an n5 object if possible.
 	 *
-	 * @param <T> the type parameter
-	 * @param n5 the n5 reader
-	 * @param defaultType the default type
-	 * @param interpolator the interpolator factory
+	 * @param <T>
+	 *            the type parameter
+	 * @param n5
+	 *            the n5 reader
+	 * @param defaultType
+	 *            the default type
+	 * @param interpolator
+	 *            the interpolator factory
 	 * @return the invertible transformation
 	 */
 	public static final <T extends RealType<T> & NativeType<T>> ExplicitInvertibleRealTransform openInvertible(
 			final N5Reader n5,
 			final T defaultType,
-			final InterpolatorFactory< RealComposite< T >, RandomAccessible< RealComposite< T > > > interpolator )
-	{
+			final InterpolatorFactory<RealComposite<T>, RandomAccessible<RealComposite<T>>> interpolator) {
 
 		return openInvertible(n5, FORWARD_ATTR, INVERSE_ATTR, defaultType, interpolator);
 	}
@@ -441,15 +510,21 @@ public class N5DisplacementField {
 	 * The resulting transform is the concatenation of an affine transform and a
 	 * {@link DisplacementFieldTransform}.
 	 *
-	 * @param <T> the type parameter
-	 * @param n5 the n5 reader
-	 * @param dataset the dataset path
-	 * @param inverse whether to open the inverse transformation
-	 * @param defaultType the default type
-	 * @param interpolator the interpolator factory
+	 * @param <T>
+	 *            the type parameter
+	 * @param n5
+	 *            the n5 reader
+	 * @param dataset
+	 *            the dataset path
+	 * @param inverse
+	 *            whether to open the inverse transformation
+	 * @param defaultType
+	 *            the default type
+	 * @param interpolator
+	 *            the interpolator factory
 	 * @return the transformation
 	 */
-	public static final <T extends RealType<T> & NativeType<T> > RealTransform open(
+	public static final <T extends RealType<T> & NativeType<T>> RealTransform open(
 			final N5Reader n5,
 			final String dataset,
 			final boolean inverse,
@@ -457,7 +532,7 @@ public class N5DisplacementField {
 			final InterpolatorFactory<RealComposite<T>, RandomAccessible<RealComposite<T>>> interpolator) {
 
 		final AffineGet affine = openAffine(n5, dataset);
-		final DisplacementFieldTransform dfield = new DisplacementFieldTransform( openCalibratedField(n5, dataset, interpolator, defaultType));
+		final DisplacementFieldTransform dfield = new DisplacementFieldTransform(openCalibratedField(n5, dataset, interpolator, defaultType));
 		if (affine != null) {
 			final RealTransformSequence xfmSeq = new RealTransformSequence();
 			if (inverse) {
@@ -477,20 +552,19 @@ public class N5DisplacementField {
 	 * Returns an {@link AffineGet} transform from pixel space to physical
 	 * space, for the given n5 dataset, if present, null otherwise.
 	 *
-	 * @param n5 the n5 reader
-	 * @param dataset the dataset path
+	 * @param n5
+	 *            the n5 reader
+	 * @param dataset
+	 *            the dataset path
 	 * @return the affine transform
 	 */
 	public static final AffineGet openPixelToPhysical(final N5Reader n5, final String dataset) {
 
 		final double[] spacing = n5.getAttribute(dataset, SPACING_ATTR, double[].class);
 		final double[] offset = n5.getAttribute(dataset, OFFSET_ATTR, double[].class);
-		if (spacing == null && offset == null )
-		{
+		if (spacing == null && offset == null) {
 			return null;
-		}
-		else if( offset == null )
-		{
+		} else if (offset == null) {
 			final int N = spacing.length;
 			if (N == 2)
 				return new Scale2D(spacing);
@@ -498,9 +572,7 @@ public class N5DisplacementField {
 				return new Scale3D(spacing);
 			else
 				return new Scale(spacing);
-		}
-		else if( spacing == null )
-		{
+		} else if (spacing == null) {
 			final int N = offset.length;
 			if (N == 2)
 				return new Translation2D(offset);
@@ -508,18 +580,18 @@ public class N5DisplacementField {
 				return new Translation3D(offset);
 			else
 				return new Translation(offset);
-		}
-		else
-		{
-			return new ScaleAndTranslation( spacing, offset );
+		} else {
+			return new ScaleAndTranslation(spacing, offset);
 		}
 	}
 
 	/**
 	 * Returns and affine transform stored as an attribute in an n5 dataset.
 	 *
-	 * @param n5 the n5 reader
-	 * @param dataset the dataset path
+	 * @param n5
+	 *            the n5 reader
+	 * @param dataset
+	 *            the dataset path
 	 * @return the affine transformation
 	 */
 	public static final AffineGet openAffine(final N5Reader n5, final String dataset) {
@@ -549,11 +621,16 @@ public class N5DisplacementField {
 	 * If the data is an {@link IntegerType}, returns an un-quantized view of
 	 * the dataset, otherwise, returns the raw {@link RandomAccessibleInterval}.
 	 *
-     * @param <T> the type parameter
-     * @param <Q> the quantized type parameter
-	 * @param n5 the n5 reader
-	 * @param dataset the dataset path
-	 * @param defaultType the default type
+	 * @param <T>
+	 *            the type parameter
+	 * @param <Q>
+	 *            the quantized type parameter
+	 * @param n5
+	 *            the n5 reader
+	 * @param dataset
+	 *            the dataset path
+	 * @param defaultType
+	 *            the default type
 	 * @return the deformation field as a RandomAccessibleInterval
 	 */
 	@SuppressWarnings("unchecked")
@@ -595,11 +672,16 @@ public class N5DisplacementField {
 	 * physical coordinates using the pixel spacing stored in the "spacing"
 	 * attribute, if present.
 	 *
-	 * @param <T> the type parameter
-	 * @param n5 the n5 reader
-	 * @param dataset the dataset path
-	 * @param interpolator the interpolato factory
-	 * @param defaultType the default type
+	 * @param <T>
+	 *            the type parameter
+	 * @param n5
+	 *            the n5 reader
+	 * @param dataset
+	 *            the dataset path
+	 * @param interpolator
+	 *            the interpolato factory
+	 * @param defaultType
+	 *            the default type
 	 * @return the deformation field as a RealRandomAccessible
 	 */
 	public static <T extends NativeType<T> & RealType<T>> RealRandomAccessible<RealComposite<T>> openCalibratedField(
@@ -624,7 +706,8 @@ public class N5DisplacementField {
 	 * ith coordinate. The output of this method can be passed directly to the
 	 * constructor of {@link DisplacementFieldTransform}.
 	 *
-	 * @param <T> the type parameter for the underlying data
+	 * @param <T>
+	 *            the type parameter for the underlying data
 	 * @param n5
 	 *            the n5 reader
 	 * @param dataset
@@ -637,30 +720,26 @@ public class N5DisplacementField {
 	 *            the type
 	 * @return the coordinate displacements
 	 */
-	public static <T extends NativeType< T > & RealType< T >> RealRandomAccessible< RealComposite< T > > openCalibratedField(
+	public static <T extends NativeType<T> & RealType<T>> RealRandomAccessible<RealComposite<T>> openCalibratedField(
 			final N5Reader n5,
 			final String dataset,
-			final InterpolatorFactory< RealComposite< T >, RandomAccessible< RealComposite< T > > > interpolator,
+			final InterpolatorFactory<RealComposite<T>, RandomAccessible<RealComposite<T>>> interpolator,
 			final String extensionType,
-			final T defaultType )
-	{
+			final T defaultType) {
 
 		final RandomAccessibleInterval<T> dfieldRai = openField(n5, dataset, defaultType);
 		if (dfieldRai == null) {
 			return null;
 		}
 
-		final CompositeIntervalView< T, RealComposite< T > > dfieldRaiPerm = Views.collapseReal( vectorAxisLast( dfieldRai ) );
+		final CompositeIntervalView<T, RealComposite<T>> dfieldRaiPerm = Views.collapseReal(vectorAxisLast(dfieldRai));
 		final RealRandomAccessible<RealComposite<T>> dfieldReal;
-		if ( extensionType.equals( EXTEND_MIRROR ) )
-		{
-			dfieldReal = Views.interpolate( Views.extendMirrorDouble( dfieldRaiPerm ), interpolator );
-		} else if ( extensionType.equals( EXTEND_BORDER ) )
-		{
-			dfieldReal = Views.interpolate( Views.extendBorder( dfieldRaiPerm ), interpolator );
-		} else
-		{
-			dfieldReal = Views.interpolate( Views.extendZero( dfieldRaiPerm ), interpolator );
+		if (extensionType.equals(EXTEND_MIRROR)) {
+			dfieldReal = Views.interpolate(Views.extendMirrorDouble(dfieldRaiPerm), interpolator);
+		} else if (extensionType.equals(EXTEND_BORDER)) {
+			dfieldReal = Views.interpolate(Views.extendBorder(dfieldRaiPerm), interpolator);
+		} else {
+			dfieldReal = Views.interpolate(Views.extendZero(dfieldRaiPerm), interpolator);
 		}
 
 		final RealRandomAccessible<RealComposite<T>> displacements;
@@ -677,10 +756,14 @@ public class N5DisplacementField {
 	 * Opens a transform from an n5 dataset using linear interpolation for the
 	 * deformation field.
 	 *
-	 * @param <T> the type parameter
-	 * @param n5 the n5 reader
-	 * @param dataset the dataset path
-	 * @param inverse whether to open the inverse
+	 * @param <T>
+	 *            the type parameter
+	 * @param n5
+	 *            the n5 reader
+	 * @param dataset
+	 *            the dataset path
+	 * @param inverse
+	 *            whether to open the inverse
 	 * @return the transform
 	 */
 	public static <T extends NativeType<T> & RealType<T>> RealTransform open(
@@ -693,10 +776,14 @@ public class N5DisplacementField {
 	 * Returns a deformation field as a {@link RandomAccessibleInterval},
 	 * ensuring that the vector is stored in the last dimension.
 	 *
-	 * @param <T> the type parameter
-	 * @param n5 the n5 reader
-	 * @param dataset the dataset path
-	 * @param defaultType the default type
+	 * @param <T>
+	 *            the type parameter
+	 * @param n5
+	 *            the n5 reader
+	 * @param dataset
+	 *            the dataset path
+	 * @param defaultType
+	 *            the default type
 	 * @return the deformation field
 	 */
 	public static final <T extends RealType<T> & NativeType<T>> RandomAccessibleInterval<T> openRaw(
@@ -712,12 +799,18 @@ public class N5DisplacementField {
 	 * Open a quantized (integer) {@link RandomAccessibleInterval} from an n5
 	 * dataset.
 	 *
-	 * @param <T> the type parameter
-	 * @param <Q> the quantized type parameter
-	 * @param n5 the n5 reader
-	 * @param dataset the dataset path
-	 * @param defaultQuantizedType the quantized type
-	 * @param defaultType the original type
+	 * @param <T>
+	 *            the type parameter
+	 * @param <Q>
+	 *            the quantized type parameter
+	 * @param n5
+	 *            the n5 reader
+	 * @param dataset
+	 *            the dataset path
+	 * @param defaultQuantizedType
+	 *            the quantized type
+	 * @param defaultType
+	 *            the original type
 	 * @return the un-quantized data
 	 */
 	public static final <Q extends RealType<Q> & NativeType<Q>, T extends RealType<T>> RandomAccessibleInterval<T> openQuantized(
@@ -756,10 +849,13 @@ public class N5DisplacementField {
 	 * Returns a deformation field as a {@link RandomAccessibleInterval} with
 	 * the vector stored in the last dimension.
 	 *
-	 * @param <T> the type parameter
-	 * @param source the source displacement field
+	 * @param <T>
+	 *            the type parameter
+	 * @param source
+	 *            the source displacement field
 	 * @return the possibly permuted deformation field
-	 * @throws Exception the exception
+	 * @throws Exception
+	 *             the exception
 	 */
 	public static final <T extends RealType<T>> RandomAccessibleInterval<T> vectorAxisLast(final RandomAccessibleInterval<T> source) {
 
@@ -785,10 +881,13 @@ public class N5DisplacementField {
 	 * Returns a deformation field as a {@link RandomAccessibleInterval} with
 	 * the vector stored in the first dimension.
 	 *
-	 * @param <T> the type parameter
-	 * @param source the source displacement field
+	 * @param <T>
+	 *            the type parameter
+	 * @param source
+	 *            the source displacement field
 	 * @return the possibly permuted deformation field
-	 * @throws Exception the exception
+	 * @throws Exception
+	 *             the exception
 	 */
 	public static final <T extends RealType<T>> RandomAccessibleInterval<T> vectorAxisFirst(final RandomAccessibleInterval<T> source) {
 
@@ -816,7 +915,7 @@ public class N5DisplacementField {
 	 * the ith input dimension in the output.
 	 *
 	 * @param <T>
-     *            the type parameter
+	 *            the type parameter
 	 * @param source
 	 *            the source data
 	 * @param p
@@ -846,7 +945,7 @@ public class N5DisplacementField {
 	 * {@link IterableInterval}, respectively.
 	 *
 	 * @param <T>
-     *            the type parameter
+	 *            the type parameter
 	 * @param img
 	 *            the iterable interval
 	 * @return the min and max values stored in a double array
@@ -866,5 +965,4 @@ public class N5DisplacementField {
 		}
 		return new double[]{min, max};
 	}
-
 }

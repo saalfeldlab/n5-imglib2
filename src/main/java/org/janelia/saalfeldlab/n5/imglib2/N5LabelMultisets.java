@@ -66,8 +66,10 @@ public class N5LabelMultisets {
 	/**
 	 * Determine whether an N5 dataset is of type {@link LabelMultisetType}.
 	 *
-	 * @param n5 the n5 reader
-	 * @param dataset the dataset path
+	 * @param n5
+	 *            the n5 reader
+	 * @param dataset
+	 *            the dataset path
 	 * @return true of the dataset is of type LabelMultiset
 	 */
 	public static boolean isLabelMultisetType(final N5Reader n5, final String dataset) {
@@ -81,8 +83,10 @@ public class N5LabelMultisets {
 	 * Open an N5 dataset of {@link LabelMultisetType} as a memory cached
 	 * {@link LazyCellImg}.
 	 *
-	 * @param n5 the n5 reader
-	 * @param dataset the dataset path
+	 * @param n5
+	 *            the n5 reader
+	 * @param dataset
+	 *            the dataset path
 	 * @return the LabelMultiset image
 	 */
 	public static final CachedCellImg<LabelMultisetType, VolatileLabelMultisetArray> openLabelMultiset(
@@ -96,9 +100,12 @@ public class N5LabelMultisets {
 	 * Open an N5 dataset of {@link LabelMultisetType} as a memory cached
 	 * {@link LazyCellImg}.
 	 *
-	 * @param n5 the n5 reader
-	 * @param dataset the dataset path
-	 * @param defaultLabelId the default label
+	 * @param n5
+	 *            the n5 reader
+	 * @param dataset
+	 *            the dataset path
+	 * @param defaultLabelId
+	 *            the default label
 	 * @return the LabelMultiset image
 	 */
 	public static final CachedCellImg<LabelMultisetType, VolatileLabelMultisetArray> openLabelMultiset(
@@ -113,9 +120,12 @@ public class N5LabelMultisets {
 	 * Open an N5 dataset of {@link LabelMultisetType} as a memory cached
 	 * {@link LazyCellImg}.
 	 *
-	 * @param n5 the n5 reader
-	 * @param dataset the dataset path
-	 * @param nullReplacement a function returning data for null blocks
+	 * @param n5
+	 *            the n5 reader
+	 * @param dataset
+	 *            the dataset path
+	 * @param nullReplacement
+	 *            a function returning data for null blocks
 	 * @return the LabelMultiset image
 	 */
 	public static final CachedCellImg<LabelMultisetType, VolatileLabelMultisetArray> openLabelMultiset(
@@ -130,10 +140,14 @@ public class N5LabelMultisets {
 	 * Open an N5 dataset of {@link LabelMultisetType} as a memory cached
 	 * {@link LazyCellImg}.
 	 *
-	 * @param n5 the n5 reader
-	 * @param dataset the dataset path
-	 * @param nullReplacement a function returning data for null blocks
-	 * @param loaderCache the cache
+	 * @param n5
+	 *            the n5 reader
+	 * @param dataset
+	 *            the dataset path
+	 * @param nullReplacement
+	 *            a function returning data for null blocks
+	 * @param loaderCache
+	 *            the cache
 	 * @return the LabelMultiset image
 	 */
 	public static final CachedCellImg<LabelMultisetType, VolatileLabelMultisetArray> openLabelMultiset(
@@ -164,11 +178,16 @@ public class N5LabelMultisets {
 	 * Save a {@link RandomAccessibleInterval} of type {@link LabelMultisetType}
 	 * as an N5 dataset.
 	 *
-	 * @param source the source image
-	 * @param n5 the n5 writer
-	 * @param dataset the dataset path
-	 * @param blockSize block size
-	 * @param compression compression type
+	 * @param source
+	 *            the source image
+	 * @param n5
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset path
+	 * @param blockSize
+	 *            block size
+	 * @param compression
+	 *            compression type
 	 */
 	public static final void saveLabelMultiset(
 			RandomAccessibleInterval<LabelMultisetType> source,
@@ -215,14 +234,22 @@ public class N5LabelMultisets {
 	 * Save a {@link RandomAccessibleInterval} of type {@link LabelMultisetType}
 	 * as an N5 dataset, multi-threaded.
 	 *
-	 * @param source the source image
-	 * @param n5 the n5 writer
-	 * @param dataset the dataset path
-	 * @param blockSize the block size
-	 * @param compression the compression type
-	 * @param exec the executor service
-	 * @throws InterruptedException interrupted exception
-	 * @throws ExecutionException execution exception
+	 * @param source
+	 *            the source image
+	 * @param n5
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset path
+	 * @param blockSize
+	 *            the block size
+	 * @param compression
+	 *            the compression type
+	 * @param exec
+	 *            the executor service
+	 * @throws InterruptedException
+	 *             interrupted exception
+	 * @throws ExecutionException
+	 *             execution exception
 	 */
 	public static final void saveLabelMultiset(
 			final RandomAccessibleInterval<LabelMultisetType> source,
@@ -289,11 +316,16 @@ public class N5LabelMultisets {
 	 * Save a {@link RandomAccessibleInterval} of type {@link LabelMultisetType}
 	 * into an existing N5 dataset.
 	 *
-	 * @param source the source image
-	 * @param n5 the n5 writer
-	 * @param dataset the dataset path
-	 * @param attributes dataset attributes
-	 * @param gridOffset the offset of this block in grid coordinates
+	 * @param source
+	 *            the source image
+	 * @param n5
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset path
+	 * @param attributes
+	 *            dataset attributes
+	 * @param gridOffset
+	 *            the offset of this block in grid coordinates
 	 */
 	public static final void saveLabelMultisetBlock(
 			RandomAccessibleInterval<LabelMultisetType> source,
@@ -345,10 +377,14 @@ public class N5LabelMultisets {
 	 * position, and the source is assumed to align with the {@link DataBlock}
 	 * grid of the dataset.
 	 *
-	 * @param source the source image
-	 * @param n5 the n5 writer
-	 * @param dataset the dataset path
-	 * @param attributes the dataset attributes
+	 * @param source
+	 *            the source image
+	 * @param n5
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset path
+	 * @param attributes
+	 *            the dataset attributes
 	 */
 	public static final void saveLabelMultisetBlock(
 			final RandomAccessibleInterval<LabelMultisetType> source,
@@ -368,9 +404,12 @@ public class N5LabelMultisets {
 	 * position, and the source is assumed to align with the {@link DataBlock}
 	 * grid of the dataset.
 	 *
-	 * @param source the source image
-	 * @param n5 the n5 writer
-	 * @param dataset the dataset path
+	 * @param source
+	 *            the source image
+	 * @param n5
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset path
 	 */
 	public static final void saveLabelMultisetBlock(
 			final RandomAccessibleInterval<LabelMultisetType> source,
@@ -389,10 +428,14 @@ public class N5LabelMultisets {
 	 * Save a {@link RandomAccessibleInterval} of type {@link LabelMultisetType}
 	 * into an existing N5 dataset.
 	 *
-	 * @param source the source image
-	 * @param n5 the n5 writer
-	 * @param dataset the dataset path
-	 * @param gridOffset the offset of the block in grid coordinates
+	 * @param source
+	 *            the source image
+	 * @param n5
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset path
+	 * @param gridOffset
+	 *            the offset of the block in grid coordinates
 	 */
 	public static final void saveLabelMultisetBlock(
 			final RandomAccessibleInterval<LabelMultisetType> source,
@@ -412,13 +455,20 @@ public class N5LabelMultisets {
 	 * Save a {@link RandomAccessibleInterval} of type {@link LabelMultisetType}
 	 * into an existing N5 dataset, multi-threaded.
 	 *
-	 * @param source the source image
-	 * @param n5 the n5 writer
-	 * @param dataset the dataset path
-	 * @param gridOffset the offset of the block in grid coordinates
-	 * @param exec the executor service
-	 * @throws InterruptedException interrupted exception
-	 * @throws ExecutionException execution exception
+	 * @param source
+	 *            the source image
+	 * @param n5
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset path
+	 * @param gridOffset
+	 *            the offset of the block in grid coordinates
+	 * @param exec
+	 *            the executor service
+	 * @throws InterruptedException
+	 *             interrupted exception
+	 * @throws ExecutionException
+	 *             execution exception
 	 */
 	public static final void saveLabelMultisetBlock(
 			final RandomAccessibleInterval<LabelMultisetType> source,
@@ -490,12 +540,18 @@ public class N5LabelMultisets {
 	 * DataBlocks} that contain labels other than a given default label are
 	 * stored.
 	 *
-	 * @param source the source image
-	 * @param n5 the n5 writer
-	 * @param dataset the dataset path
-	 * @param attributes the dataset attributes
-	 * @param gridOffset the offset of the block in grid coordinates
-	 * @param defaultLabelId the default label
+	 * @param source
+	 *            the source image
+	 * @param n5
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset path
+	 * @param attributes
+	 *            the dataset attributes
+	 * @param gridOffset
+	 *            the offset of the block in grid coordinates
+	 * @param defaultLabelId
+	 *            the default label
 	 */
 	public static final void saveLabelMultisetNonEmptyBlock(
 			RandomAccessibleInterval<LabelMultisetType> source,
@@ -550,11 +606,16 @@ public class N5LabelMultisets {
 	 * grid of the dataset. Only {@link DataBlock DataBlocks} that contain
 	 * labels other than a given default label are stored.
 	 *
-	 * @param source the source image
-	 * @param n5 the n5 writer
-	 * @param dataset the dataset path
-	 * @param attributes the dataset attributes
-	 * @param defaultLabelId the default label
+	 * @param source
+	 *            the source image
+	 * @param n5
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset path
+	 * @param attributes
+	 *            the dataset attributes
+	 * @param defaultLabelId
+	 *            the default label
 	 */
 	public static final void saveLabelMultisetNonEmptyBlock(
 			final RandomAccessibleInterval<LabelMultisetType> source,
@@ -576,10 +637,14 @@ public class N5LabelMultisets {
 	 * grid of the dataset. Only {@link DataBlock DataBlocks} that contain
 	 * labels other than a given default label are stored.
 	 *
-	 * @param source the source image
-	 * @param n5 the n5 writer
-	 * @param dataset the dataset path
-	 * @param defaultLabelId the default label
+	 * @param source
+	 *            the source image
+	 * @param n5
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset path
+	 * @param defaultLabelId
+	 *            the default label
 	 */
 	public static final void saveLabelMultisetNonEmptyBlock(
 			final RandomAccessibleInterval<LabelMultisetType> source,
@@ -602,9 +667,12 @@ public class N5LabelMultisets {
 	 * grid of the dataset. Only {@link DataBlock DataBlocks} that contain
 	 * labels other than {@link Label#BACKGROUND} are stored.
 	 *
-	 * @param source the source image
-	 * @param n5 the n5 writer
-	 * @param dataset the dataset path
+	 * @param source
+	 *            the source image
+	 * @param n5
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset path
 	 */
 	public static final void saveLabelMultisetNonEmptyBlock(
 			final RandomAccessibleInterval<LabelMultisetType> source,
@@ -622,11 +690,16 @@ public class N5LabelMultisets {
 	 * DataBlocks} that contain labels other than a given default label are
 	 * stored.
 	 *
-	 * @param source the source image
-	 * @param n5 the n5 writer
-	 * @param dataset the dataset path
-	 * @param gridOffset the offset of the block in grid coordinates
-	 * @param defaultLabelId the default label
+	 * @param source
+	 *            the source image
+	 * @param n5
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset path
+	 * @param gridOffset
+	 *            the offset of the block in grid coordinates
+	 * @param defaultLabelId
+	 *            the default label
 	 */
 	public static final void saveLabelMultisetNonEmptyBlock(
 			final RandomAccessibleInterval<LabelMultisetType> source,
@@ -651,10 +724,14 @@ public class N5LabelMultisets {
 	 * DataBlocks} that contain labels other than {@link Label#BACKGROUND} are
 	 * stored.
 	 *
-	 * @param source the source image
-	 * @param n5 the n5 writer
-	 * @param dataset the dataset path
-	 * @param gridOffset the offset of the block in grid coordinates
+	 * @param source
+	 *            the source image
+	 * @param n5
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset path
+	 * @param gridOffset
+	 *            the offset of the block in grid coordinates
 	 */
 	public static final void saveLabelMultisetNonEmptyBlock(
 			final RandomAccessibleInterval<LabelMultisetType> source,
@@ -669,8 +746,10 @@ public class N5LabelMultisets {
 	 * Creates a {@link ByteArrayDataBlock} with serialized source contents of
 	 * type {@link LabelMultisetType}.
 	 *
-	 * @param source the source image
-	 * @param gridPosition the position of the block
+	 * @param source
+	 *            the source image
+	 * @param gridPosition
+	 *            the position of the block
 	 * @return the data block
 	 */
 	private static final ByteArrayDataBlock createDataBlock(
@@ -694,9 +773,12 @@ public class N5LabelMultisets {
 	 * type {@link LabelMultisetType}, or returns {@code null} if all labels are
 	 * equal to {@code defaultLabelId} (regardless of their counts).
 	 *
-	 * @param source the source image
-	 * @param gridPosition the position of the block
-	 * @param defaultLabelId the default label
+	 * @param source
+	 *            the source image
+	 * @param gridPosition
+	 *            the position of the block
+	 * @param defaultLabelId
+	 *            the default label
 	 * @return the data block
 	 */
 	private static final ByteArrayDataBlock createNonEmptyDataBlock(

@@ -162,11 +162,16 @@ public class N5Utils {
 	 * Creates a {@link DataBlock} of matching type and copies the content of
 	 * source into it. This is a helper method with redundant parameters.
 	 *
-	 * @param source the source image
-	 * @param dataType the datatype
-	 * @param intBlockSize the block size as an int array
-	 * @param longBlockSize the block size as a long array
-	 * @param gridPosition the grid position of the block
+	 * @param source
+	 *            the source image
+	 * @param dataType
+	 *            the datatype
+	 * @param intBlockSize
+	 *            the block size as an int array
+	 * @param longBlockSize
+	 *            the block size as a long array
+	 * @param gridPosition
+	 *            the grid position of the block
 	 * @return the data block
 	 */
 	@SuppressWarnings("unchecked")
@@ -240,13 +245,20 @@ public class N5Utils {
 	 * Creates a {@link DataBlock} of matching type and copies the content of
 	 * source into it. This is a helper method with redundant parameters.
 	 *
-	 * @param <T> the type parameter
-	 * @param source the source block
-	 * @param dataType the data type
-	 * @param intBlockSize the block since as an int array
-	 * @param longBlockSize the block since as a long array
-	 * @param gridPosition the grid position
-	 * @param defaultValue the default value
+	 * @param <T>
+	 *            the type parameter
+	 * @param source
+	 *            the source block
+	 * @param dataType
+	 *            the data type
+	 * @param intBlockSize
+	 *            the block since as an int array
+	 * @param longBlockSize
+	 *            the block since as a long array
+	 * @param gridPosition
+	 *            the grid position
+	 * @param defaultValue
+	 *            the default value
 	 * @return the data block
 	 */
 	@SuppressWarnings("unchecked")
@@ -334,12 +346,18 @@ public class N5Utils {
 	 * cropped block size. Also calculates the grid raster position assuming
 	 * that the offset divisible by block size without remainder.
 	 *
-	 * @param max the max coordinate of the dataset
-	 * @param offset the block offset
-	 * @param blockDimensions the block size
-	 * @param croppedBlockDimensions the cropped block size as a long array
-	 * @param intCroppedBlockDimensions the cropped block size as an int array
-	 * @param gridPosition the grid position
+	 * @param max
+	 *            the max coordinate of the dataset
+	 * @param offset
+	 *            the block offset
+	 * @param blockDimensions
+	 *            the block size
+	 * @param croppedBlockDimensions
+	 *            the cropped block size as a long array
+	 * @param intCroppedBlockDimensions
+	 *            the cropped block size as an int array
+	 * @param gridPosition
+	 *            the grid position
 	 */
 	static void cropBlockDimensions(
 			final long[] max,
@@ -363,13 +381,20 @@ public class N5Utils {
 	 * offset assuming that the offset divisible by block size without
 	 * remainder.
 	 *
-	 * @param max the max coordinate of the dataset
-	 * @param offset the block offsett
-	 * @param gridOffset the grid offset
-	 * @param blockDimensions the block dimensions
-	 * @param croppedBlockDimensions the cropped block dimensions as a long array
-	 * @param intCroppedBlockDimensions the cropped block dimensions as an int array
-	 * @param gridPosition the block grid position
+	 * @param max
+	 *            the max coordinate of the dataset
+	 * @param offset
+	 *            the block offsett
+	 * @param gridOffset
+	 *            the grid offset
+	 * @param blockDimensions
+	 *            the block dimensions
+	 * @param croppedBlockDimensions
+	 *            the cropped block dimensions as a long array
+	 * @param intCroppedBlockDimensions
+	 *            the cropped block dimensions as an int array
+	 * @param gridPosition
+	 *            the block grid position
 	 */
 	static void cropBlockDimensions(
 			final long[] max,
@@ -391,9 +416,12 @@ public class N5Utils {
 	 * Open an N5 dataset as a memory cached {@link LazyCellImg}. Supports all
 	 * primitive types and {@link LabelMultisetType}.
 	 *
-	 * @param <T> the type parameter
-	 * @param n5 the n5 reader
-	 * @param dataset the dataset path
+	 * @param <T>
+	 *            the type parameter
+	 * @param n5
+	 *            the n5 reader
+	 * @param dataset
+	 *            the dataset path
 	 * @return the image
 	 */
 	@SuppressWarnings("unchecked")
@@ -410,10 +438,14 @@ public class N5Utils {
 	/**
 	 * Open an N5 dataset as a memory cached {@link LazyCellImg}.
 	 *
-	 * @param <T> the type parameter
-	 * @param n5 the n5 reader
-	 * @param dataset the dataset path
-	 * @param maxNumCacheEntries the max number of cache entries
+	 * @param <T>
+	 *            the type parameter
+	 * @param n5
+	 *            the n5 reader
+	 * @param dataset
+	 *            the dataset path
+	 * @param maxNumCacheEntries
+	 *            the max number of cache entries
 	 * @return the image
 	 */
 	public static final <T extends NativeType<T>> CachedCellImg<T, ?> openWithBoundedSoftRefCache(
@@ -429,9 +461,12 @@ public class N5Utils {
 	 * {@link VolatileAccess}. Supports all primitive types and
 	 * {@link LabelMultisetType}.
 	 *
-	 * @param <T> the type parameter
-	 * @param n5 the n5 reader
-	 * @param dataset the dataset path
+	 * @param <T>
+	 *            the type parameter
+	 * @param n5
+	 *            the n5 reader
+	 * @param dataset
+	 *            the dataset path
 	 * @return the image
 	 */
 	@SuppressWarnings("unchecked")
@@ -449,10 +484,14 @@ public class N5Utils {
 	 * Open an N5 dataset as a memory cached {@link LazyCellImg} using
 	 * {@link VolatileAccess}.
 	 *
-	 * @param <T> the type parameter
-	 * @param n5 n5 reader
-	 * @param dataset the dataset path
-	 * @param maxNumCacheEntries the max number of cache entries
+	 * @param <T>
+	 *            the type parameter
+	 * @param n5
+	 *            n5 reader
+	 * @param dataset
+	 *            the dataset path
+	 * @param maxNumCacheEntries
+	 *            the max number of cache entries
 	 * @return the image
 	 */
 	public static final <T extends NativeType<T>> CachedCellImg<T, ?> openVolatileWithBoundedSoftRefCache(
@@ -468,9 +507,12 @@ public class N5Utils {
 	 * requires that all parts of the the N5 dataset that will be accessed fit
 	 * into /tmp.
 	 *
-	 * @param <T> the type parameter
-	 * @param n5 n5 reader
-	 * @param dataset the dataset path
+	 * @param <T>
+	 *            the type parameter
+	 * @param n5
+	 *            n5 reader
+	 * @param dataset
+	 *            the dataset path
 	 * @return the image
 	 */
 	public static final <T extends NativeType<T>> CachedCellImg<T, ?> openWithDiskCache(
@@ -483,10 +525,14 @@ public class N5Utils {
 	/**
 	 * Open an N5 dataset as a memory cached {@link LazyCellImg}.
 	 *
-	 * @param <T> the type parameter
-	 * @param n5 n5 reader
-	 * @param dataset the dataset path
-	 * @param defaultValue the default value
+	 * @param <T>
+	 *            the type parameter
+	 * @param n5
+	 *            n5 reader
+	 * @param dataset
+	 *            the dataset path
+	 * @param defaultValue
+	 *            the default value
 	 * @return the image
 	 */
 	public static final <T extends NativeType<T>> CachedCellImg<T, ?> open(
@@ -500,11 +546,16 @@ public class N5Utils {
 	/**
 	 * Open an N5 dataset as a memory cached {@link LazyCellImg}.
 	 *
-	 * @param <T> the type parameter
-	 * @param n5 n5 reader
-	 * @param dataset the dataset path
-	 * @param defaultValue the default value
-	 * @param maxNumCacheEntries the max number of cache entries
+	 * @param <T>
+	 *            the type parameter
+	 * @param n5
+	 *            n5 reader
+	 * @param dataset
+	 *            the dataset path
+	 * @param defaultValue
+	 *            the default value
+	 * @param maxNumCacheEntries
+	 *            the max number of cache entries
 	 * @return the image
 	 */
 	public static final <T extends NativeType<T>> CachedCellImg<T, ?> openWithBoundedSoftRefCache(
@@ -520,10 +571,14 @@ public class N5Utils {
 	 * Open an N5 dataset as a memory cached {@link LazyCellImg} using
 	 * {@link VolatileAccess}.
 	 *
-	 * @param <T> the type parameter
-	 * @param n5 n5 reader
-	 * @param dataset the dataset path
-	 * @param defaultValue the default value
+	 * @param <T>
+	 *            the type parameter
+	 * @param n5
+	 *            n5 reader
+	 * @param dataset
+	 *            the dataset path
+	 * @param defaultValue
+	 *            the default value
 	 * @return the image
 	 */
 	public static final <T extends NativeType<T>> CachedCellImg<T, ?> openVolatile(
@@ -538,11 +593,16 @@ public class N5Utils {
 	 * Open an N5 dataset as a memory cached {@link LazyCellImg} using
 	 * {@link VolatileAccess}.
 	 *
-	 * @param <T> the type parameter
-	 * @param n5 n5 reader
-	 * @param dataset the dataset path
-	 * @param defaultValue the default value
-	 * @param maxNumCacheEntries the maximum number of cache entries
+	 * @param <T>
+	 *            the type parameter
+	 * @param n5
+	 *            n5 reader
+	 * @param dataset
+	 *            the dataset path
+	 * @param defaultValue
+	 *            the default value
+	 * @param maxNumCacheEntries
+	 *            the maximum number of cache entries
 	 * @return the image
 	 */
 	public static final <T extends NativeType<T>> CachedCellImg<T, ?> openVolatileWithBoundedSoftRefCache(
@@ -559,10 +619,14 @@ public class N5Utils {
 	 * requires that all parts of the the N5 dataset that will be accessed fit
 	 * into /tmp.
 	 *
-	 * @param <T> the type parameter
-	 * @param n5 n5 reader
-	 * @param dataset the dataset path
-	 * @param defaultValue the default value
+	 * @param <T>
+	 *            the type parameter
+	 * @param n5
+	 *            n5 reader
+	 * @param dataset
+	 *            the dataset path
+	 * @param defaultValue
+	 *            the default value
 	 * @return the image
 	 */
 	public static final <T extends NativeType<T>> CachedCellImg<T, ?> openWithDiskCache(
@@ -576,10 +640,14 @@ public class N5Utils {
 	/**
 	 * Open an N5 dataset as a memory cached {@link LazyCellImg}.
 	 *
-	 * @param <T> the type
-	 * @param n5 n5 reader
-	 * @param dataset the dataset path
-	 * @param blockNotFoundHandler consumer handling missing blocks
+	 * @param <T>
+	 *            the type
+	 * @param n5
+	 *            n5 reader
+	 * @param dataset
+	 *            the dataset path
+	 * @param blockNotFoundHandler
+	 *            consumer handling missing blocks
 	 * @return the image
 	 */
 	public static final <T extends NativeType<T>> CachedCellImg<T, ?> open(
@@ -593,11 +661,16 @@ public class N5Utils {
 	/**
 	 * Open an N5 dataset as a memory cached {@link LazyCellImg}.
 	 *
-	 * @param <T> the type
-	 * @param n5 n5 reader
-	 * @param dataset the dataset path
-	 * @param blockNotFoundHandler consumer handling missing blocks
-	 * @param accessFlags the access flag set
+	 * @param <T>
+	 *            the type
+	 * @param n5
+	 *            n5 reader
+	 * @param dataset
+	 *            the dataset path
+	 * @param blockNotFoundHandler
+	 *            consumer handling missing blocks
+	 * @param accessFlags
+	 *            the access flag set
 	 * @return the image
 	 */
 	public static final <T extends NativeType<T>> CachedCellImg<T, ?> open(
@@ -613,11 +686,16 @@ public class N5Utils {
 	 * Open an N5 dataset as a memory cached {@link LazyCellImg} with a bound on
 	 * the number of cache entries.
 	 *
-	 * @param <T> the type
-	 * @param n5 n5 reader
-	 * @param dataset the dataset path
-	 * @param blockNotFoundHandler consumer handling missing blocks
-	 * @param maxNumCacheEntries the maximum number of cache entries
+	 * @param <T>
+	 *            the type
+	 * @param n5
+	 *            n5 reader
+	 * @param dataset
+	 *            the dataset path
+	 * @param blockNotFoundHandler
+	 *            consumer handling missing blocks
+	 * @param maxNumCacheEntries
+	 *            the maximum number of cache entries
 	 * @return the image
 	 */
 	public static final <T extends NativeType<T>> CachedCellImg<T, ?> openWithBoundedSoftRefCache(
@@ -633,12 +711,18 @@ public class N5Utils {
 	 * Open an N5 dataset as a memory cached {@link LazyCellImg} with a bound on
 	 * the number of cache entries.
 	 *
-	 * @param <T> the type
-	 * @param n5 n5 reader
-	 * @param dataset the dataset path
-	 * @param blockNotFoundHandler consumer handling missing blocks
-	 * @param maxNumCacheEntries the maximum number of cache entries
-	 * @param accessFlags the access flag set
+	 * @param <T>
+	 *            the type
+	 * @param n5
+	 *            n5 reader
+	 * @param dataset
+	 *            the dataset path
+	 * @param blockNotFoundHandler
+	 *            consumer handling missing blocks
+	 * @param maxNumCacheEntries
+	 *            the maximum number of cache entries
+	 * @param accessFlags
+	 *            the access flag set
 	 * @return the image
 	 */
 	public static final <T extends NativeType<T>> CachedCellImg<T, ?> openWithBoundedSoftRefCache(
@@ -654,12 +738,18 @@ public class N5Utils {
 	/**
 	 * Open an N5 dataset as a memory cached {@link LazyCellImg}.
 	 *
-	 * @param <T> the type
-	 * @param n5 n5 reader
-	 * @param dataset the dataset path
-	 * @param blockNotFoundHandler consumer handling missing blocks
-	 * @param loaderCacheFactory the cache factory
-	 * @param accessFlags the access flag set
+	 * @param <T>
+	 *            the type
+	 * @param n5
+	 *            n5 reader
+	 * @param dataset
+	 *            the dataset path
+	 * @param blockNotFoundHandler
+	 *            consumer handling missing blocks
+	 * @param loaderCacheFactory
+	 *            the cache factory
+	 * @param accessFlags
+	 *            the access flag set
 	 * @return the image
 	 */
 	@SuppressWarnings({"unchecked", "rawtypes"})
@@ -681,14 +771,22 @@ public class N5Utils {
 	/**
 	 * Open an N5 dataset as a memory cached {@link LazyCellImg}.
 	 *
-	 * @param <T> the voxel type
-	 * @param <A> the access type
-	 * @param n5 n5 reader
-	 * @param dataset the dataset path
-	 * @param blockNotFoundHandler consumer handling missing blocks
-	 * @param loaderCache the cache
-	 * @param accessFlags the access flag set
-	 * @param type the type
+	 * @param <T>
+	 *            the voxel type
+	 * @param <A>
+	 *            the access type
+	 * @param n5
+	 *            n5 reader
+	 * @param dataset
+	 *            the dataset path
+	 * @param blockNotFoundHandler
+	 *            consumer handling missing blocks
+	 * @param loaderCache
+	 *            the cache
+	 * @param accessFlags
+	 *            the access flag set
+	 * @param type
+	 *            the type
 	 * @return the image
 	 */
 	@SuppressWarnings({"unchecked", "rawtypes"})
@@ -714,10 +812,14 @@ public class N5Utils {
 	 * Open an N5 dataset as a memory cached {@link LazyCellImg} using
 	 * {@link VolatileAccess}.
 	 *
-	 * @param <T> the type
-	 * @param n5 n5 reader
-	 * @param dataset the dataset path
-	 * @param blockNotFoundHandler consumer handling missing blocks
+	 * @param <T>
+	 *            the type
+	 * @param n5
+	 *            n5 reader
+	 * @param dataset
+	 *            the dataset path
+	 * @param blockNotFoundHandler
+	 *            consumer handling missing blocks
 	 * @return the image
 	 */
 	public static final <T extends NativeType<T>> CachedCellImg<T, ?> openVolatile(
@@ -732,11 +834,16 @@ public class N5Utils {
 	 * Open an N5 dataset as a memory cached {@link LazyCellImg} with a bound on
 	 * the number of cache entries using {@link VolatileAccess}.
 	 *
-	 * @param <T> the type
-	 * @param n5 n5 reader
-	 * @param dataset the dataset path
-	 * @param blockNotFoundHandler consumer handling missing blocks
-	 * @param maxNumCacheEntries the maximum number of cache entries
+	 * @param <T>
+	 *            the type
+	 * @param n5
+	 *            n5 reader
+	 * @param dataset
+	 *            the dataset path
+	 * @param blockNotFoundHandler
+	 *            consumer handling missing blocks
+	 * @param maxNumCacheEntries
+	 *            the maximum number of cache entries
 	 * @return the image
 	 */
 	public static <T extends NativeType<T>> CachedCellImg<T, ?> openVolatileWithBoundedSoftRefCache(
@@ -752,11 +859,16 @@ public class N5Utils {
 	 * Open an N5 mipmap (multi-scale) group as memory cached
 	 * {@link LazyCellImg}s, optionally backed by {@link VolatileAccess}.
 	 *
-	 * @param <T> the type parameter
-	 * @param n5 the exception
-	 * @param group the group path
-	 * @param useVolatileAccess uses volatile access if true
-	 * @param blockNotFoundHandlerSupplier supply a consumer handling missing blocks
+	 * @param <T>
+	 *            the type parameter
+	 * @param n5
+	 *            the exception
+	 * @param group
+	 *            the group path
+	 * @param useVolatileAccess
+	 *            uses volatile access if true
+	 * @param blockNotFoundHandlerSupplier
+	 *            supply a consumer handling missing blocks
 	 * @return the mipmap level images and their respective relative resolutions
 	 */
 	public static final <T extends NativeType<T>> Pair<RandomAccessibleInterval<T>[], double[][]> openMipmapsWithHandler(
@@ -801,11 +913,16 @@ public class N5Utils {
 	 * Open an N5 mipmap (multi-scale) group as memory cached
 	 * {@link LazyCellImg}s, optionally backed by {@link VolatileAccess}.
 	 *
-	 * @param <T> the type parameter
-	 * @param n5 n5 reader
-	 * @param group the group path
-	 * @param useVolatileAccess uses volatile access if true
-	 * @param defaultValueSupplier supplies a default value
+	 * @param <T>
+	 *            the type parameter
+	 * @param n5
+	 *            n5 reader
+	 * @param group
+	 *            the group path
+	 * @param useVolatileAccess
+	 *            uses volatile access if true
+	 * @param defaultValueSupplier
+	 *            supplies a default value
 	 * @return the mipmap level images and their respective relative resolutions
 	 */
 	public static final <T extends NativeType<T>> Pair<RandomAccessibleInterval<T>[], double[][]> openMipmaps(
@@ -827,10 +944,14 @@ public class N5Utils {
 	 * Open an N5 mipmap (multi-scale) group as memory cached
 	 * {@link LazyCellImg}s, optionally backed by {@link VolatileAccess}.
 	 *
-	 * @param <T> the type parameter
-	 * @param n5 n5 reader
-	 * @param group the group path
-	 * @param useVolatileAccess uses volatile access if true
+	 * @param <T>
+	 *            the type parameter
+	 * @param n5
+	 *            n5 reader
+	 * @param group
+	 *            the group path
+	 * @param useVolatileAccess
+	 *            uses volatile access if true
 	 * @return the mipmap level images and their respective relative resolutions
 	 */
 	public static final <T extends NativeType<T>> Pair<RandomAccessibleInterval<T>[], double[][]> openMipmaps(
@@ -850,10 +971,14 @@ public class N5Utils {
 	 * requires that al part of the the N5 dataset that will be accessed fit
 	 * into /tmp.
 	 *
-	 * @param <T> the type parameter
-	 * @param n5 n5 reader
-	 * @param dataset the dataset path
-	 * @param blockNotFoundHandler consumer handling missing blocks
+	 * @param <T>
+	 *            the type parameter
+	 * @param n5
+	 *            n5 reader
+	 * @param dataset
+	 *            the dataset path
+	 * @param blockNotFoundHandler
+	 *            consumer handling missing blocks
 	 * @return the image
 	 */
 	public static final <T extends NativeType<T>> CachedCellImg<T, ?> openWithDiskCache(
@@ -886,12 +1011,18 @@ public class N5Utils {
 	 * source is assumed to align with the {@link DataBlock} grid of the
 	 * dataset.
 	 *
-	 * @param <T> the type parameter
-	 * @param source the source image
-	 * @param n5 the n5 writer
-	 * @param dataset the dataset path
-	 * @param attributes the dataset attributes
-	 * @param gridOffset the offset of the source in the larger dataset
+	 * @param <T>
+	 *            the type parameter
+	 * @param source
+	 *            the source image
+	 * @param n5
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset path
+	 * @param attributes
+	 *            the dataset attributes
+	 * @param gridOffset
+	 *            the offset of the source in the larger dataset
 	 */
 	public static final <T extends NativeType<T>> void saveBlock(
 			RandomAccessibleInterval<T> source,
@@ -949,11 +1080,16 @@ public class N5Utils {
 	 * offset is determined by the source position, and the source is assumed to
 	 * align with the {@link DataBlock} grid of the dataset.
 	 *
-	 * @param <T> the type parameter
-	 * @param source the source image
-	 * @param n5 the n5 writer
-	 * @param dataset the dataset path
-	 * @param attributes the dataset attributes
+	 * @param <T>
+	 *            the type parameter
+	 * @param source
+	 *            the source image
+	 * @param n5
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset path
+	 * @param attributes
+	 *            the dataset attributes
 	 */
 	public static final <T extends NativeType<T>> void saveBlock(
 			final RandomAccessibleInterval<T> source,
@@ -972,10 +1108,14 @@ public class N5Utils {
 	 * offset is determined by the source position, and the source is assumed to
 	 * align with the {@link DataBlock} grid of the dataset.
 	 *
-	 * @param <T> the type parameter
-	 * @param source the image to write
-	 * @param n5 the n5 writer
-	 * @param dataset the dataset path
+	 * @param <T>
+	 *            the type parameter
+	 * @param source
+	 *            the image to write
+	 * @param n5
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset path
 	 */
 	public static final <T extends NativeType<T>> void saveBlock(
 			final RandomAccessibleInterval<T> source,
@@ -996,11 +1136,16 @@ public class N5Utils {
 	 * source is assumed to align with the {@link DataBlock} grid of the
 	 * dataset.
 	 *
-	 * @param <T> the type parameter
-	 * @param source the source block
-	 * @param n5 the n5 writer
-	 * @param dataset the dataset path
-	 * @param gridOffset the position in the block grid
+	 * @param <T>
+	 *            the type parameter
+	 * @param source
+	 *            the source block
+	 * @param n5
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset path
+	 * @param gridOffset
+	 *            the position in the block grid
 	 */
 	public static final <T extends NativeType<T>> void saveBlock(
 			final RandomAccessibleInterval<T> source,
@@ -1019,14 +1164,22 @@ public class N5Utils {
 	/**
 	 * Save a {@link RandomAccessibleInterval} as an N5 dataset, multi-threaded.
 	 *
-	 * @param <T> the type parameter
-	 * @param source the source block
-	 * @param n5 the n5 writer
-	 * @param dataset the dataset path
-	 * @param gridOffset the position in the block grid
-	 * @param exec the executor service
-	 * @throws InterruptedException the interrupted exception
-	 * @throws ExecutionException the execution exception
+	 * @param <T>
+	 *            the type parameter
+	 * @param source
+	 *            the source block
+	 * @param n5
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset path
+	 * @param gridOffset
+	 *            the position in the block grid
+	 * @param exec
+	 *            the executor service
+	 * @throws InterruptedException
+	 *             the interrupted exception
+	 * @throws ExecutionException
+	 *             the execution exception
 	 */
 	public static final <T extends NativeType<T>> void saveBlock(
 			final RandomAccessibleInterval<T> source,
@@ -1106,13 +1259,20 @@ public class N5Utils {
 	 * dataset. Only {@link DataBlock DataBlocks} that contain values other than
 	 * a given default value are stored.
 	 *
-	 * @param <T> the type parameter
-	 * @param source the source block
-	 * @param n5 the n5 writer
-	 * @param dataset the dataset path
-	 * @param attributes the dataset attributes
-	 * @param gridOffset the position in the block grid
-	 * @param defaultValue the default value
+	 * @param <T>
+	 *            the type parameter
+	 * @param source
+	 *            the source block
+	 * @param n5
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset path
+	 * @param attributes
+	 *            the dataset attributes
+	 * @param gridOffset
+	 *            the position in the block grid
+	 * @param defaultValue
+	 *            the default value
 	 */
 	public static final <T extends NativeType<T>> void saveNonEmptyBlock(
 			RandomAccessibleInterval<T> source,
@@ -1168,12 +1328,18 @@ public class N5Utils {
 	 * {@link DataBlock DataBlocks} that contain values other than a given
 	 * default value are stored.
 	 *
-	 * @param <T> the type parameter
-	 * @param source the source block
-	 * @param n5 the n5 writer
-	 * @param dataset the dataset path
-	 * @param attributes the dataset attributes
-	 * @param defaultValue the default value
+	 * @param <T>
+	 *            the type parameter
+	 * @param source
+	 *            the source block
+	 * @param n5
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset path
+	 * @param attributes
+	 *            the dataset attributes
+	 * @param defaultValue
+	 *            the default value
 	 */
 	public static final <T extends NativeType<T>> void saveNonEmptyBlock(
 			final RandomAccessibleInterval<T> source,
@@ -1195,11 +1361,16 @@ public class N5Utils {
 	 * {@link DataBlock DataBlocks} that contain values other than a given
 	 * default value are stored.
 	 *
-	 * @param <T> the type parameter
-	 * @param source the source block
-	 * @param n5 the n5 writer
-	 * @param dataset the dataset path
-	 * @param defaultValue the default value
+	 * @param <T>
+	 *            the type parameter
+	 * @param source
+	 *            the source block
+	 * @param n5
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset path
+	 * @param defaultValue
+	 *            the default value
 	 */
 	public static final <T extends NativeType<T>> void saveNonEmptyBlock(
 			final RandomAccessibleInterval<T> source,
@@ -1222,12 +1393,18 @@ public class N5Utils {
 	 * dataset. Only {@link DataBlock DataBlocks} that contain values other than
 	 * a given default value are stored.
 	 *
-	 * @param <T> the type parameter
-	 * @param source the source block
-	 * @param n5 the n5 writer
-	 * @param dataset the dataset path
-	 * @param gridOffset the position in the block grid
-	 * @param defaultValue the default value
+	 * @param <T>
+	 *            the type parameter
+	 * @param source
+	 *            the source block
+	 * @param n5
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset path
+	 * @param gridOffset
+	 *            the position in the block grid
+	 * @param defaultValue
+	 *            the default value
 	 */
 	public static final <T extends NativeType<T>> void saveNonEmptyBlock(
 			final RandomAccessibleInterval<T> source,
@@ -1247,12 +1424,18 @@ public class N5Utils {
 	/**
 	 * Save a {@link RandomAccessibleInterval} as an N5 dataset.
 	 *
-	 * @param <T> the type parameter
-	 * @param source the source image
-	 * @param n5 the n5 writer
-	 * @param dataset the dataset path
-	 * @param blockSize the block size
-	 * @param compression the compression type
+	 * @param <T>
+	 *            the type parameter
+	 * @param source
+	 *            the source image
+	 * @param n5
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset path
+	 * @param blockSize
+	 *            the block size
+	 * @param compression
+	 *            the compression type
 	 */
 	public static final <T extends NativeType<T>> void save(
 			RandomAccessibleInterval<T> source,
@@ -1309,15 +1492,24 @@ public class N5Utils {
 	/**
 	 * Save a {@link RandomAccessibleInterval} as an N5 dataset, multi-threaded.
 	 *
-	 * @param <T> the type parameter
-	 * @param source the image to write
-	 * @param n5 the n5 writer
-	 * @param dataset the dataset path
-	 * @param blockSize the block size
-	 * @param compression the compression type
-	 * @param exec executor for parallel writing
-	 * @throws InterruptedException the interrupted exception
-	 * @throws ExecutionException the execution exception
+	 * @param <T>
+	 *            the type parameter
+	 * @param source
+	 *            the image to write
+	 * @param n5
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset path
+	 * @param blockSize
+	 *            the block size
+	 * @param compression
+	 *            the compression type
+	 * @param exec
+	 *            executor for parallel writing
+	 * @throws InterruptedException
+	 *             the interrupted exception
+	 * @throws ExecutionException
+	 *             the execution exception
 	 */
 	public static final <T extends NativeType<T>> void save(
 			final RandomAccessibleInterval<T> source,
@@ -1393,229 +1585,244 @@ public class N5Utils {
 	}
 
 	/**
-	 * Write an image into an existing n5 dataset, padding the dataset if necessary.
-	 * The min and max values of the input source interval define the subset of the
-	 * dataset to be written.
+	 * Write an image into an existing n5 dataset, padding the dataset if
+	 * necessary. The min and max values of the input source interval define the
+	 * subset of the dataset to be written.
 	 *
-	 * Warning! Avoid calling this method in parallel for multiple sources that have
-	 * blocks in common. This risks invalid or corrupting data blocks.
+	 * Warning! Avoid calling this method in parallel for multiple sources that
+	 * have blocks in common. This risks invalid or corrupting data blocks.
 	 *
-	 * @param <T> the type parameter
-	 * @param source the source image to write
-	 * @param n5 the n5 writer
-	 * @param dataset the dataset
-	 * @throws ExecutionException the execution exception
-	 * @throws InterruptedException the interrupted exception
+	 * @param <T>
+	 *            the type parameter
+	 * @param source
+	 *            the source image to write
+	 * @param n5
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset
+	 * @throws ExecutionException
+	 *             the execution exception
+	 * @throws InterruptedException
+	 *             the interrupted exception
 	 */
 	public static <T extends NativeType<T>> void saveRegion(
 			final RandomAccessibleInterval<T> source,
 			final N5Writer n5,
-			final String dataset ) throws InterruptedException, ExecutionException
-	{
-		saveRegion( source, n5, dataset, n5.getDatasetAttributes( dataset ) );
+			final String dataset) throws InterruptedException, ExecutionException {
+
+		saveRegion(source, n5, dataset, n5.getDatasetAttributes(dataset));
 	}
 
 	/**
-	 * Write an image into an existing n5 dataset, padding the dataset if necessary.
-	 * The min and max values of the input source interval define the subset of the
-	 * dataset to be written. Blocks of the output at written in parallel using the given
-	 * {@link ExecutorService}.
+	 * Write an image into an existing n5 dataset, padding the dataset if
+	 * necessary. The min and max values of the input source interval define the
+	 * subset of the dataset to be written. Blocks of the output at written in
+	 * parallel using the given {@link ExecutorService}.
 	 *
-	 * Warning! Avoid calling this method in parallel for multiple sources that have
-	 * blocks in common. This risks invalid or corrupting data blocks.
+	 * Warning! Avoid calling this method in parallel for multiple sources that
+	 * have blocks in common. This risks invalid or corrupting data blocks.
 	 *
-	 * @param <T> the type parameter
-	 * @param source the source image to write
-	 * @param n5 the n5 writer
-	 * @param dataset the dataset
-	 * @param exec executor service
-	 * @throws ExecutionException the execution exception
-	 * @throws InterruptedException the interrupted exception
+	 * @param <T>
+	 *            the type parameter
+	 * @param source
+	 *            the source image to write
+	 * @param n5
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset
+	 * @param exec
+	 *            executor service
+	 * @throws ExecutionException
+	 *             the execution exception
+	 * @throws InterruptedException
+	 *             the interrupted exception
 	 */
 	public static <T extends NativeType<T>> void saveRegion(
 			final RandomAccessibleInterval<T> source,
 			final N5Writer n5,
 			final String dataset,
-			final ExecutorService exec ) throws InterruptedException, ExecutionException
-	{
-		saveRegion( source, n5, dataset, n5.getDatasetAttributes( dataset ), exec );
+			final ExecutorService exec) throws InterruptedException, ExecutionException {
+
+		saveRegion(source, n5, dataset, n5.getDatasetAttributes(dataset), exec);
 	}
 
 	/**
-	 * Write an image into an existing n5 dataset, padding the dataset if necessary.
-	 * The min and max values of the input source interval define the subset of the
-	 * dataset to be written.
+	 * Write an image into an existing n5 dataset, padding the dataset if
+	 * necessary. The min and max values of the input source interval define the
+	 * subset of the dataset to be written.
 	 *
-	 * Warning! Avoid calling this method in parallel for multiple sources that have
-	 * blocks in common. This risks invalid or corrupting data blocks.
+	 * Warning! Avoid calling this method in parallel for multiple sources that
+	 * have blocks in common. This risks invalid or corrupting data blocks.
 	 *
-	 * @param <T> the type parameter
-	 * @param source the source image to write
-	 * @param n5 the n5 writer
-	 * @param dataset the dataset
-	 * @param attributes dataset attributes
-	 * @throws ExecutionException the execution exception
-	 * @throws InterruptedException the interrupted exception
+	 * @param <T>
+	 *            the type parameter
+	 * @param source
+	 *            the source image to write
+	 * @param n5
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset
+	 * @param attributes
+	 *            dataset attributes
+	 * @throws ExecutionException
+	 *             the execution exception
+	 * @throws InterruptedException
+	 *             the interrupted exception
 	 */
 	public static <T extends NativeType<T>> void saveRegion(
 			final RandomAccessibleInterval<T> source,
 			final N5Writer n5,
 			final String dataset,
-			final DatasetAttributes attributes ) throws InterruptedException, ExecutionException
-	{
-		final Optional< long[] > newDimensionsOpt = saveRegionPreprocessing( source, attributes );
+			final DatasetAttributes attributes) throws InterruptedException, ExecutionException {
+
+		final Optional<long[]> newDimensionsOpt = saveRegionPreprocessing(source, attributes);
 
 		final long[] dimensions;
-		if( newDimensionsOpt.isPresent() )
-		{
-			n5.setAttribute( dataset, "dimensions", newDimensionsOpt.get() );
+		if (newDimensionsOpt.isPresent()) {
+			n5.setAttribute(dataset, "dimensions", newDimensionsOpt.get());
 			dimensions = newDimensionsOpt.get();
-		}
-		else
-		{
+		} else {
 			dimensions = attributes.getDimensions();
 		}
 
 		final int n = source.numDimensions();
 		final int[] blockSize = attributes.getBlockSize();
 
-		final Img< T > currentImg = open( n5, dataset );
+		final Img<T> currentImg = open(n5, dataset);
 
-		final long[] gridOffset = new long[ n ];
-		final long[] gridMin = new long[ n ];
-		final long[] gridMax = new long[ n ];
-		final long[] imgMin = new long[ n ];
-		final long[] imgMax = new long[ n ];
+		final long[] gridOffset = new long[n];
+		final long[] gridMin = new long[n];
+		final long[] gridMax = new long[n];
+		final long[] imgMin = new long[n];
+		final long[] imgMax = new long[n];
 
 		// find the grid positions bounding the source image to save
-		for (int d = 0; d < n; d++ )
-		{
-			gridMin[ d ] = Math.floorDiv( source.min( d ), blockSize[ d ] );
-			gridMax[ d ] = Math.floorDiv( source.max( d ), blockSize[ d ] );
+		for (int d = 0; d < n; d++) {
+			gridMin[d] = Math.floorDiv(source.min(d), blockSize[d]);
+			gridMax[d] = Math.floorDiv(source.max(d), blockSize[d]);
 		}
 
 		// iterate over those blocks
-		final IntervalIterator it = new IntervalIterator( gridMin, gridMax );
-		while( it.hasNext())
-		{
+		final IntervalIterator it = new IntervalIterator(gridMin, gridMax);
+		while (it.hasNext()) {
 			it.fwd();
-			it.localize( gridOffset );
+			it.localize(gridOffset);
 
-			for( int d = 0; d < n; d++ )
-			{
-				imgMin[ d ] = gridOffset[ d ] * blockSize[ d ];
-				imgMax[ d ] = Math.min( imgMin[ d ] + blockSize[ d ] - 1,
-						dimensions[ d ] - 1 );
+			for (int d = 0; d < n; d++) {
+				imgMin[d] = gridOffset[d] * blockSize[d];
+				imgMax[d] = Math.min(imgMin[d] + blockSize[d] - 1,
+						dimensions[d] - 1);
 			}
 
-			//  save the block
-			final IntervalView< T > currentBlock = Views.interval( currentImg, imgMin, imgMax );
-			final FinalInterval intersection = Intervals.intersect( currentBlock, source );
+			// save the block
+			final IntervalView<T> currentBlock = Views.interval(currentImg, imgMin, imgMax);
+			final FinalInterval intersection = Intervals.intersect(currentBlock, source);
 
-			final IntervalView< T > srcInt = Views.interval( source, intersection );
-			final IntervalView< T > blkInt = Views.interval( currentImg, intersection );
+			final IntervalView<T> srcInt = Views.interval(source, intersection);
+			final IntervalView<T> blkInt = Views.interval(currentImg, intersection);
 
 			// copy into the part of the block
-			LoopBuilder.setImages( srcInt, blkInt ).forEachPixel( (x,y) -> y.set( x ) );
+			LoopBuilder.setImages(srcInt, blkInt).forEachPixel((x, y) -> y.set(x));
 
-			N5Utils.saveBlock( currentBlock, n5, dataset, gridOffset );
+			N5Utils.saveBlock(currentBlock, n5, dataset, gridOffset);
 		}
 	}
 
 	/**
-	 * Write an image into an existing n5 dataset, padding the dataset if necessary.
-	 * The min and max values of the input source interval define the subset of the
-	 * dataset to be written. Blocks of the output at written in parallel using the given
-	 * {@link ExecutorService}.
+	 * Write an image into an existing n5 dataset, padding the dataset if
+	 * necessary. The min and max values of the input source interval define the
+	 * subset of the dataset to be written. Blocks of the output at written in
+	 * parallel using the given {@link ExecutorService}.
 	 *
-	 * Warning! Avoid calling this method in parallel for multiple sources that have
-	 * blocks in common. This risks invalid or corrupting data blocks.
+	 * Warning! Avoid calling this method in parallel for multiple sources that
+	 * have blocks in common. This risks invalid or corrupting data blocks.
 	 *
-	 * @param <T> the type parameter
-	 * @param source the source image to write
-	 * @param n5 the n5 writer
-	 * @param dataset the dataset
-	 * @param attributes dataset attributes
-	 * @param exec the executor
-	 * @throws ExecutionException the execution exception
-	 * @throws InterruptedException the interrupted exception
-     *
+	 * @param <T>
+	 *            the type parameter
+	 * @param source
+	 *            the source image to write
+	 * @param n5
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset
+	 * @param attributes
+	 *            dataset attributes
+	 * @param exec
+	 *            the executor
+	 * @throws ExecutionException
+	 *             the execution exception
+	 * @throws InterruptedException
+	 *             the interrupted exception
+	 *
 	 */
 	public static <T extends NativeType<T>> void saveRegion(
 			final RandomAccessibleInterval<T> source,
 			final N5Writer n5,
 			final String dataset,
 			final DatasetAttributes attributes,
-			final ExecutorService exec ) throws InterruptedException, ExecutionException
-	{
-		final Optional< long[] > newDimensionsOpt = saveRegionPreprocessing( source, attributes );
+			final ExecutorService exec) throws InterruptedException, ExecutionException {
+
+		final Optional<long[]> newDimensionsOpt = saveRegionPreprocessing(source, attributes);
 
 		final long[] dimensions;
-		if( newDimensionsOpt.isPresent() )
-		{
-			n5.setAttribute( dataset, "dimensions", newDimensionsOpt.get() );
+		if (newDimensionsOpt.isPresent()) {
+			n5.setAttribute(dataset, "dimensions", newDimensionsOpt.get());
 			dimensions = newDimensionsOpt.get();
-		}
-		else
-		{
+		} else {
 			dimensions = attributes.getDimensions();
 		}
 
 		final int n = source.numDimensions();
 		final int[] blockSize = attributes.getBlockSize();
 
-		final Img< T > currentImg = open( n5, dataset );
+		final Img<T> currentImg = open(n5, dataset);
 
-		final long[] gridOffset = new long[ n ];
-		final long[] gridMin = new long[ n ];
-		final long[] gridMax = new long[ n ];
-		final long[] imgMin = new long[ n ];
-		final long[] imgMax = new long[ n ];
+		final long[] gridOffset = new long[n];
+		final long[] gridMin = new long[n];
+		final long[] gridMax = new long[n];
+		final long[] imgMin = new long[n];
+		final long[] imgMax = new long[n];
 
 		// find the grid positions bounding the source image to save
-		for (int d = 0; d < n; d++ )
-		{
-			gridMin[ d ] = Math.floorDiv( source.min( d ), blockSize[ d ] );
-			gridMax[ d ] = Math.floorDiv( source.max( d ), blockSize[ d ] );
+		for (int d = 0; d < n; d++) {
+			gridMin[d] = Math.floorDiv(source.min(d), blockSize[d]);
+			gridMax[d] = Math.floorDiv(source.max(d), blockSize[d]);
 		}
 
 		// iterate over those blocks
 		final ArrayList<Future<?>> futures = new ArrayList<>();
-		final IntervalIterator it = new IntervalIterator( gridMin, gridMax );
-		while( it.hasNext() )
-		{
+		final IntervalIterator it = new IntervalIterator(gridMin, gridMax);
+		while (it.hasNext()) {
 			it.fwd();
-			it.localize( gridOffset );
+			it.localize(gridOffset);
 
-			for( int d = 0; d < n; d++ )
-			{
-				imgMin[ d ] = gridOffset[ d ] * blockSize[ d ];
-				imgMax[ d ] = Math.min(
-						imgMin[ d ] + blockSize[ d ] - 1,
-						dimensions[ d ] - 1 );
+			for (int d = 0; d < n; d++) {
+				imgMin[d] = gridOffset[d] * blockSize[d];
+				imgMax[d] = Math.min(
+						imgMin[d] + blockSize[d] - 1,
+						dimensions[d] - 1);
 			}
 
-			final long[] imgMinCopy = new long[ n ];
-			final long[] imgMaxCopy = new long[ n ];
-			final long[] gridOffsetCopy = new long[ n ];
+			final long[] imgMinCopy = new long[n];
+			final long[] imgMaxCopy = new long[n];
+			final long[] gridOffsetCopy = new long[n];
 
-			System.arraycopy( imgMin, 0, imgMinCopy, 0, n );
-			System.arraycopy( imgMax, 0, imgMaxCopy, 0, n );
-			System.arraycopy( gridOffset, 0, gridOffsetCopy, 0, n );
+			System.arraycopy(imgMin, 0, imgMinCopy, 0, n);
+			System.arraycopy(imgMax, 0, imgMaxCopy, 0, n);
+			System.arraycopy(gridOffset, 0, gridOffsetCopy, 0, n);
 
-			futures.add( exec.submit( () ->
-			{
-				//  save the block
-				final IntervalView< T > currentBlock = Views.interval( currentImg, imgMinCopy, imgMaxCopy );
-				final FinalInterval intersection = Intervals.intersect( currentBlock, source );
+			futures.add(exec.submit(() -> {
+				// save the block
+				final IntervalView<T> currentBlock = Views.interval(currentImg, imgMinCopy, imgMaxCopy);
+				final FinalInterval intersection = Intervals.intersect(currentBlock, source);
 
-				final IntervalView< T > srcInt = Views.interval( source, intersection );
-				final IntervalView< T > blkInt = Views.interval( currentImg, intersection );
+				final IntervalView<T> srcInt = Views.interval(source, intersection);
+				final IntervalView<T> blkInt = Views.interval(currentImg, intersection);
 
 				// copy into the part of the block
-				LoopBuilder.setImages( srcInt, blkInt ).forEachPixel( (x,y) -> y.set( x ) );
-				N5Utils.saveBlock( currentBlock, n5, dataset, gridOffsetCopy );
-			} ));
+				LoopBuilder.setImages(srcInt, blkInt).forEachPixel((x, y) -> y.set(x));
+				N5Utils.saveBlock(currentBlock, n5, dataset, gridOffsetCopy);
+			}));
 		}
 
 		for (final Future<?> f : futures)
@@ -1625,64 +1832,61 @@ public class N5Utils {
 	/**
 	 * Performs checks, and determine if padding is necessary.
 	 *
-	 * @param <T> the type parameter
-	 * @param source the source image to write
-	 * @param attributes n5 dataset attributes
-	 * @return new dataset dimensions if padding necessary, empty optional otherwise
+	 * @param <T>
+	 *            the type parameter
+	 * @param source
+	 *            the source image to write
+	 * @param attributes
+	 *            n5 dataset attributes
+	 * @return new dataset dimensions if padding necessary, empty optional
+	 *         otherwise
 	 */
-	private static <T extends NativeType<T>>  Optional< long[] > saveRegionPreprocessing(
+	private static <T extends NativeType<T>> Optional<long[]> saveRegionPreprocessing(
 			final RandomAccessibleInterval<T> source,
-			final DatasetAttributes attributes)
-	{
+			final DatasetAttributes attributes) {
+
 		final DataType dtype = attributes.getDataType();
 		final long[] currentDimensions = attributes.getDimensions();
 		final int n = currentDimensions.length;
 
 		// ensure source has the correct dimensionality
-		if( source.numDimensions() != n )
-		{
+		if (source.numDimensions() != n) {
 			throw new ImgLibException(
-					String.format( "Image dimensions (%d) does not match n5 dataset dimensionalidy (%d)",
-							source.numDimensions(), n ));
+					String.format("Image dimensions (%d) does not match n5 dataset dimensionalidy (%d)",
+							source.numDimensions(), n));
 		}
 
 		// ensure type of passed image matches the existing dataset
-		final DataType srcType = N5Utils.dataType( Util.getTypeFromInterval( source ));
-		if( srcType != dtype )
-		{
+		final DataType srcType = N5Utils.dataType(Util.getTypeFromInterval(source));
+		if (srcType != dtype) {
 			throw new ImgLibException(
-					String.format( "Image type (%s) does not match n5 dataset type (%s)",
-							srcType, dtype ));
+					String.format("Image type (%s) does not match n5 dataset type (%s)",
+							srcType, dtype));
 		}
 
 		// check if the volume needs padding
 		// and that the source min is >= 0
 		boolean needsPadding = false;
-		final long[] newDimensions = new long[ n ];
+		final long[] newDimensions = new long[n];
 
 		// set newDimensions to current dimensions
-		for( int d = 0; d < n; d++ )
-		{
-			if( source.min( d ) < 0 )
-			{
+		for (int d = 0; d < n; d++) {
+			if (source.min(d) < 0) {
 				throw new ImgLibException(
-						String.format( "Source interval must ",
-								source.min( d ), d ));
+						String.format("Source interval must ",
+								source.min(d), d));
 			}
 
-			if( source.max( d ) + 1 > currentDimensions[ d ] )
-			{
-				newDimensions[ d ] = source.max( d ) + 1;
+			if (source.max(d) + 1 > currentDimensions[d]) {
+				newDimensions[d] = source.max(d) + 1;
 				needsPadding = true;
-			}
-			else
-			{
-				newDimensions[ d ] = currentDimensions[ d ];
+			} else {
+				newDimensions[d] = currentDimensions[d];
 			}
 		}
 
-		if( needsPadding )
-			return Optional.of( newDimensions );
+		if (needsPadding)
+			return Optional.of(newDimensions);
 		else
 			return Optional.empty();
 	}
@@ -1692,11 +1896,16 @@ public class N5Utils {
 	 * is given in {@link DataBlock} grid coordinates and the interval is
 	 * assumed to align with the {@link DataBlock} grid of the dataset.
 	 *
-	 * @param interval the interval
-	 * @param n5 the n5 writer
-	 * @param dataset the dataset path
-	 * @param attributes dataset attributes
-	 * @param gridOffset the position in the block grid
+	 * @param interval
+	 *            the interval
+	 * @param n5
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset path
+	 * @param attributes
+	 *            dataset attributes
+	 * @param gridOffset
+	 *            the position in the block grid
 	 */
 	public static final void deleteBlock(
 			final Interval interval,
@@ -1738,10 +1947,14 @@ public class N5Utils {
 	 * determined by the interval position, and the interval is assumed to align
 	 * with the {@link DataBlock} grid of the dataset.
 	 *
-	 * @param interval the interval
-	 * @param n5 the n5 writer
-	 * @param dataset the dataset path
-	 * @param attributes dataset attributes
+	 * @param interval
+	 *            the interval
+	 * @param n5
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset path
+	 * @param attributes
+	 *            dataset attributes
 	 */
 	public static final void deleteBlock(
 			final Interval interval,
@@ -1760,9 +1973,12 @@ public class N5Utils {
 	 * determined by the interval position, and the interval is assumed to align
 	 * with the {@link DataBlock} grid of the dataset.
 	 *
-	 * @param interval the interval
-	 * @param n5 the n5 writer
-	 * @param dataset the dataset path
+	 * @param interval
+	 *            the interval
+	 * @param n5
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset path
 	 */
 	public static final void deleteBlock(
 			final Interval interval,
@@ -1782,10 +1998,14 @@ public class N5Utils {
 	 * is given in {@link DataBlock} grid coordinates and the interval is
 	 * assumed to align with the {@link DataBlock} grid of the dataset.
 	 *
-	 * @param interval the interval
-	 * @param n5 the n5 writer
-	 * @param dataset the dataset path
-	 * @param gridOffset the position in the block grid
+	 * @param interval
+	 *            the interval
+	 * @param n5
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset path
+	 * @param gridOffset
+	 *            the position in the block grid
 	 */
 	public static final void deleteBlock(
 			final Interval interval,
