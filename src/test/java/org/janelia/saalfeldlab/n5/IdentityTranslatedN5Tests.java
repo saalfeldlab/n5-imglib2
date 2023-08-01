@@ -3,6 +3,7 @@ package org.janelia.saalfeldlab.n5;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -14,10 +15,17 @@ import com.google.gson.reflect.TypeToken;
 
 public class IdentityTranslatedN5Tests extends AbstractN5Test {
 	
-	static private String testDirPath = System.getProperty("user.home") + "/tmp/idTranslatedTest.n5";
+	private static String testDirPath = createTestDirPath("n5-imglib2-test");
 
+	private static String createTestDirPath(String dirName) {
+		try {
+			return Files.createTempDirectory(dirName).toString();
+		} catch (IOException exc) {
+			return System.getProperty("user.home") + "/tmp/" + dirName;
+		}
+	}
 	protected N5Writer createN5Writer() throws IOException {
-		final N5FSWriter n5Base = new N5FSWriter( testDirPath );
+		final N5FSWriter n5Base = new N5FSWriter( testDirPath + "/idTranslatedTest.n5" );
 		final TranslatedN5Writer n5 = new TranslatedN5Writer(n5Base, n5Base.getGson(), ".", "." );	
 		return n5;
 	}

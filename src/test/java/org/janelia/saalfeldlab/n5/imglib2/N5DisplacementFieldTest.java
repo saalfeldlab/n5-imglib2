@@ -3,6 +3,8 @@ package org.janelia.saalfeldlab.n5.imglib2;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Random;
 
 import org.janelia.saalfeldlab.n5.GzipCompression;
@@ -25,7 +27,15 @@ import net.imglib2.view.composite.RealComposite;
 
 public class N5DisplacementFieldTest
 {
-	static private String testDirPath = System.getProperty("user.home") + "/tmp/n5-imglib2-test";
+	private static String testDirPath = createTestDirPath("n5-imglib2-test");
+
+	private static String createTestDirPath(String dirName) {
+		try {
+			return Files.createTempDirectory(dirName).toString();
+		} catch (IOException exc) {
+			return System.getProperty("user.home") + "/tmp/" + dirName;
+		}
+	}
 
 	@Test
 	public void testDfieldSaveLoad()

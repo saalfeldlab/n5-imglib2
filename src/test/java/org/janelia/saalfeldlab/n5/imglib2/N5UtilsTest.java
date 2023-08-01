@@ -31,6 +31,7 @@ import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
@@ -71,7 +72,15 @@ import net.imglib2.view.Views;
 
 public class N5UtilsTest {
 
-	static private String testDirPath = System.getProperty("user.home") + "/tmp/n5-imglib2-test";
+	private static String testDirPath = createTestDirPath("n5-imglib2-test");
+
+	private static String createTestDirPath(String dirName) {
+		try {
+			return Files.createTempDirectory(dirName).toString();
+		} catch (IOException exc) {
+			return System.getProperty("user.home") + "/tmp/" + dirName;
+		}
+	}
 
 	static private String datasetName = "/test/group/dataset";
 
