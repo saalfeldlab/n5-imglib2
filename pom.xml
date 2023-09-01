@@ -146,7 +146,7 @@
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
 		<releaseProfiles>sign,deploy-to-scijava</releaseProfiles>
 
-		<n5.version>3.0.0</n5.version>
+		<n5.version>3.0.2</n5.version>
 
 		<bigdataviewer-core-test.version>10.4.6</bigdataviewer-core-test.version>
 		<bigdataviewer-vistools-test.version>1.0.0-beta-32</bigdataviewer-vistools-test.version>
