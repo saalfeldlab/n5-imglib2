@@ -10,6 +10,8 @@ def hasDims: .attributes | has("dimensions");
 
 def flattenTree: .. | select( type == "object" and has("path")) | del(.children);
 
+def cleanPath: . | sub("^\\.(?<x>.*)\\/.+"; "\(.x)"; "g");
+
 def parentPath: if length <= 1 then "" elif length == 2 then .[0] else .[0:-1] | map(select( . != "children")) | join("/") end;
 
 def attrPaths: paths | select(.[-1] == "attributes");
@@ -292,6 +294,11 @@ def getSubTree( $path ): getpath( $path | toTreePath );
 
 def moveSubTree( $srcPath; $dstPath ): getSubTree( $srcPath ) as $subTree | setpath( $dstPath | toTreePath; $subTree ) 
     | delpaths([$srcPath | toTreePath]);
+
+def treeAddAttrs( $path; $attrs ):
+    ($path | toTreePath | . + ["attributes"]) as $p |
+    getpath( $p ) as $currentAttrs |
+    setpath( $p; $currentAttrs + $attrs );
 
 def canonicalAxis( $type; $lbl; $unit ): {
     "type" : $type,
