@@ -290,6 +290,8 @@ def scaleTransform( $scales ): { "type" : "scale", "scale" : $scales };
 
 def toTreePath: ltrimstr( "/") | split("/") | map_values( ["children", . ] ) | flatten;
 
+def fromTreePath: if (length == 0) then "" else [.[range(1;length;2)]] | join("/") end;
+
 def getSubTree( $path ): getpath( $path | toTreePath );
 
 def moveSubTree( $srcPath; $dstPath ): getSubTree( $srcPath ) as $subTree | setpath( $dstPath | toTreePath; $subTree ) 
