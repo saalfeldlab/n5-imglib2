@@ -1,4 +1,4 @@
-def cleanPath: . | sub("^\\.(?<x>.*)\\/.+"; "\(.x)"; "g");
+def cleanPath($prefix): . | sub("^"+ $prefix + "/(?<x>\\w*)\/*\\.*.+" ; "\(.x)"; "g");
 
 def containsExactString($query): reduce .[] as $i (false; . or ($i == $query));
 
@@ -44,13 +44,13 @@ def zomAdd( $path; $attrs; $suffix ):
     getpath( $p ) as $currentAttrs |
     setpath( $p; $currentAttrs + $attrs );
 
-def zomAddFiles: 
-    reduce inputs as $i ({}; 
+def zomAddFiles($prefix):
+    reduce inputs as $i ({};
         input_filename as $f |
-        ($f | cleanPath) as $p |
+        ($f | cleanPath($prefix) as $p |
         if ($f | endswith(".zattrs")) then
-            zomAdd( ($p | cleanPath); $i; ["attributes"] )
+            zomAdd($p; $i; ["attributes"])
         else
-            zomAdd( ($p | cleanPath); $i; [] )
+            zomAdd($p; $i; [])
         end);
 
