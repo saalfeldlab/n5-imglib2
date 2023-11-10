@@ -39,6 +39,11 @@ def hasAttributes: type == "object" and has("attributes");
 
 def zomTreePath: ltrimstr( "/") | split("/") | map_values( ["members", . ] ) | flatten;
 
+def zomAddMissingAttrs: walk(
+    if type == "object" and has("members") and (has("attributes") | not) then 
+        . + {"attributes" : {}}
+    else .  end);
+
 def zomAdd( $path; $attrs; $suffix ):
     ($path | zomTreePath | . + $suffix) as $p |
     getpath( $p ) as $currentAttrs |
@@ -47,10 +52,11 @@ def zomAdd( $path; $attrs; $suffix ):
 def zomAddFiles($prefix):
     reduce inputs as $i ({};
         input_filename as $f |
-        ($f | cleanPath($prefix) as $p |
+        ($f | cleanPath($prefix)) as $p |
         if ($f | endswith(".zattrs")) then
             zomAdd($p; $i; ["attributes"])
         else
             zomAdd($p; $i; [])
-        end);
+        end) |
+   zomAddMissingAttrs;
 
