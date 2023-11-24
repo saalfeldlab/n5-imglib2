@@ -25,7 +25,7 @@ import net.imglib2.view.composite.RealComposite;
 
 public class N5DisplacementFieldTest {
 
-	static private String testDirPath = System.getProperty("user.home") + "/tmp/n5-imglib2-test";
+	static private final String testDirPath = System.getProperty("user.home") + "/tmp/n5-imglib2-test";
 
 	@Test
 	public void testDfieldSaveLoad() {
@@ -92,14 +92,12 @@ public class N5DisplacementFieldTest {
 		final Random r = new Random();
 		return new FunctionRealRandomAccessible<>(3,
 				(x, v) -> {
-					r.setSeed((long)Math.round(x.getDoublePosition(0) + sz[0] * x.getDoublePosition(1) + sz[0] * sz[1] * x.getDoublePosition(2)));
+					r.setSeed(Math.round(x.getDoublePosition(0) + sz[0] * x.getDoublePosition(1) + sz[0] * sz[1] * x.getDoublePosition(2)));
 					v.setPosition(r.nextDouble(), 0);
 					v.setPosition(r.nextDouble(), 1);
 					v.setPosition(r.nextDouble(), 2);
 				},
-				() -> {
-					return DoubleType.createVector(3);
-				});
+				() -> DoubleType.createVector(3));
 	}
 
 	// public static RealRandomAccessible< RealComposite< DoubleType > >

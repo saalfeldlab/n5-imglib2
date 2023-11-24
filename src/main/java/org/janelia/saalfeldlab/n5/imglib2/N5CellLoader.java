@@ -192,8 +192,8 @@ public class N5CellLoader<T extends NativeType<T>> implements CellLoader<T> {
 					final byte[] data = (byte[])b.getData();
 					@SuppressWarnings("unchecked")
 					final Cursor<? extends GenericByteType<?>> c = (Cursor<? extends GenericByteType<?>>)a.cursor();
-					for (int i = 0; i < data.length; ++i)
-						c.next().setByte(data[i]);
+					for (byte datum : data)
+						c.next().setByte(datum);
 				} else
 					copyIntersection(a, b, dataType);
 			};
@@ -204,8 +204,8 @@ public class N5CellLoader<T extends NativeType<T>> implements CellLoader<T> {
 					final short[] data = (short[])b.getData();
 					@SuppressWarnings("unchecked")
 					final Cursor<? extends GenericShortType<?>> c = (Cursor<? extends GenericShortType<?>>)a.cursor();
-					for (int i = 0; i < data.length; ++i)
-						c.next().setShort(data[i]);
+					for (short datum : data)
+						c.next().setShort(datum);
 				} else
 					copyIntersection(a, b, dataType);
 			};
@@ -216,8 +216,8 @@ public class N5CellLoader<T extends NativeType<T>> implements CellLoader<T> {
 					final int[] data = (int[])b.getData();
 					@SuppressWarnings("unchecked")
 					final Cursor<? extends GenericIntType<?>> c = (Cursor<? extends GenericIntType<?>>)a.cursor();
-					for (int i = 0; i < data.length; ++i)
-						c.next().setInt(data[i]);
+					for (int datum : data)
+						c.next().setInt(datum);
 				} else
 					copyIntersection(a, b, dataType);
 			};
@@ -228,8 +228,8 @@ public class N5CellLoader<T extends NativeType<T>> implements CellLoader<T> {
 					final long[] data = (long[])b.getData();
 					@SuppressWarnings("unchecked")
 					final Cursor<? extends GenericLongType<?>> c = (Cursor<? extends GenericLongType<?>>)a.cursor();
-					for (int i = 0; i < data.length; ++i)
-						c.next().setLong(data[i]);
+					for (long datum : data)
+						c.next().setLong(datum);
 				} else
 					copyIntersection(a, b, dataType);
 			};
@@ -239,8 +239,8 @@ public class N5CellLoader<T extends NativeType<T>> implements CellLoader<T> {
 					final float[] data = (float[])b.getData();
 					@SuppressWarnings("unchecked")
 					final Cursor<? extends FloatType> c = (Cursor<? extends FloatType>)a.cursor();
-					for (int i = 0; i < data.length; ++i)
-						c.next().set(data[i]);
+					for (float datum : data)
+						c.next().set(datum);
 				} else
 					copyIntersection(a, b, dataType);
 			};
@@ -250,8 +250,8 @@ public class N5CellLoader<T extends NativeType<T>> implements CellLoader<T> {
 					final double[] data = (double[])b.getData();
 					@SuppressWarnings("unchecked")
 					final Cursor<? extends DoubleType> c = (Cursor<? extends DoubleType>)a.cursor();
-					for (int i = 0; i < data.length; ++i)
-						c.next().set(data[i]);
+					for (double datum : data)
+						c.next().set(datum);
 				} else
 					copyIntersection(a, b, dataType);
 			};

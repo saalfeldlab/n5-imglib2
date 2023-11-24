@@ -12,7 +12,6 @@ public class InvertibleCoordinateMappingTest {
 		final int[] perm = new int[]{1, 2, 0};
 		final RealInvertibleComponentMappingTransform xfm = new RealInvertibleComponentMappingTransform(perm);
 
-		final double[] xOrig = new double[]{7, 5, 3};
 		final double[] x = new double[]{7, 5, 3};
 		final double[] y = new double[3];
 

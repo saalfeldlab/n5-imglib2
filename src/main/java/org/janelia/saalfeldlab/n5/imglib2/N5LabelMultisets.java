@@ -760,12 +760,10 @@ public class N5LabelMultisets {
 				Views.flatIterable(source),
 				(int)Intervals.numElements(source));
 
-		final ByteArrayDataBlock dataBlock = new ByteArrayDataBlock(
+		return new ByteArrayDataBlock(
 				Intervals.dimensionsAsIntArray(source),
 				gridPosition,
 				data);
-
-		return dataBlock;
 	}
 
 	/**
@@ -781,7 +779,7 @@ public class N5LabelMultisets {
 	 *            the default label
 	 * @return the data block
 	 */
-	private static final ByteArrayDataBlock createNonEmptyDataBlock(
+	private static ByteArrayDataBlock createNonEmptyDataBlock(
 			final RandomAccessibleInterval<LabelMultisetType> source,
 			final long[] gridPosition,
 			final long defaultLabelId) {

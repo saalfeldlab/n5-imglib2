@@ -56,7 +56,7 @@ public class N5DatasetViewerExample {
 		mainT(args);
 	}
 
-	public static final <T extends NativeType<T>> void mainT(final String... args) throws IOException {
+	public static final <T extends NativeType<T>> void mainT(final String... args) {
 
 		final N5Reader n5Reader = new N5FSReader(args[0]);
 		Bdv bdv = null;

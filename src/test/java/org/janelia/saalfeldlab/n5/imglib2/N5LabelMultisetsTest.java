@@ -57,13 +57,13 @@ import net.imglib2.view.Views;
 
 public class N5LabelMultisetsTest {
 
-	static private String testDirPath = System.getProperty("user.home") + "/tmp/n5-imglib2-test";
+	static private final String testDirPath = System.getProperty("user.home") + "/tmp/n5-imglib2-test";
 
-	static private String datasetName = "/test/group/dataset/label";
+	static private final String datasetName = "/test/group/dataset/label";
 
-	static private long[] dimensions = new long[]{11, 22, 33};
+	static private final long[] dimensions = new long[]{11, 22, 33};
 
-	static private int[] blockSize = new int[]{5, 7, 9};
+	static private final int[] blockSize = new int[]{5, 7, 9};
 
 	static private RandomAccessibleInterval<LabelMultisetType> expectedImg;
 
@@ -94,7 +94,7 @@ public class N5LabelMultisetsTest {
 	}
 
 	@AfterClass
-	public static void rampDownAfterClass() throws Exception {
+	public static void rampDownAfterClass() {
 
 		Assert.assertTrue(n5.remove(""));
 	}

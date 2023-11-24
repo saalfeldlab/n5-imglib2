@@ -105,25 +105,25 @@ public class N5Utils {
 
 	public static final <T extends NativeType<T>> DataType dataType(final T type) {
 
-		if (DoubleType.class.isInstance(type))
+		if (type instanceof DoubleType)
 			return DataType.FLOAT64;
-		if (FloatType.class.isInstance(type))
+		if (type instanceof FloatType)
 			return DataType.FLOAT32;
-		if (LongType.class.isInstance(type))
+		if (type instanceof LongType)
 			return DataType.INT64;
-		if (UnsignedLongType.class.isInstance(type))
+		if (type instanceof UnsignedLongType)
 			return DataType.UINT64;
-		if (IntType.class.isInstance(type))
+		if (type instanceof IntType)
 			return DataType.INT32;
-		if (UnsignedIntType.class.isInstance(type))
+		if (type instanceof UnsignedIntType)
 			return DataType.UINT32;
-		if (ShortType.class.isInstance(type))
+		if (type instanceof ShortType)
 			return DataType.INT16;
-		if (UnsignedShortType.class.isInstance(type))
+		if (type instanceof UnsignedShortType)
 			return DataType.UINT16;
-		if (ByteType.class.isInstance(type))
+		if (type instanceof ByteType)
 			return DataType.INT8;
-		if (UnsignedByteType.class.isInstance(type))
+		if (type instanceof UnsignedByteType)
 			return DataType.UINT8;
 		else
 			return null;
@@ -175,7 +175,7 @@ public class N5Utils {
 	 * @return the data block
 	 */
 	@SuppressWarnings("unchecked")
-	private static final DataBlock<?> createDataBlock(
+	private static DataBlock<?> createDataBlock(
 			final RandomAccessibleInterval<?> source,
 			final DataType dataType,
 			final int[] intBlockSize,
@@ -262,7 +262,7 @@ public class N5Utils {
 	 * @return the data block
 	 */
 	@SuppressWarnings("unchecked")
-	private static final <T extends Type<T>> DataBlock<?> createNonEmptyDataBlock(
+	private static <T extends Type<T>> DataBlock<?> createNonEmptyDataBlock(
 			final RandomAccessibleInterval<?> source,
 			final DataType dataType,
 			final int[] intBlockSize,
@@ -789,7 +789,6 @@ public class N5Utils {
 	 *            the type
 	 * @return the image
 	 */
-	@SuppressWarnings({"unchecked", "rawtypes"})
 	public static final <T extends NativeType<T>, A extends ArrayDataAccess<A>> CachedCellImg<T, A> open(
 			final N5Reader n5,
 			final String dataset,
@@ -804,8 +803,7 @@ public class N5Utils {
 		final CellGrid grid = new CellGrid(dimensions, blockSize);
 		final CacheLoader<Long, Cell<A>> loader = new N5CacheLoader<>(n5, dataset, grid, type, accessFlags, blockNotFoundHandler);
 		final Cache<Long, Cell<A>> cache = loaderCache.withLoader(loader);
-		final CachedCellImg<T, A> img = new CachedCellImg<>(grid, type, cache, ArrayDataAccessFactory.get(type, accessFlags));
-		return img;
+		return new CachedCellImg<>(grid, type, cache, ArrayDataAccessFactory.get(type, accessFlags));
 	}
 
 	/**
@@ -889,8 +887,7 @@ public class N5Utils {
 			final double[] scale = new double[dimensions.length];
 			if (downsamplingFactors == null) {
 				final int si = 1 << s;
-				for (int i = 0; i < scale.length; ++i)
-					scale[i] = si;
+				Arrays.fill(scale, si);
 			} else {
 				for (int i = 0; i < scale.length; ++i)
 					scale[i] = downsamplingFactors[i];
@@ -935,9 +932,7 @@ public class N5Utils {
 				n5,
 				group,
 				useVolatileAccess,
-				s -> {
-					return N5CellLoader.setToDefaultValue(defaultValueSupplier.apply(s));
-				});
+				s -> N5CellLoader.setToDefaultValue(defaultValueSupplier.apply(s)));
 	}
 
 	/**
