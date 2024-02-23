@@ -201,15 +201,10 @@
 			<version>${bigdataviewer-vistools-test.version}</version>
 			<scope>test</scope>
 		</dependency>
-				<dependency>
+        <dependency>
 			<groupId>se.sawano.java</groupId>
 			<artifactId>alphanumeric-comparator</artifactId>
 			<version>${alphanumeric-comparator.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>net.thisptr</groupId>
-			<artifactId>jackson-jq</artifactId>
-			<version>1.0.0-preview.20191208</version>
 		</dependency>
 	</dependencies>
 
