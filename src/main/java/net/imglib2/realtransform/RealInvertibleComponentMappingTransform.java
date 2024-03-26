@@ -32,9 +32,9 @@ public class RealInvertibleComponentMappingTransform extends RealComponentMappin
 
 	private static int[] checkAndFillComponent(final int[] component, int nd) {
 
-		final TreeSet<Integer> sortedIndexes = new TreeSet<Integer>();
-		for (int i = 0; i < component.length; i++) {
-			sortedIndexes.add(component[i]);
+		final TreeSet<Integer> sortedIndexes = new TreeSet<>();
+		for (int i : component) {
+			sortedIndexes.add(i);
 		}
 		final int max = sortedIndexes.last();
 		if (max > nd - 1)
@@ -49,7 +49,7 @@ public class RealInvertibleComponentMappingTransform extends RealComponentMappin
 	private static int[] buildNewComponent(final int[] component, final TreeSet<Integer> sortedIndexes, final int nd) {
 
 		final TreeSet<Integer> missingIndexes = new TreeSet<>();
-		IntStream.range(0, nd).forEach(i -> missingIndexes.add(i));
+		IntStream.range(0, nd).forEach(missingIndexes::add);
 		missingIndexes.removeAll(sortedIndexes);
 
 		final int[] compOut = new int[nd];

@@ -14,7 +14,6 @@ public class CoordinateMappingTest {
 		final int[] perm = new int[]{1, 0};
 		final RealComponentMappingTransform xfm = new RealComponentMappingTransform(3, perm);
 
-		final double[] xOrig = new double[]{7, 5, 3};
 		final double[] x = new double[]{7, 5, 3};
 		final double[] y = new double[2];
 
