@@ -393,14 +393,7 @@ public class N5DisplacementField {
 		final RandomAccessibleInterval<T> source_permuted = vectorAxisFirst(source);
 		final RandomAccessibleInterval<Q> source_quant = Converters.convert(
 				source_permuted,
-				new Converter<T, Q>() {
-
-					@Override
-					public void convert(final T input, final Q output) {
-
-						output.setInteger(Math.round(input.getRealDouble() / m));
-					}
-				},
+				(input, output) -> output.setInteger(Math.round(input.getRealDouble() / m)),
 				outputType.copy());
 
 		N5Utils.save(source_quant, n5Writer, dataset, blockSize, compression);
@@ -828,19 +821,11 @@ public class N5DisplacementField {
 			m = 1.0;
 
 		final RandomAccessibleInterval<Q> src_perm = vectorAxisLast(src);
-		final RandomAccessibleInterval<T> src_converted = Converters.convert(
+
+		return Converters.convert(
 				src_perm,
-				new Converter<Q, T>() {
-
-					@Override
-					public void convert(final Q input, final T output) {
-
-						output.setReal(input.getRealDouble() * m);
-					}
-				},
+				(input, output) -> output.setReal(input.getRealDouble() * m),
 				defaultType.copy());
-
-		return src_converted;
 	}
 
 	/**
@@ -930,7 +915,7 @@ public class N5DisplacementField {
 		final MixedTransform t = new MixedTransform(n, n);
 		t.setComponentMapping(p);
 
-		return Views.interval(new MixedTransformView<T>(source, t), min, max);
+		return Views.interval(new MixedTransformView<>(source, t), min, max);
 	}
 
 	/**

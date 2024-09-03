@@ -26,8 +26,8 @@ public class StackedRealTransform implements RealTransform {
 			ns += t.numSourceDimensions();
 			nt += t.numTargetDimensions();
 
-			maxDim = ns > maxDim ? ns : maxDim;
-			maxDim = nt > maxDim ? nt : maxDim;
+			maxDim = Math.max(ns, maxDim);
+			maxDim = Math.max(nt, maxDim);
 		}
 		tmpSrc = new double[maxDim];
 		tmpTgt = new double[maxDim];

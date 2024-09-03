@@ -26,6 +26,7 @@
  */
 package org.janelia.saalfeldlab.n5.imglib2;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
@@ -70,13 +71,13 @@ import net.imglib2.view.Views;
 
 public class N5UtilsTest {
 
-	static private String testDirPath = System.getProperty("user.home") + "/tmp/n5-imglib2-test";
+	static private final String testDirPath = System.getProperty("user.home") + "/tmp/n5-imglib2-test";
 
-	static private String datasetName = "/test/group/dataset";
+	static private final String datasetName = "/test/group/dataset";
 
-	static private long[] dimensions = new long[]{11, 22, 33};
+	static private final long[] dimensions = new long[]{11, 22, 33};
 
-	static private int[] blockSize = new int[]{5, 7, 9};
+	static private final int[] blockSize = new int[]{5, 7, 9};
 
 	static short[] data;
 
@@ -119,16 +120,16 @@ public class N5UtilsTest {
 	}
 
 	@AfterClass
-	public static void rampDownAfterClass() throws Exception {
+	public static void rampDownAfterClass() {
 
 		n5.remove("");
 	}
 
 	@Before
-	public void setUp() throws Exception {}
+	public void setUp() {}
 
 	@After
-	public void tearDown() throws Exception {}
+	public void tearDown() {}
 
 	@Test
 	public void testSaveAndOpen() throws InterruptedException, ExecutionException {
@@ -174,7 +175,7 @@ public class N5UtilsTest {
 	}
 
 	@Test
-	public void testOpenWithBoundedSoftRefCache() throws IOException {
+	public void testOpenWithBoundedSoftRefCache() {
 
 		// existing dataset
 		{
@@ -208,7 +209,7 @@ public class N5UtilsTest {
 	}
 
 	@Test
-	public void testVolatileOpenWithBoundedSoftRefCache() throws IOException {
+	public void testVolatileOpenWithBoundedSoftRefCache() {
 
 		// existing dataset
 		{
@@ -274,7 +275,7 @@ public class N5UtilsTest {
 	}
 
 	@Test
-	public void testBlockSize() throws IOException {
+	public void testBlockSize() {
 
 		n5.remove(datasetName);
 		final DatasetAttributes datasetAttributes = new DatasetAttributes(
@@ -310,7 +311,7 @@ public class N5UtilsTest {
 
 		int i = 0;
 		for (final UnsignedShortType t : interval000)
-			assertTrue(t.getShort() == excessData[i++]);
+			assertEquals(t.getShort(), excessData[i++]);
 
 		final IntervalView<UnsignedShortType> interval001 = Views
 				.interval(
@@ -318,7 +319,6 @@ public class N5UtilsTest {
 						new long[]{0, 0, blockSize[2]},
 						new long[]{blockSize[0] - 1, blockSize[1] - 1, blockSize[2] + blockSize[2] - 1});
 
-		i = 0;
 		final ArrayImg<UnsignedShortType, ShortArray> referenceDataImg = ArrayImgs
 				.unsignedShorts(
 						excessData,
