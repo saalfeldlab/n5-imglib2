@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>37.0.0</version>
+		<version>38.0.1</version>
 		<relativePath />
 	</parent>
 
@@ -146,9 +146,12 @@
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
 		<releaseProfiles>sign,deploy-to-scijava</releaseProfiles>
 
-		<n5.version>3.2.0</n5.version>
-		<bigdataviewer-core-test.version>10.4.14</bigdataviewer-core-test.version>
-		<bigdataviewer-vistools-test.version>1.0.0-beta-34</bigdataviewer-vistools-test.version>
+		<n5.version>3.3.0</n5.version>
+		<imglib2.version>7.1.0</imglib2.version>
+		<imglib2-cache.version>1.0.0-beta-18</imglib2-cache.version>
+		<imglib2-realtransform.version>4.0.3</imglib2-realtransform.version>
+		<bigdataviewer-core-test.version>10.6.0</bigdataviewer-core-test.version>
+		<bigdataviewer-vistools-test.version>1.0.0-beta-36</bigdataviewer-vistools-test.version>
 		<alphanumeric-comparator.version>1.4.1</alphanumeric-comparator.version>
 	</properties>
 
