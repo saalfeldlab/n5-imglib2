@@ -89,7 +89,7 @@ public class N5LabelMultisets {
 	 *            the dataset path
 	 * @return the LabelMultiset image
 	 */
-	public static final CachedCellImg<LabelMultisetType, VolatileLabelMultisetArray> openLabelMultiset(
+	public static CachedCellImg<LabelMultisetType, VolatileLabelMultisetArray> openLabelMultiset(
 			final N5Reader n5,
 			final String dataset) {
 
@@ -108,7 +108,7 @@ public class N5LabelMultisets {
 	 *            the default label
 	 * @return the LabelMultiset image
 	 */
-	public static final CachedCellImg<LabelMultisetType, VolatileLabelMultisetArray> openLabelMultiset(
+	public static CachedCellImg<LabelMultisetType, VolatileLabelMultisetArray> openLabelMultiset(
 			final N5Reader n5,
 			final String dataset,
 			final long defaultLabelId) {
@@ -128,7 +128,7 @@ public class N5LabelMultisets {
 	 *            a function returning data for null blocks
 	 * @return the LabelMultiset image
 	 */
-	public static final CachedCellImg<LabelMultisetType, VolatileLabelMultisetArray> openLabelMultiset(
+	public static CachedCellImg<LabelMultisetType, VolatileLabelMultisetArray> openLabelMultiset(
 			final N5Reader n5,
 			final String dataset,
 			final BiFunction<CellGrid, long[], byte[]> nullReplacement) {
@@ -150,7 +150,7 @@ public class N5LabelMultisets {
 	 *            the cache
 	 * @return the LabelMultiset image
 	 */
-	public static final CachedCellImg<LabelMultisetType, VolatileLabelMultisetArray> openLabelMultiset(
+	public static CachedCellImg<LabelMultisetType, VolatileLabelMultisetArray> openLabelMultiset(
 			final N5Reader n5,
 			final String dataset,
 			final BiFunction<CellGrid, long[], byte[]> nullReplacement,
@@ -189,7 +189,7 @@ public class N5LabelMultisets {
 	 * @param compression
 	 *            compression type
 	 */
-	public static final void saveLabelMultiset(
+	public static void saveLabelMultiset(
 			RandomAccessibleInterval<LabelMultisetType> source,
 			final N5Writer n5,
 			final String dataset,
@@ -251,7 +251,7 @@ public class N5LabelMultisets {
 	 * @throws ExecutionException
 	 *             execution exception
 	 */
-	public static final void saveLabelMultiset(
+	public static void saveLabelMultiset(
 			final RandomAccessibleInterval<LabelMultisetType> source,
 			final N5Writer n5,
 			final String dataset,
@@ -327,7 +327,7 @@ public class N5LabelMultisets {
 	 * @param gridOffset
 	 *            the offset of this block in grid coordinates
 	 */
-	public static final void saveLabelMultisetBlock(
+	public static void saveLabelMultisetBlock(
 			RandomAccessibleInterval<LabelMultisetType> source,
 			final N5Writer n5,
 			final String dataset,
@@ -386,7 +386,7 @@ public class N5LabelMultisets {
 	 * @param attributes
 	 *            the dataset attributes
 	 */
-	public static final void saveLabelMultisetBlock(
+	public static void saveLabelMultisetBlock(
 			final RandomAccessibleInterval<LabelMultisetType> source,
 			final N5Writer n5,
 			final String dataset,
@@ -411,7 +411,7 @@ public class N5LabelMultisets {
 	 * @param dataset
 	 *            the dataset path
 	 */
-	public static final void saveLabelMultisetBlock(
+	public static void saveLabelMultisetBlock(
 			final RandomAccessibleInterval<LabelMultisetType> source,
 			final N5Writer n5,
 			final String dataset) {
@@ -437,7 +437,7 @@ public class N5LabelMultisets {
 	 * @param gridOffset
 	 *            the offset of the block in grid coordinates
 	 */
-	public static final void saveLabelMultisetBlock(
+	public static void saveLabelMultisetBlock(
 			final RandomAccessibleInterval<LabelMultisetType> source,
 			final N5Writer n5,
 			final String dataset,
@@ -470,7 +470,7 @@ public class N5LabelMultisets {
 	 * @throws ExecutionException
 	 *             execution exception
 	 */
-	public static final void saveLabelMultisetBlock(
+	public static void saveLabelMultisetBlock(
 			final RandomAccessibleInterval<LabelMultisetType> source,
 			final N5Writer n5,
 			final String dataset,
@@ -553,7 +553,7 @@ public class N5LabelMultisets {
 	 * @param defaultLabelId
 	 *            the default label
 	 */
-	public static final void saveLabelMultisetNonEmptyBlock(
+	public static void saveLabelMultisetNonEmptyBlock(
 			RandomAccessibleInterval<LabelMultisetType> source,
 			final N5Writer n5,
 			final String dataset,
@@ -617,7 +617,7 @@ public class N5LabelMultisets {
 	 * @param defaultLabelId
 	 *            the default label
 	 */
-	public static final void saveLabelMultisetNonEmptyBlock(
+	public static void saveLabelMultisetNonEmptyBlock(
 			final RandomAccessibleInterval<LabelMultisetType> source,
 			final N5Writer n5,
 			final String dataset,
@@ -646,7 +646,7 @@ public class N5LabelMultisets {
 	 * @param defaultLabelId
 	 *            the default label
 	 */
-	public static final void saveLabelMultisetNonEmptyBlock(
+	public static void saveLabelMultisetNonEmptyBlock(
 			final RandomAccessibleInterval<LabelMultisetType> source,
 			final N5Writer n5,
 			final String dataset,
@@ -674,7 +674,7 @@ public class N5LabelMultisets {
 	 * @param dataset
 	 *            the dataset path
 	 */
-	public static final void saveLabelMultisetNonEmptyBlock(
+	public static void saveLabelMultisetNonEmptyBlock(
 			final RandomAccessibleInterval<LabelMultisetType> source,
 			final N5Writer n5,
 			final String dataset) {
@@ -701,7 +701,7 @@ public class N5LabelMultisets {
 	 * @param defaultLabelId
 	 *            the default label
 	 */
-	public static final void saveLabelMultisetNonEmptyBlock(
+	public static void saveLabelMultisetNonEmptyBlock(
 			final RandomAccessibleInterval<LabelMultisetType> source,
 			final N5Writer n5,
 			final String dataset,
@@ -733,7 +733,7 @@ public class N5LabelMultisets {
 	 * @param gridOffset
 	 *            the offset of the block in grid coordinates
 	 */
-	public static final void saveLabelMultisetNonEmptyBlock(
+	public static void saveLabelMultisetNonEmptyBlock(
 			final RandomAccessibleInterval<LabelMultisetType> source,
 			final N5Writer n5,
 			final String dataset,
@@ -752,7 +752,7 @@ public class N5LabelMultisets {
 	 *            the position of the block
 	 * @return the data block
 	 */
-	private static final ByteArrayDataBlock createDataBlock(
+	private static ByteArrayDataBlock createDataBlock(
 			final RandomAccessibleInterval<LabelMultisetType> source,
 			final long[] gridPosition) {
 
@@ -781,7 +781,7 @@ public class N5LabelMultisets {
 	 *            the default label
 	 * @return the data block
 	 */
-	private static final ByteArrayDataBlock createNonEmptyDataBlock(
+	private static ByteArrayDataBlock createNonEmptyDataBlock(
 			final RandomAccessibleInterval<LabelMultisetType> source,
 			final long[] gridPosition,
 			final long defaultLabelId) {

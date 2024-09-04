@@ -103,7 +103,7 @@ public class N5Utils {
 
 	private N5Utils() {}
 
-	public static final <T extends NativeType<T>> DataType dataType(final T type) {
+	public static <T extends NativeType<T>> DataType dataType(final T type) {
 
 		if (DoubleType.class.isInstance(type))
 			return DataType.FLOAT64;
@@ -130,7 +130,7 @@ public class N5Utils {
 	}
 
 	@SuppressWarnings("unchecked")
-	public static final <T extends NativeType<T>> T type(final DataType dataType) {
+	public static <T extends NativeType<T>> T type(final DataType dataType) {
 
 		switch (dataType) {
 		case INT8:
@@ -425,7 +425,7 @@ public class N5Utils {
 	 * @return the image
 	 */
 	@SuppressWarnings("unchecked")
-	public static final <T extends NativeType<T>> CachedCellImg<T, ?> open(
+	public static <T extends NativeType<T>> CachedCellImg<T, ?> open(
 			final N5Reader n5,
 			final String dataset) {
 
@@ -448,7 +448,7 @@ public class N5Utils {
 	 *            the max number of cache entries
 	 * @return the image
 	 */
-	public static final <T extends NativeType<T>> CachedCellImg<T, ?> openWithBoundedSoftRefCache(
+	public static <T extends NativeType<T>> CachedCellImg<T, ?> openWithBoundedSoftRefCache(
 			final N5Reader n5,
 			final String dataset,
 			final int maxNumCacheEntries) {
@@ -470,7 +470,7 @@ public class N5Utils {
 	 * @return the image
 	 */
 	@SuppressWarnings("unchecked")
-	public static final <T extends NativeType<T>> CachedCellImg<T, ?> openVolatile(
+	public static <T extends NativeType<T>> CachedCellImg<T, ?> openVolatile(
 			final N5Reader n5,
 			final String dataset) {
 
@@ -494,7 +494,7 @@ public class N5Utils {
 	 *            the max number of cache entries
 	 * @return the image
 	 */
-	public static final <T extends NativeType<T>> CachedCellImg<T, ?> openVolatileWithBoundedSoftRefCache(
+	public static <T extends NativeType<T>> CachedCellImg<T, ?> openVolatileWithBoundedSoftRefCache(
 			final N5Reader n5,
 			final String dataset,
 			final int maxNumCacheEntries) {
@@ -515,7 +515,7 @@ public class N5Utils {
 	 *            the dataset path
 	 * @return the image
 	 */
-	public static final <T extends NativeType<T>> CachedCellImg<T, ?> openWithDiskCache(
+	public static <T extends NativeType<T>> CachedCellImg<T, ?> openWithDiskCache(
 			final N5Reader n5,
 			final String dataset) {
 
@@ -535,7 +535,7 @@ public class N5Utils {
 	 *            the default value
 	 * @return the image
 	 */
-	public static final <T extends NativeType<T>> CachedCellImg<T, ?> open(
+	public static <T extends NativeType<T>> CachedCellImg<T, ?> open(
 			final N5Reader n5,
 			final String dataset,
 			final T defaultValue) {
@@ -558,7 +558,7 @@ public class N5Utils {
 	 *            the max number of cache entries
 	 * @return the image
 	 */
-	public static final <T extends NativeType<T>> CachedCellImg<T, ?> openWithBoundedSoftRefCache(
+	public static <T extends NativeType<T>> CachedCellImg<T, ?> openWithBoundedSoftRefCache(
 			final N5Reader n5,
 			final String dataset,
 			final int maxNumCacheEntries,
@@ -581,7 +581,7 @@ public class N5Utils {
 	 *            the default value
 	 * @return the image
 	 */
-	public static final <T extends NativeType<T>> CachedCellImg<T, ?> openVolatile(
+	public static <T extends NativeType<T>> CachedCellImg<T, ?> openVolatile(
 			final N5Reader n5,
 			final String dataset,
 			final T defaultValue) {
@@ -605,7 +605,7 @@ public class N5Utils {
 	 *            the maximum number of cache entries
 	 * @return the image
 	 */
-	public static final <T extends NativeType<T>> CachedCellImg<T, ?> openVolatileWithBoundedSoftRefCache(
+	public static <T extends NativeType<T>> CachedCellImg<T, ?> openVolatileWithBoundedSoftRefCache(
 			final N5Reader n5,
 			final String dataset,
 			final int maxNumCacheEntries,
@@ -629,7 +629,7 @@ public class N5Utils {
 	 *            the default value
 	 * @return the image
 	 */
-	public static final <T extends NativeType<T>> CachedCellImg<T, ?> openWithDiskCache(
+	public static <T extends NativeType<T>> CachedCellImg<T, ?> openWithDiskCache(
 			final N5Reader n5,
 			final String dataset,
 			final T defaultValue) {
@@ -650,7 +650,7 @@ public class N5Utils {
 	 *            consumer handling missing blocks
 	 * @return the image
 	 */
-	public static final <T extends NativeType<T>> CachedCellImg<T, ?> open(
+	public static <T extends NativeType<T>> CachedCellImg<T, ?> open(
 			final N5Reader n5,
 			final String dataset,
 			final Consumer<IterableInterval<T>> blockNotFoundHandler) {
@@ -673,7 +673,7 @@ public class N5Utils {
 	 *            the access flag set
 	 * @return the image
 	 */
-	public static final <T extends NativeType<T>> CachedCellImg<T, ?> open(
+	public static <T extends NativeType<T>> CachedCellImg<T, ?> open(
 			final N5Reader n5,
 			final String dataset,
 			final Consumer<IterableInterval<T>> blockNotFoundHandler,
@@ -698,7 +698,7 @@ public class N5Utils {
 	 *            the maximum number of cache entries
 	 * @return the image
 	 */
-	public static final <T extends NativeType<T>> CachedCellImg<T, ?> openWithBoundedSoftRefCache(
+	public static <T extends NativeType<T>> CachedCellImg<T, ?> openWithBoundedSoftRefCache(
 			final N5Reader n5,
 			final String dataset,
 			final Consumer<IterableInterval<T>> blockNotFoundHandler,
@@ -725,7 +725,7 @@ public class N5Utils {
 	 *            the access flag set
 	 * @return the image
 	 */
-	public static final <T extends NativeType<T>> CachedCellImg<T, ?> openWithBoundedSoftRefCache(
+	public static <T extends NativeType<T>> CachedCellImg<T, ?> openWithBoundedSoftRefCache(
 			final N5Reader n5,
 			final String dataset,
 			final Consumer<IterableInterval<T>> blockNotFoundHandler,
@@ -753,7 +753,7 @@ public class N5Utils {
 	 * @return the image
 	 */
 	@SuppressWarnings({"unchecked", "rawtypes"})
-	public static final <T extends NativeType<T>> CachedCellImg<T, ?> open(
+	public static <T extends NativeType<T>> CachedCellImg<T, ?> open(
 			final N5Reader n5,
 			final String dataset,
 			final Consumer<IterableInterval<T>> blockNotFoundHandler,
@@ -790,7 +790,7 @@ public class N5Utils {
 	 * @return the image
 	 */
 	@SuppressWarnings({"unchecked", "rawtypes"})
-	public static final <T extends NativeType<T>, A extends ArrayDataAccess<A>> CachedCellImg<T, A> open(
+	public static <T extends NativeType<T>, A extends ArrayDataAccess<A>> CachedCellImg<T, A> open(
 			final N5Reader n5,
 			final String dataset,
 			final Consumer<IterableInterval<T>> blockNotFoundHandler,
@@ -822,7 +822,7 @@ public class N5Utils {
 	 *            consumer handling missing blocks
 	 * @return the image
 	 */
-	public static final <T extends NativeType<T>> CachedCellImg<T, ?> openVolatile(
+	public static <T extends NativeType<T>> CachedCellImg<T, ?> openVolatile(
 			final N5Reader n5,
 			final String dataset,
 			final Consumer<IterableInterval<T>> blockNotFoundHandler) {
@@ -871,7 +871,7 @@ public class N5Utils {
 	 *            supply a consumer handling missing blocks
 	 * @return the mipmap level images and their respective relative resolutions
 	 */
-	public static final <T extends NativeType<T>> Pair<RandomAccessibleInterval<T>[], double[][]> openMipmapsWithHandler(
+	public static <T extends NativeType<T>> Pair<RandomAccessibleInterval<T>[], double[][]> openMipmapsWithHandler(
 			final N5Reader n5,
 			final String group,
 			final boolean useVolatileAccess,
@@ -925,7 +925,7 @@ public class N5Utils {
 	 *            supplies a default value
 	 * @return the mipmap level images and their respective relative resolutions
 	 */
-	public static final <T extends NativeType<T>> Pair<RandomAccessibleInterval<T>[], double[][]> openMipmaps(
+	public static <T extends NativeType<T>> Pair<RandomAccessibleInterval<T>[], double[][]> openMipmaps(
 			final N5Reader n5,
 			final String group,
 			final boolean useVolatileAccess,
@@ -954,7 +954,7 @@ public class N5Utils {
 	 *            uses volatile access if true
 	 * @return the mipmap level images and their respective relative resolutions
 	 */
-	public static final <T extends NativeType<T>> Pair<RandomAccessibleInterval<T>[], double[][]> openMipmaps(
+	public static <T extends NativeType<T>> Pair<RandomAccessibleInterval<T>[], double[][]> openMipmaps(
 			final N5Reader n5,
 			final String group,
 			final boolean useVolatileAccess) {
@@ -981,7 +981,7 @@ public class N5Utils {
 	 *            consumer handling missing blocks
 	 * @return the image
 	 */
-	public static final <T extends NativeType<T>> CachedCellImg<T, ?> openWithDiskCache(
+	public static <T extends NativeType<T>> CachedCellImg<T, ?> openWithDiskCache(
 			final N5Reader n5,
 			final String dataset,
 			final Consumer<IterableInterval<T>> blockNotFoundHandler) {
@@ -1024,7 +1024,7 @@ public class N5Utils {
 	 * @param gridOffset
 	 *            the offset of the source in the larger dataset
 	 */
-	public static final <T extends NativeType<T>> void saveBlock(
+	public static <T extends NativeType<T>> void saveBlock(
 			RandomAccessibleInterval<T> source,
 			final N5Writer n5,
 			final String dataset,
@@ -1091,7 +1091,7 @@ public class N5Utils {
 	 * @param attributes
 	 *            the dataset attributes
 	 */
-	public static final <T extends NativeType<T>> void saveBlock(
+	public static <T extends NativeType<T>> void saveBlock(
 			final RandomAccessibleInterval<T> source,
 			final N5Writer n5,
 			final String dataset,
@@ -1117,7 +1117,7 @@ public class N5Utils {
 	 * @param dataset
 	 *            the dataset path
 	 */
-	public static final <T extends NativeType<T>> void saveBlock(
+	public static <T extends NativeType<T>> void saveBlock(
 			final RandomAccessibleInterval<T> source,
 			final N5Writer n5,
 			final String dataset) {
@@ -1147,7 +1147,7 @@ public class N5Utils {
 	 * @param gridOffset
 	 *            the position in the block grid
 	 */
-	public static final <T extends NativeType<T>> void saveBlock(
+	public static <T extends NativeType<T>> void saveBlock(
 			final RandomAccessibleInterval<T> source,
 			final N5Writer n5,
 			final String dataset,
@@ -1181,7 +1181,7 @@ public class N5Utils {
 	 * @throws ExecutionException
 	 *             the execution exception
 	 */
-	public static final <T extends NativeType<T>> void saveBlock(
+	public static <T extends NativeType<T>> void saveBlock(
 			final RandomAccessibleInterval<T> source,
 			final N5Writer n5,
 			final String dataset,
@@ -1274,7 +1274,7 @@ public class N5Utils {
 	 * @param defaultValue
 	 *            the default value
 	 */
-	public static final <T extends NativeType<T>> void saveNonEmptyBlock(
+	public static <T extends NativeType<T>> void saveNonEmptyBlock(
 			RandomAccessibleInterval<T> source,
 			final N5Writer n5,
 			final String dataset,
@@ -1341,7 +1341,7 @@ public class N5Utils {
 	 * @param defaultValue
 	 *            the default value
 	 */
-	public static final <T extends NativeType<T>> void saveNonEmptyBlock(
+	public static <T extends NativeType<T>> void saveNonEmptyBlock(
 			final RandomAccessibleInterval<T> source,
 			final N5Writer n5,
 			final String dataset,
@@ -1372,7 +1372,7 @@ public class N5Utils {
 	 * @param defaultValue
 	 *            the default value
 	 */
-	public static final <T extends NativeType<T>> void saveNonEmptyBlock(
+	public static <T extends NativeType<T>> void saveNonEmptyBlock(
 			final RandomAccessibleInterval<T> source,
 			final N5Writer n5,
 			final String dataset,
@@ -1406,7 +1406,7 @@ public class N5Utils {
 	 * @param defaultValue
 	 *            the default value
 	 */
-	public static final <T extends NativeType<T>> void saveNonEmptyBlock(
+	public static <T extends NativeType<T>> void saveNonEmptyBlock(
 			final RandomAccessibleInterval<T> source,
 			final N5Writer n5,
 			final String dataset,
@@ -1437,8 +1437,8 @@ public class N5Utils {
 	 * @param compression
 	 *            the compression type
 	 */
-	public static final <T extends NativeType<T>> void save(
 			RandomAccessibleInterval<T> source,
+	public static <T extends NativeType<T>> void save(
 			final N5Writer n5,
 			final String dataset,
 			final int[] blockSize,
@@ -1511,7 +1511,7 @@ public class N5Utils {
 	 * @throws ExecutionException
 	 *             the execution exception
 	 */
-	public static final <T extends NativeType<T>> void save(
+	public static <T extends NativeType<T>> void save(
 			final RandomAccessibleInterval<T> source,
 			final N5Writer n5,
 			final String dataset,
@@ -1907,7 +1907,7 @@ public class N5Utils {
 	 * @param gridOffset
 	 *            the position in the block grid
 	 */
-	public static final void deleteBlock(
+	public static void deleteBlock(
 			final Interval interval,
 			final N5Writer n5,
 			final String dataset,
@@ -1956,7 +1956,7 @@ public class N5Utils {
 	 * @param attributes
 	 *            dataset attributes
 	 */
-	public static final void deleteBlock(
+	public static void deleteBlock(
 			final Interval interval,
 			final N5Writer n5,
 			final String dataset,
@@ -1980,7 +1980,7 @@ public class N5Utils {
 	 * @param dataset
 	 *            the dataset path
 	 */
-	public static final void deleteBlock(
+	public static void deleteBlock(
 			final Interval interval,
 			final N5Writer n5,
 			final String dataset) {
@@ -2007,7 +2007,7 @@ public class N5Utils {
 	 * @param gridOffset
 	 *            the position in the block grid
 	 */
-	public static final void deleteBlock(
+	public static void deleteBlock(
 			final Interval interval,
 			final N5Writer n5,
 			final String dataset,

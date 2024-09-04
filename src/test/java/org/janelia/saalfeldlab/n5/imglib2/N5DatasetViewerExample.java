@@ -51,12 +51,12 @@ import net.imglib2.type.NativeType;
  */
 public class N5DatasetViewerExample {
 
-	public static final void main(final String... args) throws IOException {
+	public static void main(final String... args) throws IOException {
 
 		mainT(args);
 	}
 
-	public static final <T extends NativeType<T>> void mainT(final String... args) throws IOException {
+	public static <T extends NativeType<T>> void mainT(final String... args) throws IOException {
 
 		final N5Reader n5Reader = new N5FSReader(args[0]);
 		Bdv bdv = null;
