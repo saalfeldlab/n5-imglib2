@@ -65,6 +65,7 @@ import net.imglib2.view.Views;
  * @param <T>
  *            the type parameter
  */
+@Deprecated
 public class N5CellLoader<T extends NativeType<T>> implements CellLoader<T> {
 
 	private final N5Reader n5;
@@ -92,6 +93,7 @@ public class N5CellLoader<T extends NativeType<T>> implements CellLoader<T> {
 	 * @param cellDimensions
 	 *            size of the cell (block)
 	 */
+	@Deprecated
 	public N5CellLoader(final N5Reader n5, final String dataset, final int[] cellDimensions) {
 
 		this(n5, dataset, cellDimensions, img -> {});
@@ -109,6 +111,7 @@ public class N5CellLoader<T extends NativeType<T>> implements CellLoader<T> {
 	 *            Sets block contents if the appropriate {@link N5Reader}
 	 *            returns {@code null} for that block.
 	 */
+	@Deprecated
 	public N5CellLoader(
 			final N5Reader n5,
 			final String dataset,
@@ -144,6 +147,7 @@ public class N5CellLoader<T extends NativeType<T>> implements CellLoader<T> {
 
 	}
 
+	@Deprecated
 	public static <T extends Type<T>> void burnIn(
 			final RandomAccessibleInterval<T> source,
 			final RandomAccessibleInterval<T> target) {
@@ -166,6 +170,7 @@ public class N5CellLoader<T extends NativeType<T>> implements CellLoader<T> {
 	 *            reference value
 	 * @return true if all values were equal to the reference
 	 */
+	@Deprecated
 	public static <T extends Type<T>> boolean burnInTestAllEqual(
 			final RandomAccessibleInterval<T> source,
 			final RandomAccessibleInterval<T> target,
@@ -181,6 +186,7 @@ public class N5CellLoader<T extends NativeType<T>> implements CellLoader<T> {
 		return equal;
 	}
 
+	@Deprecated
 	public static <T extends NativeType<T>, I extends RandomAccessibleInterval<T> & IterableInterval<T>> BiConsumer<I, DataBlock<?>> createCopy(
 			final DataType dataType) {
 
@@ -271,12 +277,14 @@ public class N5CellLoader<T extends NativeType<T>> implements CellLoader<T> {
 	 * @return {@link Consumer} that sets all values of its argument to
 	 *         {@code defaultValue}.
 	 */
+	@Deprecated
 	public static <T extends Type<T>, I extends IterableInterval<T>> Consumer<I> setToDefaultValue(
 			final T defaultValue) {
 
 		return rai -> rai.forEach(pixel -> pixel.set(defaultValue));
 	}
 
+	@Deprecated
 	private static boolean sizeEquals(final Interval a, final DataBlock<?> b) {
 
 		final int[] dataBlockSize = b.getSize();
@@ -288,6 +296,7 @@ public class N5CellLoader<T extends NativeType<T>> implements CellLoader<T> {
 	}
 
 	@SuppressWarnings("rawtypes")
+	@Deprecated
 	private static ArrayImg dataBlock2ArrayImg(
 			final DataBlock<?> dataBlock,
 			final DataType dataType) {
@@ -323,6 +332,7 @@ public class N5CellLoader<T extends NativeType<T>> implements CellLoader<T> {
 		}
 	}
 
+	@Deprecated
 	private static <T extends NativeType<T>, I extends RandomAccessibleInterval<T> & IterableInterval<T>> void copyIntersection(
 			final I a,
 			final DataBlock<?> b,
