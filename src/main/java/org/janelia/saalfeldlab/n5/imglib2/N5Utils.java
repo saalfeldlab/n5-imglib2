@@ -719,7 +719,7 @@ public class N5Utils {
 
 	/**
 	 * Open an N5 dataset as a disk-cached {@link LazyCellImg}. Note that this
-	 * requires that al part of the the N5 dataset that will be accessed fit
+	 * requires that all parts of the N5 dataset that will be accessed fit
 	 * into /tmp.
 	 *
 	 * @param <T>
@@ -732,7 +732,7 @@ public class N5Utils {
 	 *            consumer handling missing blocks
 	 * @return the image
 	 */
-	public static <T extends NativeType<T>> CachedCellImg<T, ?> openWithDiskCache(
+	public static <T extends NativeType<T>, A extends ArrayDataAccess<A>> CachedCellImg<T, ?> openWithDiskCache(
 			final N5Reader n5,
 			final String dataset,
 			final Consumer<IterableInterval<T>> blockNotFoundHandler) {
@@ -741,7 +741,10 @@ public class N5Utils {
 		final long[] dimensions = attributes.getDimensions();
 		final int[] blockSize = attributes.getBlockSize();
 
-		final N5CellLoader<T> loader = new N5CellLoader<>(n5, dataset, blockSize, blockNotFoundHandler);
+		final CellGrid grid = new CellGrid(dimensions, blockSize);
+		final T type = type(attributes.getDataType());
+		final Set<AccessFlags> accessFlags = AccessFlags.setOf(AccessFlags.VOLATILE, AccessFlags.DIRTY);
+		final CacheLoader<Long, Cell<A>> loader = new N5CacheLoader<>(n5, dataset, grid, type, accessFlags, blockNotFoundHandler);
 
 		final DiskCachedCellImgOptions options = DiskCachedCellImgOptions
 				.options()
@@ -750,10 +753,9 @@ public class N5Utils {
 				.maxCacheSize(100);
 
 		final DiskCachedCellImgFactory<T> factory = new DiskCachedCellImgFactory<T>(
-				type(attributes.getDataType()),
-				options);
+				type, options);
 
-		return factory.create(dimensions, loader);
+		return factory.createWithCacheLoader(dimensions, loader);
 	}
 
 	/**
