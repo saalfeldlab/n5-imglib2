@@ -291,7 +291,7 @@ public class N5Utils {
 			final String dataset,
 			final T defaultValue) {
 
-		return open(n5, dataset, N5CellLoader.setToDefaultValue(defaultValue));
+		return open(n5, dataset, N5CacheLoader.setToDefaultValue(defaultValue));
 	}
 
 	/**
@@ -315,7 +315,7 @@ public class N5Utils {
 			final int maxNumCacheEntries,
 			final T defaultValue) {
 
-		return openWithBoundedSoftRefCache(n5, dataset, N5CellLoader.setToDefaultValue(defaultValue), maxNumCacheEntries);
+		return openWithBoundedSoftRefCache(n5, dataset, N5CacheLoader.setToDefaultValue(defaultValue), maxNumCacheEntries);
 	}
 
 	/**
@@ -337,7 +337,7 @@ public class N5Utils {
 			final String dataset,
 			final T defaultValue) {
 
-		return openVolatile(n5, dataset, N5CellLoader.setToDefaultValue(defaultValue));
+		return openVolatile(n5, dataset, N5CacheLoader.setToDefaultValue(defaultValue));
 	}
 
 	/**
@@ -362,7 +362,7 @@ public class N5Utils {
 			final int maxNumCacheEntries,
 			final T defaultValue) {
 
-		return openVolatileWithBoundedSoftRefCache(n5, dataset, N5CellLoader.setToDefaultValue(defaultValue), maxNumCacheEntries);
+		return openVolatileWithBoundedSoftRefCache(n5, dataset, N5CacheLoader.setToDefaultValue(defaultValue), maxNumCacheEntries);
 	}
 
 	/**
@@ -385,7 +385,7 @@ public class N5Utils {
 			final String dataset,
 			final T defaultValue) {
 
-		return openWithDiskCache(n5, dataset, N5CellLoader.setToDefaultValue(defaultValue));
+		return openWithDiskCache(n5, dataset, N5CacheLoader.setToDefaultValue(defaultValue));
 	}
 
 	/**
@@ -687,7 +687,7 @@ public class N5Utils {
 				group,
 				useVolatileAccess,
 				s -> {
-					return N5CellLoader.setToDefaultValue(defaultValueSupplier.apply(s));
+					return N5CacheLoader.setToDefaultValue(defaultValueSupplier.apply(s));
 				});
 	}
 

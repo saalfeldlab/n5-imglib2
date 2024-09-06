@@ -35,6 +35,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 
+import net.imglib2.type.Type;
 import org.janelia.saalfeldlab.n5.DataBlock;
 import org.janelia.saalfeldlab.n5.DatasetAttributes;
 import org.janelia.saalfeldlab.n5.N5Exception;
@@ -288,5 +289,22 @@ public class N5CacheLoader<T extends NativeType<T>, A extends ArrayDataAccess<A>
 						size);
 			}
 		}
+	}
+
+	/**
+	 *
+	 * @param <T>
+	 *            type parameter
+	 * @param <I>
+	 *            interval type
+	 * @param defaultValue
+	 *            the default value
+	 * @return {@link Consumer} that sets all values of its argument to
+	 *         {@code defaultValue}.
+	 */
+	public static <T extends Type<T>, I extends IterableInterval<T>> Consumer<I> setToDefaultValue(
+			final T defaultValue) {
+
+		return rai -> rai.forEach(pixel -> pixel.set(defaultValue));
 	}
 }
