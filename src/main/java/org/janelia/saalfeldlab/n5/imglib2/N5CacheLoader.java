@@ -35,6 +35,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 
+import net.imglib2.blocks.SubArrayCopy;
 import net.imglib2.type.Type;
 import org.janelia.saalfeldlab.n5.DataBlock;
 import org.janelia.saalfeldlab.n5.DatasetAttributes;
@@ -133,13 +134,16 @@ public class N5CacheLoader<T extends NativeType<T>, A extends ArrayDataAccess<A>
 
 		private final IntFunction<P> createPrimitiveArray;
 		private final Function<P, A> createArrayAccess;
+		private final SubArrayCopy.Typed<P,P> subArrayCopy;
 
 		ArrayDataAccessLoader(
 				final IntFunction<P> createPrimitiveArray,
+				final SubArrayCopy.Typed<P,P> subArrayCopy,
 				final Function<P, A> createArrayAccess) {
 
 			this.createPrimitiveArray = createPrimitiveArray;
 			this.createArrayAccess = createArrayAccess;
+			this.subArrayCopy = subArrayCopy;
 		}
 
 		public A loadArray(final DataBlock<P> dataBlock, final int[] cellDimensions) {
@@ -153,7 +157,7 @@ public class N5CacheLoader<T extends NativeType<T>, A extends ArrayDataAccess<A>
 				final int[] pos = new int[dataBlockSize.length];
 				final int[] size = new int[dataBlockSize.length];
 				Arrays.setAll(size, d -> Math.min(dataBlockSize[d], cellDimensions[d]));
-				ndArrayCopy(src, dataBlockSize, pos, data, cellDimensions, pos, size);
+				subArrayCopy.copy(src, dataBlockSize, pos,data, cellDimensions, pos, size);
 				return createArrayAccess.apply(data);
 			}
 		}
@@ -169,6 +173,7 @@ public class N5CacheLoader<T extends NativeType<T>, A extends ArrayDataAccess<A>
 		switch (primitiveType) {
 		case BYTE:
 			return new ArrayDataAccessLoader<>(byte[]::new,
+					SubArrayCopy.forPrimitiveType(primitiveType),
 					dirty
 							? volatil
 									? data -> new DirtyVolatileByteArray(data, true)
@@ -178,6 +183,7 @@ public class N5CacheLoader<T extends NativeType<T>, A extends ArrayDataAccess<A>
 									: data -> new ByteArray(data));
 		case SHORT:
 			return new ArrayDataAccessLoader<>(short[]::new,
+					SubArrayCopy.forPrimitiveType(primitiveType),
 					dirty
 							? volatil
 									? data -> new DirtyVolatileShortArray(data, true)
@@ -187,6 +193,7 @@ public class N5CacheLoader<T extends NativeType<T>, A extends ArrayDataAccess<A>
 									: data -> new ShortArray(data));
 		case INT:
 			return new ArrayDataAccessLoader<>(int[]::new,
+					SubArrayCopy.forPrimitiveType(primitiveType),
 					dirty
 							? volatil
 									? data -> new DirtyVolatileIntArray(data, true)
@@ -196,6 +203,7 @@ public class N5CacheLoader<T extends NativeType<T>, A extends ArrayDataAccess<A>
 									: data -> new IntArray(data));
 		case LONG:
 			return new ArrayDataAccessLoader<>(long[]::new,
+					SubArrayCopy.forPrimitiveType(primitiveType),
 					dirty
 							? volatil
 									? data -> new DirtyVolatileLongArray(data, true)
@@ -205,6 +213,7 @@ public class N5CacheLoader<T extends NativeType<T>, A extends ArrayDataAccess<A>
 									: data -> new LongArray(data));
 		case FLOAT:
 			return new ArrayDataAccessLoader<>(float[]::new,
+					SubArrayCopy.forPrimitiveType(primitiveType),
 					dirty
 							? volatil
 									? data -> new DirtyVolatileFloatArray(data, true)
@@ -214,6 +223,7 @@ public class N5CacheLoader<T extends NativeType<T>, A extends ArrayDataAccess<A>
 									: data -> new FloatArray(data));
 		case DOUBLE:
 			return new ArrayDataAccessLoader<>(double[]::new,
+					SubArrayCopy.forPrimitiveType(primitiveType),
 					dirty
 							? volatil
 									? data -> new DirtyVolatileDoubleArray(data, true)
@@ -223,71 +233,6 @@ public class N5CacheLoader<T extends NativeType<T>, A extends ArrayDataAccess<A>
 									: data -> new DoubleArray(data));
 		default:
 			throw new IllegalArgumentException();
-		}
-	}
-
-	/**
-	 * Like `System.arrayCopy()` but for flattened nD arrays.
-	 *
-	 * @param src
-	 *            the (flattened) source array.
-	 * @param srcSize
-	 *            dimensions of the source array.
-	 * @param srcPos
-	 *            starting position in the source array.
-	 * @param dest
-	 *            the (flattened destination array.
-	 * @param destSize
-	 *            dimensions of the source array.
-	 * @param destPos
-	 *            starting position in the destination data.
-	 * @param size
-	 *            the number of array elements to be copied.
-	 */
-	// TODO: This will be moved to a new imglib2-blk artifact later. Re-use it
-	// from there when that happens.
-	private static <T> void ndArrayCopy(
-			final T src, final int[] srcSize, final int[] srcPos,
-			final T dest, final int[] destSize, final int[] destPos,
-			final int[] size) {
-
-		final int n = srcSize.length;
-		int srcStride = 1;
-		int destStride = 1;
-		int srcOffset = 0;
-		int destOffset = 0;
-		for (int d = 0; d < n; ++d) {
-			srcOffset += srcStride * srcPos[d];
-			srcStride *= srcSize[d];
-			destOffset += destStride * destPos[d];
-			destStride *= destSize[d];
-		}
-		ndArrayCopy(n - 1, src, srcSize, srcOffset, dest, destSize, destOffset, size);
-	}
-
-	private static <T> void ndArrayCopy(
-			final int d,
-			final T src, final int[] srcSize, final int srcPos,
-			final T dest, final int[] destSize, final int destPos,
-			final int[] size) {
-
-		if (d == 0)
-			System.arraycopy(src, srcPos, dest, destPos, size[d]);
-		else {
-			int srcStride = 1;
-			int destStride = 1;
-			for (int dd = 0; dd < d; ++dd) {
-				srcStride *= srcSize[dd];
-				destStride *= destSize[dd];
-			}
-
-			final int w = size[d];
-			for (int x = 0; x < w; ++x) {
-				ndArrayCopy(d - 1,
-						src, srcSize, srcPos + x * srcStride,
-						dest, destSize, destPos + x * destStride,
-						size);
-			}
 		}
 	}
 
