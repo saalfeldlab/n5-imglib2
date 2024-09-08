@@ -214,7 +214,7 @@ public class N5LabelMultisets {
 		final int[] intCroppedBlockSize = new int[n];
 		final long[] longCroppedBlockSize = new long[n];
 		for (int d = 0; d < n;) {
-			N5Utils.cropBlockDimensions(max, offset, blockSize, longCroppedBlockSize, intCroppedBlockSize, gridPosition);
+			cropBlockDimensions(max, offset, blockSize, longCroppedBlockSize, intCroppedBlockSize, gridPosition);
 			final RandomAccessibleInterval<LabelMultisetType> sourceBlock = Views.offsetInterval(source, offset, longCroppedBlockSize);
 			final ByteArrayDataBlock dataBlock = createDataBlock(sourceBlock, gridPosition);
 
@@ -286,7 +286,7 @@ public class N5LabelMultisets {
 								final int[] intCroppedBlockSize = new int[n];
 								final long[] longCroppedBlockSize = new long[n];
 
-								N5Utils.cropBlockDimensions(
+								cropBlockDimensions(
 										max,
 										fOffset,
 										blockSize,
@@ -348,7 +348,7 @@ public class N5LabelMultisets {
 		final int[] intCroppedBlockSize = new int[n];
 		final long[] longCroppedBlockSize = new long[n];
 		for (int d = 0; d < n;) {
-			N5Utils.cropBlockDimensions(
+			cropBlockDimensions(
 					max,
 					offset,
 					gridOffset,
@@ -501,7 +501,7 @@ public class N5LabelMultisets {
 									final int[] intCroppedBlockSize = new int[n];
 									final long[] longCroppedBlockSize = new long[n];
 
-									N5Utils.cropBlockDimensions(
+									cropBlockDimensions(
 											max,
 											fOffset,
 											gridOffset,
@@ -575,7 +575,7 @@ public class N5LabelMultisets {
 		final int[] intCroppedBlockSize = new int[n];
 		final long[] longCroppedBlockSize = new long[n];
 		for (int d = 0; d < n;) {
-			N5Utils.cropBlockDimensions(
+			cropBlockDimensions(
 					max,
 					offset,
 					gridOffset,
@@ -792,5 +792,36 @@ public class N5LabelMultisets {
 				isEmpty &= entry.getElement().id() == defaultLabelId;
 
 		return isEmpty ? null : createDataBlock(source, gridPosition);
+	}
+
+	static void cropBlockDimensions(
+			final long[] max,
+			final long[] offset,
+			final long[] gridOffset,
+			final int[] blockDimensions,
+			final long[] croppedBlockDimensions,
+			final int[] intCroppedBlockDimensions,
+			final long[] gridPosition) {
+
+		for (int d = 0; d < max.length; ++d) {
+			croppedBlockDimensions[d] = Math.min(blockDimensions[d], max[d] - offset[d] + 1);
+			intCroppedBlockDimensions[d] = (int)croppedBlockDimensions[d];
+			gridPosition[d] = offset[d] / blockDimensions[d] + gridOffset[d];
+		}
+	}
+
+	static void cropBlockDimensions(
+			final long[] max,
+			final long[] offset,
+			final int[] blockDimensions,
+			final long[] croppedBlockDimensions,
+			final int[] intCroppedBlockDimensions,
+			final long[] gridPosition) {
+
+		for (int d = 0; d < max.length; ++d) {
+			croppedBlockDimensions[d] = Math.min(blockDimensions[d], max[d] - offset[d] + 1);
+			intCroppedBlockDimensions[d] = (int)croppedBlockDimensions[d];
+			gridPosition[d] = offset[d] / blockDimensions[d];
+		}
 	}
 }
