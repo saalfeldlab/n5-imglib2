@@ -64,7 +64,6 @@ import net.imglib2.img.basictypeaccess.volatiles.VolatileAccess;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.util.Intervals;
 import net.imglib2.util.Pair;
-import net.imglib2.util.Util;
 import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
 
@@ -219,7 +218,7 @@ public class N5UtilsTest {
 			for (final Pair<UnsignedShortType, UnsignedShortType> pair : Views
 					.flatIterable(Views.interval(Views.pair(img, loaded), img)))
 				Assert.assertEquals(pair.getA().get(), pair.getB().get());
-			Assert.assertEquals(UnsignedShortType.class, Util.getTypeFromInterval(loaded).getClass());
+			Assert.assertEquals(UnsignedShortType.class, loaded.getType().getClass());
 			MatcherAssert
 					.assertThat(
 							((CachedCellImg<UnsignedShortType, ?>)loaded).getAccessType(),
@@ -239,7 +238,7 @@ public class N5UtilsTest {
 							MAX_NUM_CACHE_ENTRIES,
 							new UnsignedShortType(EMPTY_BLOCK_VALUE));
 			Views.iterable(loaded).forEach(val -> Assert.assertEquals(EMPTY_BLOCK_VALUE, val.get()));
-			Assert.assertEquals(UnsignedShortType.class, Util.getTypeFromInterval(loaded).getClass());
+			Assert.assertEquals(UnsignedShortType.class, loaded.getType().getClass());
 			MatcherAssert
 					.assertThat(
 							((CachedCellImg<UnsignedShortType, ?>)loaded).getAccessType(),

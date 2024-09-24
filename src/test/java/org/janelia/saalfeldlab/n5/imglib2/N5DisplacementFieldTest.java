@@ -123,7 +123,7 @@ public class N5DisplacementFieldTest {
 	// new NLinearInterpolatorFactory<RealComposite<DoubleType>>());
 	// }
 
-	final public static double distance(final RealLocalizable position1, final RealLocalizable position2) {
+	public static double distance(final RealLocalizable position1, final RealLocalizable position2) {
 
 		double dist = 0;
 		final int n = position1.numDimensions();
