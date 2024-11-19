@@ -43,8 +43,10 @@ import org.janelia.saalfeldlab.n5.DataBlock;
 import org.janelia.saalfeldlab.n5.DataType;
 import org.janelia.saalfeldlab.n5.DatasetAttributes;
 import org.janelia.saalfeldlab.n5.N5Exception.N5IOException;
+import org.janelia.saalfeldlab.n5.N5Exception.N5ShardException;
 import org.janelia.saalfeldlab.n5.N5Reader;
 import org.janelia.saalfeldlab.n5.N5Writer;
+import org.janelia.saalfeldlab.n5.ShardedDatasetAttributes;
 
 import java.util.stream.Collectors;
 import net.imglib2.FinalInterval;
@@ -1114,6 +1116,237 @@ public class N5Utils {
 			throw new N5IOException("Dataset " + dataset + " does not exist.");
 		}
 	}
+	
+	/**
+	 * Save a {@link RandomAccessibleInterval} into an N5 dataset at a given
+	 * offset. The offset is given in shard grid coordinates and the
+	 * source is assumed to align with the {@link Shard} grid of the
+	 * dataset.
+	 *
+	 * @param <T>
+	 *            the type parameter
+	 * @param source
+	 *            the source image
+	 * @param n5
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset path
+	 * @param attributes
+	 *            the dataset attributes
+	 * @param gridOffset
+	 *            the offset of the source in the larger dataset
+	 */
+	public static <T extends NativeType<T>> void saveShard(
+			RandomAccessibleInterval<T> source,
+			final N5Writer n5,
+			final String dataset,
+			final DatasetAttributes attributes,
+			final long[] gridOffset) {
+
+		// TODO implement
+
+//		if (N5LabelMultisets.isLabelMultisetType(n5, dataset)) {
+//			@SuppressWarnings("unchecked")
+//			final RandomAccessibleInterval<LabelMultisetType> labelMultisetSource = (RandomAccessibleInterval<LabelMultisetType>)source;
+//			N5LabelMultisets.saveLabelMultisetBlock(labelMultisetSource, n5, dataset, attributes, gridOffset);
+//			return;
+//		}
+//
+//		final RandomAccessibleInterval<Interval> gridBlocks = new CellGrid(source.dimensionsAsLongArray(), attributes.getBlockSize())
+//				.cellIntervals()
+//				.view().translate(gridOffset);
+//		final BlockWriter writer = BlockWriter.create(source.view().zeroMin(), n5, dataset, attributes);
+//		Streams.localizing(gridBlocks)
+//				.map(writer::writeTask)
+//				.forEach(Runnable::run);
+	}
+
+	/**
+	 * Save a {@link RandomAccessibleInterval} into an N5 dataset. The block
+	 * offset is determined by the source position, and the source is assumed to
+	 * align with the {@link DataBlock} grid of the dataset.
+	 *
+	 * @param <T>
+	 *            the type parameter
+	 * @param source
+	 *            the source image
+	 * @param n5
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset path
+	 * @param attributes
+	 *            the sharded dataset attributes
+	 */
+	public static <T extends NativeType<T>> void saveShard(
+			final RandomAccessibleInterval<T> source,
+			final N5Writer n5,
+			final String dataset,
+			final ShardedDatasetAttributes attributes) {
+
+		final int[] shardSize = attributes.getShardSize();
+		final long[] gridOffset = new long[shardSize.length];
+		Arrays.setAll(gridOffset, d -> source.min(d) / shardSize[d]);
+		saveShard(source, n5, dataset, attributes, gridOffset);
+	}
+
+	/**
+	 * Save a {@link RandomAccessibleInterval} into an N5 dataset. The block
+	 * offset is determined by the source position, and the source is assumed to
+	 * align with the {@link DataBlock} grid of the dataset.
+	 *
+	 * @param <T>
+	 *            the type parameter
+	 * @param source
+	 *            the image to write
+	 * @param n5
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset path
+	 */
+	public static <T extends NativeType<T>> void saveShard(
+			final RandomAccessibleInterval<T> source,
+			final N5Writer n5,
+			final String dataset) {
+
+		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
+		if (attributes == null) {
+			throw new N5IOException("Dataset " + dataset + " does not exist.");
+		} else if (!(attributes instanceof ShardedDatasetAttributes)) {
+			throw new N5ShardException("Dataset " + dataset + " is not sharded.");
+		}
+
+		saveBlock(source, n5, dataset, attributes);
+	}
+
+	/**
+	 * Save a {@link RandomAccessibleInterval} into an N5 dataset at a given
+	 * offset. The offset is given in {@link DataBlock} grid coordinates and the
+	 * source is assumed to align with the {@link DataBlock} grid of the
+	 * dataset.
+	 *
+	 * @param <T>
+	 *            the type parameter
+	 * @param source
+	 *            the source block
+	 * @param n5
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset path
+	 * @param gridOffset
+	 *            the position in the block grid
+	 */
+	public static <T extends NativeType<T>> void saveShard(
+			final RandomAccessibleInterval<T> source,
+			final N5Writer n5,
+			final String dataset,
+			final long[] gridOffset) {
+
+		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
+		if (attributes == null) {
+			throw new N5IOException("Dataset " + dataset + " does not exist.");
+		} else if (!(attributes instanceof ShardedDatasetAttributes)) {
+			throw new N5ShardException("Dataset " + dataset + " is not sharded.");
+		}
+
+		saveBlock(source, n5, dataset, attributes, gridOffset);
+	}
+
+	/**
+	 * Save a {@link RandomAccessibleInterval} into an N5 dataset at a given
+	 * offset, multi-threaded. The offset is given in {@link DataBlock} grid
+	 * coordinates and the source is assumed to align with the {@link DataBlock}
+	 * grid of the dataset.
+	 *
+	 * @param <T>
+	 *            the type parameter
+	 * @param source
+	 *            the source block
+	 * @param n5
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset path
+	 * @param attributes
+	 *            the dataset attributes
+	 * @param gridOffset
+	 *            the position in the block grid
+	 * @param exec
+	 *            the executor service
+	 * @throws InterruptedException
+	 *             the interrupted exception
+	 * @throws ExecutionException
+	 *             the execution exception
+	 */
+	public static <T extends NativeType<T>> void saveShard(
+			final RandomAccessibleInterval<T> source,
+			final N5Writer n5,
+			final String dataset,
+			final ShardedDatasetAttributes attributes,
+			final long[] gridOffset,
+			final ExecutorService exec) throws InterruptedException, ExecutionException {
+
+		if (N5LabelMultisets.isLabelMultisetType(n5, dataset)) {
+			@SuppressWarnings("unchecked")
+			final RandomAccessibleInterval<LabelMultisetType> labelMultisetSource = (RandomAccessibleInterval<LabelMultisetType>)source;
+			N5LabelMultisets.saveLabelMultisetBlock(labelMultisetSource, n5, dataset, gridOffset, exec);
+			return;
+		}
+
+		final RandomAccessibleInterval<Interval> gridShards = new CellGrid(source.dimensionsAsLongArray(), attributes.getShardSize())
+				.cellIntervals()
+				.view().translate(gridOffset);
+		
+		// TODO implement me
+
+		final BlockWriter writer = BlockWriter.create(source.view().zeroMin(), n5, dataset, attributes).threadSafe();
+//		final List<Future<?>> futures = Streams.localizing(gridBlocks)
+//				.map(writer::writeTask)
+//				.map(exec::submit)
+//				.collect(Collectors.toList());
+//		for (final Future<?> f : futures)
+//			f.get();
+	}
+
+	/**
+	 * Save a {@link RandomAccessibleInterval} into an N5 dataset at a given
+	 * offset, multi-threaded. The offset is given in {@link DataBlock} grid
+	 * coordinates and the source is assumed to align with the {@link DataBlock}
+	 * grid of the dataset.
+	 *
+	 * @param <T>
+	 *            the type parameter
+	 * @param source
+	 *            the source block
+	 * @param n5
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset path
+	 * @param gridOffset
+	 *            the position in the block grid
+	 * @param exec
+	 *            the executor service
+	 * @throws InterruptedException
+	 *             the interrupted exception
+	 * @throws ExecutionException
+	 *             the execution exception
+	 */
+	public static <T extends NativeType<T>> void saveShard(
+			final RandomAccessibleInterval<T> source,
+			final N5Writer n5,
+			final String dataset,
+			final long[] gridOffset,
+			final ExecutorService exec) throws InterruptedException, ExecutionException {
+
+		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
+		if (!(attributes instanceof ShardedDatasetAttributes)) {
+			throw new N5ShardException("Dataset " + dataset + " is not sharded.");
+		}
+
+		if (attributes != null) {
+			saveShard(source, n5, dataset, (ShardedDatasetAttributes)attributes, gridOffset, exec);
+		} else {
+			throw new N5IOException("Dataset " + dataset + " does not exist.");
+		}
+	}
 
 	/**
 	 * Save a {@link RandomAccessibleInterval} as an N5 dataset.
@@ -1663,10 +1896,15 @@ public class N5Utils {
 				this.zeroPos = writer.zeroPos;
 			}
 
-			@Override
-			public void write(final long[] gridPos, final long[] blockMin, final int[] blockSize) {
+			public DataBlock<P> createDataBlock(final long[] gridPos, final long[] blockMin, final int[] blockSize) {
 				final DataBlock<P> dataBlock = Cast.unchecked(dataType.createDataBlock(blockSize, gridPos));
 				sourceBlocks.copy(blockMin, dataBlock.getData(), blockSize);
+				return dataBlock;
+			}
+
+			@Override
+			public void write(final long[] gridPos, final long[] blockMin, final int[] blockSize) {
+				final DataBlock<P> dataBlock = createDataBlock(gridPos, blockMin, blockSize);
 				writeBlock.accept(dataBlock);
 			}
 
@@ -1842,6 +2080,13 @@ public class N5Utils {
 				return (gridPos, blockMin, blockSize) -> threadSafeSupplier.get().write(gridPos, blockMin, blockSize);
 			}
 		}
+	}
+	
+	/**
+	 * Write shards from a source image that aligns with the shard grid of the dataset.
+	 */
+	private interface ShardWriter {
+
 	}
 
 
