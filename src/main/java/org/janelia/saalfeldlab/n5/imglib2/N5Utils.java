@@ -47,6 +47,9 @@ import org.janelia.saalfeldlab.n5.N5Exception.N5ShardException;
 import org.janelia.saalfeldlab.n5.N5Reader;
 import org.janelia.saalfeldlab.n5.N5Writer;
 import org.janelia.saalfeldlab.n5.ShardedDatasetAttributes;
+import org.janelia.saalfeldlab.n5.shard.InMemoryShard;
+import org.janelia.saalfeldlab.n5.shard.Shard;
+import org.janelia.saalfeldlab.n5.util.GridIterator;
 
 import java.util.stream.Collectors;
 import net.imglib2.FinalInterval;
@@ -1143,22 +1146,21 @@ public class N5Utils {
 			final DatasetAttributes attributes,
 			final long[] gridOffset) {
 
-		// TODO implement
+		if (N5LabelMultisets.isLabelMultisetType(n5, dataset)) {
+			throw new N5ShardException("Sharded LabelMultisets not supported.");
+		}
 
-//		if (N5LabelMultisets.isLabelMultisetType(n5, dataset)) {
-//			@SuppressWarnings("unchecked")
-//			final RandomAccessibleInterval<LabelMultisetType> labelMultisetSource = (RandomAccessibleInterval<LabelMultisetType>)source;
-//			N5LabelMultisets.saveLabelMultisetBlock(labelMultisetSource, n5, dataset, attributes, gridOffset);
-//			return;
-//		}
-//
-//		final RandomAccessibleInterval<Interval> gridBlocks = new CellGrid(source.dimensionsAsLongArray(), attributes.getBlockSize())
-//				.cellIntervals()
-//				.view().translate(gridOffset);
-//		final BlockWriter writer = BlockWriter.create(source.view().zeroMin(), n5, dataset, attributes);
-//		Streams.localizing(gridBlocks)
-//				.map(writer::writeTask)
-//				.forEach(Runnable::run);
+		if (attributes.getShardAttributes() == null) {
+			throw new N5ShardException("Dataset " + dataset + " is not sharded.");
+		}
+
+		final ShardedDatasetAttributes shardAttrs = attributes.getShardAttributes();
+		final RandomAccessibleInterval<Interval> gridBlocks = new CellGrid( source.dimensionsAsLongArray(), shardAttrs.getShardSize()) .cellIntervals()
+				.view().translate(gridOffset);
+		final ShardWriter writer = ShardWriter.create(source.view().zeroMin(), n5, dataset, attributes);
+		Streams.localizing(gridBlocks)
+				.map(writer::writeTask)
+				.forEach(Runnable::run);
 	}
 
 	/**
@@ -1211,11 +1213,11 @@ public class N5Utils {
 		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
 		if (attributes == null) {
 			throw new N5IOException("Dataset " + dataset + " does not exist.");
-		} else if (!(attributes instanceof ShardedDatasetAttributes)) {
+		} else if (attributes.getShardAttributes() == null ) {
 			throw new N5ShardException("Dataset " + dataset + " is not sharded.");
 		}
 
-		saveBlock(source, n5, dataset, attributes);
+		saveShard(source, n5, dataset, attributes.getShardAttributes());
 	}
 
 	/**
@@ -2085,10 +2087,113 @@ public class N5Utils {
 	/**
 	 * Write shards from a source image that aligns with the shard grid of the dataset.
 	 */
-	private interface ShardWriter {
+	public interface ShardWriter {
+
+		static <T extends NativeType<T>> ShardWriter create(
+				final RandomAccessibleInterval<T> source,
+				final N5Writer n5,
+				final String dataset,
+				final DatasetAttributes attributes) {
+
+			return new Imp<>(source, attributes,
+					shard -> n5.writeShard(dataset, attributes, shard));
+		}
+
+		static <T extends NativeType<T>> ShardWriter createNonEmpty(
+				final RandomAccessibleInterval<T> source,
+				final N5Writer n5,
+				final String dataset,
+				final DatasetAttributes attributes,
+				final T defaultValue) {
+
+			// TODO implement me
+			return null;
+		}
+
+		/**
+		 * Write a Shard at {@code gridPos}.
+		 * <p>
+		 * The interval covered by the block in the source image is given by
+		 * {@code blockMin} and {@code blockSize}. It must be fully inside the
+		 * source image.
+		 *
+		 * @param gridPos
+		 * 		the grid coordinates of the block
+		 * @param blockMin
+		 * 		minimum of the interval covered by the block in the source image
+		 * @param blockSize
+		 * 		dimensions of the interval covered by the block in the source image
+		 */
+		void write(long[] gridPos, long[] blockMin, int[] blockSize);
+
+		default Runnable writeTask(LocalizableSampler<Interval> gridShard) {
+			final long[] gridPos = gridShard.positionAsLongArray();
+			final Interval blockInterval = gridShard.get();
+			final long[] blockMin = blockInterval.minAsLongArray();
+			final int[] blockSize = new int[ blockInterval.numDimensions() ];
+			Arrays.setAll(blockSize, d -> (int) blockInterval.dimension(d));
+			return () -> write(gridPos, blockMin, blockSize);
+		}
+
+		class Imp<T extends NativeType<T>, P> implements ShardWriter {
+
+			final DataType dataType;
+			final DatasetAttributes attributes;
+			final Consumer<Shard<?>> writeShard;
+			final PrimitiveBlocks<T> sourceBlocks;
+			final int[] zeroPos;
+
+			Imp(
+					final RandomAccessibleInterval<T> source,
+					final DatasetAttributes attributes,
+					final Consumer<Shard<?>> writeShard) {
+
+				this.dataType = attributes.getDataType();
+				this.attributes = attributes;
+				this.writeShard = writeShard;
+				sourceBlocks = PrimitiveBlocks.of(source, OnFallback.ACCEPT);
+				final int n = source.numDimensions();
+				zeroPos = new int[n];
+			}
+
+			Imp(final Imp<T, P> writer) {
+				this.dataType = writer.dataType;
+				this.attributes = writer.attributes;
+				this.writeShard = writer.writeShard;
+				this.sourceBlocks = writer.sourceBlocks.independentCopy();
+				this.zeroPos = writer.zeroPos;
+			}
+
+			public Shard<P> createShard(final long[] shardGridPos, final long[] shardMin, final int[] shardSize) {
+
+				final ShardedDatasetAttributes shardAttrs = attributes.getShardAttributes();
+				final int[] blockSize = shardAttrs.getBlockSize();
+				final InMemoryShard<P> shard = new InMemoryShard<P>(shardAttrs, shardGridPos);
+				final GridIterator it = new GridIterator(shardAttrs.getBlocksPerShard());
+
+				while( it.hasNext() ) {
+
+					final long[] blkPosShardRelative = it.next();
+					final long[] blockMin = shardAttrs.getBlockMinFromShardPosition(shardGridPos, blkPosShardRelative);
+					final long[] blockPos = shardAttrs.getBlockPositionFromShardPosition(shardGridPos, blkPosShardRelative);
+
+					final DataBlock<P> dataBlock = Cast.unchecked(dataType.createDataBlock(blockSize, blockPos));
+					sourceBlocks.copy(blockMin, dataBlock.getData(), blockSize);
+
+					shard.addBlock(dataBlock);
+				}
+
+				return shard;
+			}
+
+			public void write(final long[] gridPos, final long[] shardMin, final int[] shardSize) {
+				final Shard<P> shard = createShard(gridPos, shardMin, shardSize);
+				writeShard.accept(shard);
+			}
+
+		}
 
 	}
-
 
 	/**
 	 * @return primitve array with one element corresponding to the given value
