@@ -26,8 +26,10 @@
  */
 package org.janelia.saalfeldlab.n5.imglib2;
 
+import java.nio.ByteOrder;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -42,13 +44,19 @@ import org.janelia.saalfeldlab.n5.Compression;
 import org.janelia.saalfeldlab.n5.DataBlock;
 import org.janelia.saalfeldlab.n5.DataType;
 import org.janelia.saalfeldlab.n5.DatasetAttributes;
+import org.janelia.saalfeldlab.n5.N5KeyValueWriter;
 import org.janelia.saalfeldlab.n5.N5Exception.N5IOException;
 import org.janelia.saalfeldlab.n5.N5Exception.N5ShardException;
+import org.janelia.saalfeldlab.n5.codec.BytesCodec;
+import org.janelia.saalfeldlab.n5.codec.Codec;
+import org.janelia.saalfeldlab.n5.codec.DeterministicSizeCodec;
+import org.janelia.saalfeldlab.n5.codec.N5BlockCodec;
 import org.janelia.saalfeldlab.n5.N5Reader;
 import org.janelia.saalfeldlab.n5.N5Writer;
 import org.janelia.saalfeldlab.n5.ShardedDatasetAttributes;
 import org.janelia.saalfeldlab.n5.shard.InMemoryShard;
 import org.janelia.saalfeldlab.n5.shard.Shard;
+import org.janelia.saalfeldlab.n5.shard.ShardingCodec.IndexLocation;
 import org.janelia.saalfeldlab.n5.util.GridIterator;
 
 import java.util.stream.Collectors;
@@ -545,7 +553,6 @@ public class N5Utils {
 	 *            the type
 	 * @return the image
 	 */
-	@SuppressWarnings({"unchecked", "rawtypes"})
 	public static <T extends NativeType<T>, A extends ArrayDataAccess<A>> CachedCellImg<T, A> open(
 			final N5Reader n5,
 			final String dataset,
@@ -1387,6 +1394,116 @@ public class N5Utils {
 				compression);
 		n5.createDataset(dataset, attributes);
 		saveBlock(source, n5, dataset, attributes);
+	}
+
+	/**
+	 * Save a {@link RandomAccessibleInterval} as a sharded N5 dataset.
+	 * <p>
+	 * Both the blocksCodecs and indexCodecus must contain a
+	 * {@link Codec.ArrayCodec}. We recommend only specifying a compression Codec
+	 * using the method:
+	 * {@link #save(RandomAccessibleInterval, N5Writer, String, int[], int[], Codec, IndexLocation)}
+	 * or
+	 * {@link #save(RandomAccessibleInterval, N5Writer, String, int[], int[], Codec)}
+	 *
+	 * @param <T>           the type parameter
+	 * @param source        the source image
+	 * @param n5            the n5 writer
+	 * @param dataset       the dataset path
+	 * @param blockSize     the block size (in pixels)
+	 * @param shardSize     the shard size (in pixels)
+	 * @param blocksCodecs  codecs for block data
+	 * @param indexCodecs   codecs for the shard index
+	 * @param indexLocation the shard index location
+	 */
+	public static <T extends NativeType<T>> void save(
+			final RandomAccessibleInterval<T> source,
+			final N5Writer n5,
+			final String dataset,
+			final int[] blockSize,
+			final int[] shardSize,
+			final Codec[] blocksCodecs,
+			final DeterministicSizeCodec[] indexCodecs,
+			final IndexLocation indexLocation) {
+
+		if (source.getType() instanceof LabelMultisetType) {
+			throw new N5ShardException("Sharded LabelMultisets not supported.");
+		}
+
+		final ShardedDatasetAttributes attributes = new ShardedDatasetAttributes(
+				source.dimensionsAsLongArray(),
+				shardSize,
+				blockSize,
+				dataType(source.getType()),
+				blocksCodecs,
+				indexCodecs,
+				indexLocation);
+
+		n5.createDataset(dataset, attributes);
+		saveShard(source, n5, dataset, attributes);
+	}
+
+	/**
+	 * Save a {@link RandomAccessibleInterval} as a sharded N5 dataset.
+	 *
+	 * @param <T>              the type parameter
+	 * @param source           the source image
+	 * @param n5               the n5 writer
+	 * @param dataset          the dataset path
+	 * @param blockSize        the block size (in pixels)
+	 * @param shardSize        the shard size (in pixels)
+	 * @param compressionCodec the compression codec
+	 * @param indexLocation    the shard index location
+	 */
+	public static <T extends NativeType<T>> void save(
+			final RandomAccessibleInterval<T> source,
+			final N5Writer n5,
+			final String dataset,
+			final int[] blockSize,
+			final int[] shardSize,
+			final Codec compressionCodec,
+			final IndexLocation indexLocation) {
+
+		Codec.ArrayCodec blockCodec;
+		if (n5 instanceof N5KeyValueWriter)
+			blockCodec = new N5BlockCodec();
+		else
+			blockCodec = new BytesCodec();
+
+		Codec[] blockCodecs;
+		if (compressionCodec == null)
+			blockCodecs = new Codec[]{blockCodec};
+		else
+			blockCodecs = new Codec[]{blockCodec, compressionCodec};
+
+		save(source, n5, dataset, blockSize, shardSize,
+				blockCodecs,
+				new DeterministicSizeCodec[]{new BytesCodec()},
+				indexLocation );
+	}
+
+	/**
+	 * Save a {@link RandomAccessibleInterval} as a sharded N5 dataset.
+	 * <p>
+	 * Writes the shard index at the end.
+	 *
+	 * @param <T>              the type parameter
+	 * @param source           the source image
+	 * @param n5               the n5 writer
+	 * @param dataset          the dataset path
+	 * @param blockSize        the block size (in pixels)
+	 * @param shardSize        the shard size (in pixels)
+	 * @param compressionCodec the compression codec
+	 */
+	public static <T extends NativeType<T>> void save(
+			final RandomAccessibleInterval<T> source,
+			final N5Writer n5,
+			final String dataset,
+			final int[] blockSize,
+			final int[] shardSize,
+			final Codec compressionCodec) {
+
+		save(source, n5, dataset, blockSize, shardSize, compressionCodec, IndexLocation.END);
 	}
 
 	/**
