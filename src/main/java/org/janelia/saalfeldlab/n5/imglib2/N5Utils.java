@@ -1150,18 +1150,18 @@ public class N5Utils {
 			RandomAccessibleInterval<T> source,
 			final N5Writer n5,
 			final String dataset,
-			final DatasetAttributes attributes,
+			final ShardedDatasetAttributes attributes,
 			final long[] gridOffset) {
 
 		if (N5LabelMultisets.isLabelMultisetType(n5, dataset)) {
 			throw new N5ShardException("Sharded LabelMultisets not supported.");
 		}
 
-		if (attributes.getShardAttributes() == null) {
+		if (!(attributes instanceof ShardedDatasetAttributes)) {
 			throw new N5ShardException("Dataset " + dataset + " is not sharded.");
 		}
 
-		final ShardedDatasetAttributes shardAttrs = attributes.getShardAttributes();
+		final ShardedDatasetAttributes shardAttrs = (ShardedDatasetAttributes)attributes;
 		final RandomAccessibleInterval<Interval> gridBlocks = new CellGrid( source.dimensionsAsLongArray(), shardAttrs.getShardSize()) .cellIntervals()
 				.view().translate(gridOffset);
 		final ShardWriter writer = ShardWriter.create(source.view().zeroMin(), n5, dataset, attributes);
@@ -1220,11 +1220,11 @@ public class N5Utils {
 		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
 		if (attributes == null) {
 			throw new N5IOException("Dataset " + dataset + " does not exist.");
-		} else if (attributes.getShardAttributes() == null ) {
+		} else if (!(attributes instanceof ShardedDatasetAttributes)) {
 			throw new N5ShardException("Dataset " + dataset + " is not sharded.");
 		}
 
-		saveShard(source, n5, dataset, attributes.getShardAttributes());
+		saveShard(source, n5, dataset, (ShardedDatasetAttributes)attributes);
 	}
 
 	/**
@@ -2210,7 +2210,7 @@ public class N5Utils {
 				final RandomAccessibleInterval<T> source,
 				final N5Writer n5,
 				final String dataset,
-				final DatasetAttributes attributes) {
+				final ShardedDatasetAttributes attributes) {
 
 			return new Imp<>(source, attributes,
 					shard -> n5.writeShard(dataset, attributes, shard));
@@ -2220,7 +2220,7 @@ public class N5Utils {
 				final RandomAccessibleInterval<T> source,
 				final N5Writer n5,
 				final String dataset,
-				final DatasetAttributes attributes,
+				final ShardedDatasetAttributes attributes,
 				final T defaultValue) {
 
 			// TODO implement me
@@ -2255,14 +2255,14 @@ public class N5Utils {
 		class Imp<T extends NativeType<T>, P> implements ShardWriter {
 
 			final DataType dataType;
-			final DatasetAttributes attributes;
+			final ShardedDatasetAttributes attributes;
 			final Consumer<Shard<?>> writeShard;
 			final PrimitiveBlocks<T> sourceBlocks;
 			final int[] zeroPos;
 
 			Imp(
 					final RandomAccessibleInterval<T> source,
-					final DatasetAttributes attributes,
+					final ShardedDatasetAttributes attributes,
 					final Consumer<Shard<?>> writeShard) {
 
 				this.dataType = attributes.getDataType();
@@ -2283,16 +2283,15 @@ public class N5Utils {
 
 			public Shard<P> createShard(final long[] shardGridPos, final long[] shardMin, final int[] shardSize) {
 
-				final ShardedDatasetAttributes shardAttrs = attributes.getShardAttributes();
-				final int[] blockSize = shardAttrs.getBlockSize();
-				final InMemoryShard<P> shard = new InMemoryShard<P>(shardAttrs, shardGridPos);
-				final GridIterator it = new GridIterator(shardAttrs.getBlocksPerShard());
+				final int[] blockSize = attributes.getBlockSize();
+				final InMemoryShard<P> shard = new InMemoryShard<P>(attributes, shardGridPos);
+				final GridIterator it = new GridIterator(attributes.getBlocksPerShard());
 
 				while( it.hasNext() ) {
 
 					final long[] blkPosShardRelative = it.next();
-					final long[] blockMin = shardAttrs.getBlockMinFromShardPosition(shardGridPos, blkPosShardRelative);
-					final long[] blockPos = shardAttrs.getBlockPositionFromShardPosition(shardGridPos, blkPosShardRelative);
+					final long[] blockMin = attributes.getBlockMinFromShardPosition(shardGridPos, blkPosShardRelative);
+					final long[] blockPos = attributes.getBlockPositionFromShardPosition(shardGridPos, blkPosShardRelative);
 
 					final DataBlock<P> dataBlock = Cast.unchecked(dataType.createDataBlock(blockSize, blockPos));
 					sourceBlocks.copy(blockMin, dataBlock.getData(), blockSize);
