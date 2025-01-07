@@ -26,10 +26,8 @@
  */
 package org.janelia.saalfeldlab.n5.imglib2;
 
-import java.nio.ByteOrder;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -56,6 +54,7 @@ import org.janelia.saalfeldlab.n5.N5Writer;
 import org.janelia.saalfeldlab.n5.ShardedDatasetAttributes;
 import org.janelia.saalfeldlab.n5.shard.InMemoryShard;
 import org.janelia.saalfeldlab.n5.shard.Shard;
+import org.janelia.saalfeldlab.n5.shard.ShardParameters;
 import org.janelia.saalfeldlab.n5.shard.ShardingCodec.IndexLocation;
 import org.janelia.saalfeldlab.n5.util.GridIterator;
 
@@ -2206,11 +2205,11 @@ public class N5Utils {
 	 */
 	public interface ShardWriter {
 
-		static <T extends NativeType<T>> ShardWriter create(
+		static <T extends NativeType<T>,A extends DatasetAttributes & ShardParameters> ShardWriter create(
 				final RandomAccessibleInterval<T> source,
 				final N5Writer n5,
 				final String dataset,
-				final ShardedDatasetAttributes attributes) {
+				final A attributes) {
 
 			return new Imp<>(source, attributes,
 					shard -> n5.writeShard(dataset, attributes, shard));
@@ -2252,18 +2251,18 @@ public class N5Utils {
 			return () -> write(gridPos, blockMin, blockSize);
 		}
 
-		class Imp<T extends NativeType<T>, P> implements ShardWriter {
+		class Imp<T extends NativeType<T>, A extends DatasetAttributes & ShardParameters, P> implements ShardWriter {
 
 			final DataType dataType;
-			final ShardedDatasetAttributes attributes;
-			final Consumer<Shard<?>> writeShard;
+			final A attributes;
+			final Consumer<Shard<P,A>> writeShard;
 			final PrimitiveBlocks<T> sourceBlocks;
 			final int[] zeroPos;
 
 			Imp(
 					final RandomAccessibleInterval<T> source,
-					final ShardedDatasetAttributes attributes,
-					final Consumer<Shard<?>> writeShard) {
+					final A attributes,
+					final Consumer<Shard<P,A>> writeShard) {
 
 				this.dataType = attributes.getDataType();
 				this.attributes = attributes;
@@ -2273,7 +2272,7 @@ public class N5Utils {
 				zeroPos = new int[n];
 			}
 
-			Imp(final Imp<T, P> writer) {
+			Imp(final Imp<T, A, P> writer) {
 				this.dataType = writer.dataType;
 				this.attributes = writer.attributes;
 				this.writeShard = writer.writeShard;
@@ -2281,10 +2280,10 @@ public class N5Utils {
 				this.zeroPos = writer.zeroPos;
 			}
 
-			public Shard<P> createShard(final long[] shardGridPos, final long[] shardMin, final int[] shardSize) {
+			public Shard<P,A> createShard(final long[] shardGridPos, final long[] shardMin, final int[] shardSize) {
 
 				final int[] blockSize = attributes.getBlockSize();
-				final InMemoryShard<P> shard = new InMemoryShard<P>(attributes, shardGridPos);
+				final InMemoryShard<P,A> shard = new InMemoryShard<P,A>(attributes, shardGridPos);
 				final GridIterator it = new GridIterator(attributes.getBlocksPerShard());
 
 				while( it.hasNext() ) {
@@ -2303,7 +2302,7 @@ public class N5Utils {
 			}
 
 			public void write(final long[] gridPos, final long[] shardMin, final int[] shardSize) {
-				final Shard<P> shard = createShard(gridPos, shardMin, shardSize);
+				final Shard<P,A> shard = createShard(gridPos, shardMin, shardSize);
 				writeShard.accept(shard);
 			}
 
