@@ -2205,7 +2205,7 @@ public class N5Utils {
 	 */
 	public interface ShardWriter {
 
-		static <T extends NativeType<T>,A extends DatasetAttributes & ShardParameters> ShardWriter create(
+		static <T extends NativeType<T>, A extends DatasetAttributes & ShardParameters> ShardWriter create(
 				final RandomAccessibleInterval<T> source,
 				final N5Writer n5,
 				final String dataset,
@@ -2255,14 +2255,14 @@ public class N5Utils {
 
 			final DataType dataType;
 			final A attributes;
-			final Consumer<Shard<P,A>> writeShard;
+			final Consumer<Shard<P>> writeShard;
 			final PrimitiveBlocks<T> sourceBlocks;
 			final int[] zeroPos;
 
 			Imp(
 					final RandomAccessibleInterval<T> source,
 					final A attributes,
-					final Consumer<Shard<P,A>> writeShard) {
+					final Consumer<Shard<P>> writeShard) {
 
 				this.dataType = attributes.getDataType();
 				this.attributes = attributes;
@@ -2280,10 +2280,10 @@ public class N5Utils {
 				this.zeroPos = writer.zeroPos;
 			}
 
-			public Shard<P,A> createShard(final long[] shardGridPos, final long[] shardMin, final int[] shardSize) {
+			public Shard<P> createShard(final long[] shardGridPos, final long[] shardMin, final int[] shardSize) {
 
 				final int[] blockSize = attributes.getBlockSize();
-				final InMemoryShard<P,A> shard = new InMemoryShard<P,A>(attributes, shardGridPos);
+				final InMemoryShard<P> shard = new InMemoryShard<P>(attributes, shardGridPos);
 				final GridIterator it = new GridIterator(attributes.getBlocksPerShard());
 
 				while( it.hasNext() ) {
@@ -2302,7 +2302,7 @@ public class N5Utils {
 			}
 
 			public void write(final long[] gridPos, final long[] shardMin, final int[] shardSize) {
-				final Shard<P,A> shard = createShard(gridPos, shardMin, shardSize);
+				final Shard<P> shard = createShard(gridPos, shardMin, shardSize);
 				writeShard.accept(shard);
 			}
 
