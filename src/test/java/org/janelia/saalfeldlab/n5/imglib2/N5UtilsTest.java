@@ -26,6 +26,7 @@
  */
 package org.janelia.saalfeldlab.n5.imglib2;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
@@ -35,6 +36,7 @@ import java.util.Random;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.IntStream;
 
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.MatcherAssert;
@@ -45,6 +47,7 @@ import org.janelia.saalfeldlab.n5.N5FSWriter;
 import org.janelia.saalfeldlab.n5.N5Writer;
 import org.janelia.saalfeldlab.n5.RawCompression;
 import org.janelia.saalfeldlab.n5.ShortArrayDataBlock;
+import org.janelia.saalfeldlab.n5.shard.ShardParameters;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -59,8 +62,11 @@ import net.imglib2.cache.img.CachedCellImg;
 import net.imglib2.img.array.ArrayImg;
 import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.img.basictypeaccess.ShortAccess;
+import net.imglib2.img.basictypeaccess.array.IntArray;
 import net.imglib2.img.basictypeaccess.array.ShortArray;
 import net.imglib2.img.basictypeaccess.volatiles.VolatileAccess;
+import net.imglib2.loops.LoopBuilder;
+import net.imglib2.type.numeric.integer.IntType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.util.Intervals;
 import net.imglib2.util.Pair;
@@ -334,4 +340,40 @@ public class N5UtilsTest {
 		while (c.hasNext())
 			assertTrue(c.next().valueEquals(d.next()));
 	}
+
+	@Test
+	public void testShard() throws IOException {
+
+		final String shardDset = "shardDataset";
+
+		final int nx = 20;
+		final int ny = 16;
+		final int[] data = IntStream.range(0, nx * ny).toArray();
+		final ArrayImg<IntType, IntArray> img = ArrayImgs.ints(data, nx, ny);
+
+		final int[] readData = new int[data.length];
+		final ArrayImg<IntType, IntArray> imgRead = ArrayImgs.ints(readData, nx, ny);
+
+		final long[] imgSize = new long[] { nx, ny };
+		final int[] shardSize = new int[] { 10, 8 };
+		final int[] blkSize = new int[] { 5, 4 };
+
+		n5.remove(shardDset);
+		N5Utils.save(img, n5, shardDset, blkSize, shardSize, new RawCompression());
+
+		assertTrue(n5.datasetExists(shardDset));
+
+		final DatasetAttributes attrs = n5.getDatasetAttributes(shardDset);
+		assertTrue("attributes not sharded", attrs instanceof ShardParameters);
+		assertArrayEquals("block size incorrect", blkSize, attrs.getBlockSize());
+		assertArrayEquals("shard size incorrect", shardSize, ((ShardParameters) attrs).getShardSize());
+
+		CachedCellImg<IntType, ?> tmp = N5Utils.open(n5, shardDset);
+		LoopBuilder.setImages(tmp, imgRead).forEachPixel((x, y) -> {
+			y.set(x);
+		});
+
+		assertArrayEquals("data incorrect", data, readData);
+	}
+
 }
