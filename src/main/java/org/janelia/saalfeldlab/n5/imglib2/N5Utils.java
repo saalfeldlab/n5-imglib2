@@ -51,6 +51,7 @@ import org.janelia.saalfeldlab.n5.codec.DeterministicSizeCodec;
 import org.janelia.saalfeldlab.n5.codec.N5BlockCodec;
 import org.janelia.saalfeldlab.n5.N5Reader;
 import org.janelia.saalfeldlab.n5.N5Writer;
+import org.janelia.saalfeldlab.n5.RawCompression;
 import org.janelia.saalfeldlab.n5.ShardedDatasetAttributes;
 import org.janelia.saalfeldlab.n5.shard.InMemoryShard;
 import org.janelia.saalfeldlab.n5.shard.Shard;
@@ -1470,7 +1471,7 @@ public class N5Utils {
 			blockCodec = new BytesCodec();
 
 		Codec[] blockCodecs;
-		if (compressionCodec == null)
+		if (compressionCodec == null || compressionCodec instanceof RawCompression)
 			blockCodecs = new Codec[]{blockCodec};
 		else
 			blockCodecs = new Codec[]{blockCodec, compressionCodec};
