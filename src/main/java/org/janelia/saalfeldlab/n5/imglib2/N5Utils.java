@@ -1410,8 +1410,8 @@ public class N5Utils {
 	 * @param source        the source image
 	 * @param n5            the n5 writer
 	 * @param dataset       the dataset path
-	 * @param blockSize     the block size (in pixels)
 	 * @param shardSize     the shard size (in pixels)
+	 * @param blockSize     the block size (in pixels)
 	 * @param blocksCodecs  codecs for block data
 	 * @param indexCodecs   codecs for the shard index
 	 * @param indexLocation the shard index location
@@ -1420,8 +1420,8 @@ public class N5Utils {
 			final RandomAccessibleInterval<T> source,
 			final N5Writer n5,
 			final String dataset,
-			final int[] blockSize,
 			final int[] shardSize,
+			final int[] blockSize,
 			final Codec[] blocksCodecs,
 			final DeterministicSizeCodec[] indexCodecs,
 			final IndexLocation indexLocation) {
@@ -1450,8 +1450,8 @@ public class N5Utils {
 	 * @param source           the source image
 	 * @param n5               the n5 writer
 	 * @param dataset          the dataset path
-	 * @param blockSize        the block size (in pixels)
 	 * @param shardSize        the shard size (in pixels)
+	 * @param blockSize        the block size (in pixels)
 	 * @param compressionCodec the compression codec
 	 * @param indexLocation    the shard index location
 	 */
@@ -1459,8 +1459,8 @@ public class N5Utils {
 			final RandomAccessibleInterval<T> source,
 			final N5Writer n5,
 			final String dataset,
-			final int[] blockSize,
 			final int[] shardSize,
+			final int[] blockSize,
 			final Codec compressionCodec,
 			final IndexLocation indexLocation) {
 
@@ -1476,7 +1476,9 @@ public class N5Utils {
 		else
 			blockCodecs = new Codec[]{blockCodec, compressionCodec};
 
-		save(source, n5, dataset, blockSize, shardSize,
+		save(source, n5, dataset,
+				shardSize,
+				blockSize,
 				blockCodecs,
 				new DeterministicSizeCodec[]{new BytesCodec()},
 				indexLocation );
@@ -1491,19 +1493,19 @@ public class N5Utils {
 	 * @param source           the source image
 	 * @param n5               the n5 writer
 	 * @param dataset          the dataset path
-	 * @param blockSize        the block size (in pixels)
 	 * @param shardSize        the shard size (in pixels)
+	 * @param blockSize        the block size (in pixels)
 	 * @param compressionCodec the compression codec
 	 */
 	public static <T extends NativeType<T>> void save(
 			final RandomAccessibleInterval<T> source,
 			final N5Writer n5,
 			final String dataset,
-			final int[] blockSize,
 			final int[] shardSize,
+			final int[] blockSize,
 			final Codec compressionCodec) {
 
-		save(source, n5, dataset, blockSize, shardSize, compressionCodec, IndexLocation.END);
+		save(source, n5, dataset, shardSize, blockSize, compressionCodec, IndexLocation.END);
 	}
 
 	/**
