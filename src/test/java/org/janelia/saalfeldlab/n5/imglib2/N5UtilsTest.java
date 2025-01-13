@@ -83,6 +83,8 @@ public class N5UtilsTest {
 
 	static private int[] blockSize = new int[]{5, 7, 9};
 
+	static private int[] shardSize = new int[]{10, 14, 18};
+
 	static short[] data;
 
 	static short[] excessData;
@@ -359,7 +361,7 @@ public class N5UtilsTest {
 		final int[] blkSize = new int[] { 5, 4 };
 
 		n5.remove(shardDset);
-		N5Utils.save(img, n5, shardDset, blkSize, shardSize, new RawCompression());
+		N5Utils.save(img, n5, shardDset, shardSize, blkSize, new RawCompression());
 
 		assertTrue(n5.datasetExists(shardDset));
 
