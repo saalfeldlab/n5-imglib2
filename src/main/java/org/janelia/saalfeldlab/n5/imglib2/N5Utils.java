@@ -1132,6 +1132,149 @@ public class N5Utils {
 
 	/**
 	 * Save a {@link RandomAccessibleInterval} into an N5 dataset at a given
+	 * offset. The offset is given in {@link Shard} grid coordinates and the
+	 * source is assumed to align with the {@link Shard} grid of the
+	 * dataset. Only DataBlocks that contain values other than
+	 * a given default value are stored.
+	 *
+	 * @param <T>
+	 *            the type parameter
+	 * @param source
+	 *            the source block
+	 * @param n5
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset path
+	 * @param attributes
+	 *            the dataset attributes
+	 * @param gridOffset
+	 *            the position in the block grid
+	 * @param defaultValue
+	 *            the default value
+	 */
+	public static <T extends NativeType<T>, A extends DatasetAttributes & ShardParameters> void saveNonEmptyShard(
+			final RandomAccessibleInterval<T> source,
+			final N5Writer n5,
+			final String dataset,
+			final A attributes,
+			final long[] gridOffset,
+			final T defaultValue) {
+
+		final RandomAccessibleInterval<Interval> gridShards = new CellGrid(source.dimensionsAsLongArray(), attributes.getShardSize())
+				.cellIntervals()
+				.view().translate(gridOffset);
+		final ShardWriter writer = ShardWriter.createNonEmpty(source.view().zeroMin(), n5, dataset, attributes, defaultValue);
+		Streams.localizing(gridShards)
+				.map(writer::writeTask)
+				.forEach(Runnable::run);
+	}
+
+	/**
+	 * Save a {@link RandomAccessibleInterval} into an N5 dataset. The shard
+	 * offset is determined by the source position, and the source is assumed to
+	 * align with the {@link Shard} grid of the dataset. Only
+	 * DataBlocks  that contain values other than a given
+	 * default value are stored.
+	 *
+	 * @param <T>
+	 *            the type parameter
+	 * @param source
+	 *            the source block
+	 * @param n5
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset path
+	 * @param attributes
+	 *            the dataset attributes
+	 * @param defaultValue
+	 *            the default value
+	 */
+	public static <T extends NativeType<T>, A extends DatasetAttributes & ShardParameters> void saveNonEmptyShard(
+			final RandomAccessibleInterval<T> source,
+			final N5Writer n5,
+			final String dataset,
+			final A attributes,
+			final T defaultValue) {
+
+		final int[] blockSize = attributes.getBlockSize();
+		final long[] gridOffset = new long[blockSize.length];
+		Arrays.setAll(gridOffset, d -> source.min(d) / blockSize[d]);
+		saveNonEmptyBlock(source, n5, dataset, attributes, gridOffset, defaultValue);
+	}
+
+	/**
+	 * Save a {@link RandomAccessibleInterval} into an N5 dataset. The block
+	 * offset is determined by the source position, and the source is assumed to
+	 * align with the {@link DataBlock} grid of the dataset. Only
+	 * {@link DataBlock DataBlocks} that contain values other than a given
+	 * default value are stored.
+	 *
+	 * @param <T>
+	 *            the type parameter
+	 * @param source
+	 *            the source block
+	 * @param n5
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset path
+	 * @param defaultValue
+	 *            the default value
+	 */
+	public static <T extends NativeType<T>> void saveNonEmptyShard(
+			final RandomAccessibleInterval<T> source,
+			final N5Writer n5,
+			final String dataset,
+			final T defaultValue) {
+
+		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
+		if( attributes == null ) {
+			throw new N5IOException("Dataset " + dataset + " does not exist.");
+		} else if( !(attributes instanceof ShardParameters )) {
+			throw new N5IOException("Dataset " + dataset + " is not sharded.");
+		}
+
+		saveNonEmptyShard(source, n5, dataset, (DatasetAttributes & ShardParameters)attributes, defaultValue);
+	}
+
+	/**
+	 * Save a {@link RandomAccessibleInterval} into an N5 dataset at a given
+	 * offset. The offset is given in {@link Shard} grid coordinates and the
+	 * source is assumed to align with the {@link Shard} grid of the
+	 * dataset. Only DataBlocks that contain values other than
+	 * a given default value are stored.
+	 *
+	 * @param <T>
+	 *            the type parameter
+	 * @param source
+	 *            the source block
+	 * @param n5
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset path
+	 * @param gridOffset
+	 *            the position in the shard grid
+	 * @param defaultValue
+	 *            the default value
+	 */
+	public static <T extends NativeType<T>> void saveNonEmptyShard(
+			final RandomAccessibleInterval<T> source,
+			final N5Writer n5,
+			final String dataset,
+			final long[] gridOffset,
+			final T defaultValue) {
+
+		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
+		if( attributes == null ) {
+			throw new N5IOException("Dataset " + dataset + " does not exist.");
+		} else if( !(attributes instanceof ShardParameters )) {
+			throw new N5IOException("Dataset " + dataset + " is not sharded.");
+		}
+
+		saveNonEmptyBlock(source, n5, dataset, attributes, gridOffset, defaultValue);
+	}
+
+	/**
+	 * Save a {@link RandomAccessibleInterval} into an N5 dataset at a given
 	 * offset. The offset is given in shard grid coordinates and the
 	 * source is assumed to align with the {@link Shard} grid of the
 	 * dataset.
@@ -2490,11 +2633,11 @@ public class N5Utils {
 					shard -> n5.writeShard(dataset, attributes, shard));
 		}
 
-		static <T extends NativeType<T>> ShardWriter createNonEmpty(
+		static <T extends NativeType<T>, A extends DatasetAttributes & ShardParameters> ShardWriter createNonEmpty(
 				final RandomAccessibleInterval<T> source,
 				final N5Writer n5,
 				final String dataset,
-				final ShardedDatasetAttributes attributes,
+				final A attributes,
 				final T defaultValue) {
 
 			return new ShardImp<>(source, attributes,
