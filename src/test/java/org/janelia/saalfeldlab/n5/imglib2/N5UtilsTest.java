@@ -28,6 +28,8 @@ package org.janelia.saalfeldlab.n5.imglib2;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -40,10 +42,13 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.MatcherAssert;
+import org.janelia.saalfeldlab.n5.DataBlock;
 import org.janelia.saalfeldlab.n5.DataType;
 import org.janelia.saalfeldlab.n5.DatasetAttributes;
 import org.janelia.saalfeldlab.n5.GzipCompression;
@@ -282,50 +287,51 @@ public class N5UtilsTest {
 	public void testSaveNonEmpty() throws InterruptedException, ExecutionException {
 
 		final String datasetPath = "nonEmptyTest";
-		final ArrayImg<UnsignedShortType, ?> img = ArrayImgs.unsignedShorts(dimensions);
-
-		// dimensions are : {20, 28, 36}
-		// block size is 	{ 5,  7,  9}
-		// 4x4x4 block grid, set only "diagonal blocks" (i,i,i) i in [0,3]
-		ArrayRandomAccess<UnsignedShortType> ra = img.randomAccess();
-		ra.setPositionAndGet(0,0,0).set(1);
-		ra.setPositionAndGet(5,7,9).set(1);
-		ra.setPositionAndGet(10,14,18).set(1);
-		ra.setPositionAndGet(15,21,27).set(1);
-
 		final UnsignedShortType zero = new UnsignedShortType();
 		zero.setZero();
 
-		final DatasetAttributes attrs = new DatasetAttributes(
-				img.dimensionsAsLongArray(),
-				blockSize, 
-				DataType.UINT16,
-				new RawCompression());
-
-		final N5FSWriter n5fs = (N5FSWriter)n5;
-		final KeyValueAccess kva = n5fs.getKeyValueAccess();
-
-		n5.createDataset(datasetPath, attrs);
-		N5Utils.saveNonEmptyBlock(img, n5, datasetPath, zero);
-
-		final long[] p = new long[3];
-		final CellIntervals blocks = new CellGrid(dimensions, blockSize).cellIntervals();
-		final Cursor<Interval> c = blocks.cursor();
-		while( c.hasNext()) {
-			c.fwd();
-			c.localize(p);
-			final String blockPath = n5fs.absoluteDataBlockPath(datasetPath, p);
-			if( p[0] == p[1] && p[0] == p[2] )
-				assertTrue(kva.exists(blockPath));
-			else
-				assertFalse(kva.exists(blockPath));
-		}
+		testSaveNonEmptyShardHelper(
+				datasetPath,
+				this::datasetAttributes,
+				img -> { N5Utils.saveNonEmptyBlock(img, n5, datasetPath, zero); });
 	}
 
 	@Test
 	public void testSaveNonEmptyShard() throws InterruptedException, ExecutionException {
 
 		final String datasetPath = "nonEmptyTestShard";
+		final UnsignedShortType zero = new UnsignedShortType();
+		zero.setZero();
+
+		testSaveNonEmptyShardHelper(
+				datasetPath,
+				this::shardedDatasetAttributes,
+				img -> { N5Utils.saveNonEmptyBlock(img, n5, datasetPath, zero); });
+
+		final String datasetPath2 = "nonEmptyTestShard2";
+		testSaveNonEmptyShardHelper(
+				datasetPath2,
+				this::shardedDatasetAttributes,
+				img -> { N5Utils.saveNonEmptyShard(img, n5, datasetPath2, zero); });
+	}
+
+	private ShardedDatasetAttributes shardedDatasetAttributes() {
+		return new ShardedDatasetAttributes(dimensions, shardSize, blockSize, DataType.UINT16,
+				new Codec[] { new BytesCodec(), new GzipCompression(4) },
+				new DeterministicSizeCodec[] { new BytesCodec(), new Crc32cChecksumCodec() }, IndexLocation.END);
+	}
+
+	private DatasetAttributes datasetAttributes() {
+		return new DatasetAttributes(dimensions, blockSize, DataType.UINT16,
+				new RawCompression());
+	}
+
+	public void testSaveNonEmptyShardHelper(
+			final String datasetPath,
+			final Supplier<DatasetAttributes> datasetAttributes,
+			final Consumer<RandomAccessibleInterval<UnsignedShortType>> saveNonEmpty
+			) throws InterruptedException, ExecutionException {
+
 		final ArrayImg<UnsignedShortType, ?> img = ArrayImgs.unsignedShorts(dimensions);
 
 		// dimensions are : {20, 28, 36}
@@ -342,55 +348,23 @@ public class N5UtilsTest {
 		final UnsignedShortType zero = new UnsignedShortType();
 		zero.setZero();
 
-		ShardedDatasetAttributes attrs = new ShardedDatasetAttributes(
-				dimensions,
-				shardSize,
-				blockSize,
-				DataType.UINT16,
-				new Codec[]{new BytesCodec(), new GzipCompression(4)},
-				new DeterministicSizeCodec[]{new BytesCodec(), new Crc32cChecksumCodec()},
-				IndexLocation.END
-		);
-
-		final N5FSWriter n5fs = (N5FSWriter)n5;
-		final KeyValueAccess kva = n5fs.getKeyValueAccess();
+		final DatasetAttributes attrs = datasetAttributes.get();
 
 		n5.remove(datasetPath);
 		n5.createDataset(datasetPath, attrs);
-		N5Utils.saveNonEmptyBlock(img, n5, datasetPath, zero);
+		saveNonEmpty.accept(img);
 
-		// ensure that only shards [0,0,0] and [1,1,1] were written
-		final long[] p = new long[3];
-		final CellIntervals shards = new CellGrid(dimensions, shardSize).cellIntervals();
-		final Cursor<Interval> c = shards.cursor();
-		while( c.hasNext()) {
+		final CellIntervals blocks = new CellGrid(dimensions, blockSize).cellIntervals();
+		final Cursor<Interval> c = blocks.cursor();
+		final long[] blockPos = new long[3];
+		while (c.hasNext()) {
 			c.fwd();
-			c.localize(p);
-			final String blockPath = n5fs.absoluteDataBlockPath(datasetPath, p);
-			if( p[0] == p[1] && p[0] == p[2] )
-				assertTrue(kva.exists(blockPath));
-			else
-				assertFalse(kva.exists(blockPath));
-		}
-
-		// read each shard
-		final ShardIndex index0 = n5.readShard(datasetPath, attrs, 0, 0, 0).getIndex();
-		final ShardIndex index1 = n5.readShard(datasetPath, attrs, 1, 1, 1).getIndex();
-
-		final int[] indexPos = new int[3];
-		final CellIntervals blocks = new CellGrid(GridIterator.int2long(shardSize), blockSize).cellIntervals();
-		final Cursor<Interval> bcursor = blocks.cursor();
-		while (bcursor.hasNext()) {
-			bcursor.fwd();
-			bcursor.localize(indexPos);
-
-			if( indexPos[0] == indexPos[1] && indexPos[0] == indexPos[2] ) {
-				assertTrue(index0.exists(indexPos));
-				assertTrue(index1.exists(indexPos));
-			}
-			else {
-				assertFalse(index0.exists(indexPos));
-				assertFalse(index1.exists(indexPos));
+			c.localize(blockPos);
+			final DataBlock<?> blk = n5.readBlock(datasetPath, attrs, blockPos);
+			if (blockPos[0] == blockPos[1] && blockPos[0] == blockPos[2]) {
+				assertNotNull(blk);
+			} else {
+				assertNull(blk);
 			}
 		}
 	}
