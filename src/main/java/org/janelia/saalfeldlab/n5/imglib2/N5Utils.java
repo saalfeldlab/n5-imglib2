@@ -36,6 +36,7 @@ import java.util.concurrent.Future;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.IntFunction;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import org.janelia.saalfeldlab.n5.Compression;
@@ -60,6 +61,7 @@ import org.janelia.saalfeldlab.n5.shard.ShardingCodec.IndexLocation;
 import org.janelia.saalfeldlab.n5.util.GridIterator;
 
 import java.util.stream.Collectors;
+
 import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
 import net.imglib2.IterableInterval;
@@ -106,6 +108,7 @@ import net.imglib2.util.CloseableThreadLocal;
 import net.imglib2.util.Intervals;
 import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
+import net.imglib2.view.Views;
 
 /**
  * Static utility methods to open N5 datasets as ImgLib2
@@ -1126,7 +1129,7 @@ public class N5Utils {
 			throw new N5IOException("Dataset " + dataset + " does not exist.");
 		}
 	}
-	
+
 	/**
 	 * Save a {@link RandomAccessibleInterval} into an N5 dataset at a given
 	 * offset. The offset is given in shard grid coordinates and the
@@ -1162,10 +1165,12 @@ public class N5Utils {
 		}
 
 		final ShardedDatasetAttributes shardAttrs = (ShardedDatasetAttributes)attributes;
-		final RandomAccessibleInterval<Interval> gridBlocks = new CellGrid( source.dimensionsAsLongArray(), shardAttrs.getShardSize()) .cellIntervals()
+		final RandomAccessibleInterval<Interval> shardBlocks = new CellGrid( source.dimensionsAsLongArray(),shardAttrs.getShardSize())
+				.cellIntervals()
 				.view().translate(gridOffset);
+
 		final ShardWriter writer = ShardWriter.create(source.view().zeroMin(), n5, dataset, attributes);
-		Streams.localizing(gridBlocks)
+		Streams.localizing(shardBlocks)
 				.map(writer::writeTask)
 				.forEach(Runnable::run);
 	}
@@ -1303,16 +1308,83 @@ public class N5Utils {
 		final RandomAccessibleInterval<Interval> gridShards = new CellGrid(source.dimensionsAsLongArray(), attributes.getShardSize())
 				.cellIntervals()
 				.view().translate(gridOffset);
-		
-		// TODO implement me
 
-		final BlockWriter writer = BlockWriter.create(source.view().zeroMin(), n5, dataset, attributes).threadSafe();
-//		final List<Future<?>> futures = Streams.localizing(gridBlocks)
-//				.map(writer::writeTask)
-//				.map(exec::submit)
-//				.collect(Collectors.toList());
-//		for (final Future<?> f : futures)
-//			f.get();
+		final ShardWriter writer = ShardWriter.create(source.view().zeroMin(), n5, dataset, attributes).threadSafe();
+		final List<Future<?>> futures = Streams.localizing(gridShards)
+				.map(writer::writeTask)
+				.map(exec::submit)
+				.collect(Collectors.toList());
+
+		for (final Future<?> f : futures)
+			f.get();
+	}
+
+	/**
+	 * Save a {@link RandomAccessibleInterval} into an N5 dataset in parallel
+	 * using the given {@link ExecutorService}.
+	 *
+	 * @param <T>
+	 *            the type parameter
+	 * @param source
+	 *            the source block
+	 * @param n5
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset path
+	 * @param exec
+	 *            the executor service
+	 * @throws InterruptedException
+	 *             the interrupted exception
+	 * @throws ExecutionException
+	 *             the execution exception
+	 */
+	public static <T extends NativeType<T>> void saveShard(
+			final RandomAccessibleInterval<T> source,
+			final N5Writer n5,
+			final String dataset,
+			final ExecutorService exec) throws InterruptedException, ExecutionException {
+
+		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
+		if (attributes == null) {
+			throw new N5IOException("Dataset " + dataset + " does not exist.");
+		} else if (!(attributes instanceof ShardedDatasetAttributes)) {
+			throw new N5ShardException("Dataset " + dataset + " is not sharded.");
+		}
+
+		final long[] zeroGridOffset = new long[attributes.getNumDimensions()];
+		saveShard(source, n5, dataset, (ShardedDatasetAttributes)attributes, zeroGridOffset, exec);
+	}
+
+	/**
+	 * Save a {@link RandomAccessibleInterval} into an N5 dataset in parallel
+	 * using the given {@link ExecutorService}.
+	 *
+	 * @param <T>
+	 *            the type parameter
+	 * @param source
+	 *            the source block
+	 * @param n5
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset path
+	 * @param attributes
+	 *            the dataset attributes
+	 * @param exec
+	 *            the executor service
+	 * @throws InterruptedException
+	 *             the interrupted exception
+	 * @throws ExecutionException
+	 *             the execution exception
+	 */
+	public static <T extends NativeType<T>> void saveShard(
+			final RandomAccessibleInterval<T> source,
+			final N5Writer n5,
+			final String dataset,
+			final DatasetAttributes attributes,
+			final ExecutorService exec) throws InterruptedException, ExecutionException {
+
+		final long[] zeroGridOffset = new long[attributes.getNumDimensions()];
+		saveShard(source, n5, dataset, (ShardedDatasetAttributes)attributes, zeroGridOffset, exec);
 	}
 
 	/**
@@ -1346,15 +1418,13 @@ public class N5Utils {
 			final ExecutorService exec) throws InterruptedException, ExecutionException {
 
 		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
-		if (!(attributes instanceof ShardedDatasetAttributes)) {
+		if (attributes == null) {
+			throw new N5IOException("Dataset " + dataset + " does not exist.");
+		} else if (!(attributes instanceof ShardedDatasetAttributes)) {
 			throw new N5ShardException("Dataset " + dataset + " is not sharded.");
 		}
 
-		if (attributes != null) {
-			saveShard(source, n5, dataset, (ShardedDatasetAttributes)attributes, gridOffset, exec);
-		} else {
-			throw new N5IOException("Dataset " + dataset + " does not exist.");
-		}
+		saveShard(source, n5, dataset, (ShardedDatasetAttributes)attributes, gridOffset, exec);
 	}
 
 	/**
@@ -1394,118 +1464,6 @@ public class N5Utils {
 				compression);
 		n5.createDataset(dataset, attributes);
 		saveBlock(source, n5, dataset, attributes);
-	}
-
-	/**
-	 * Save a {@link RandomAccessibleInterval} as a sharded N5 dataset.
-	 * <p>
-	 * Both the blocksCodecs and indexCodecus must contain a
-	 * {@link Codec.ArrayCodec}. We recommend only specifying a compression Codec
-	 * using the method:
-	 * {@link #save(RandomAccessibleInterval, N5Writer, String, int[], int[], Codec, IndexLocation)}
-	 * or
-	 * {@link #save(RandomAccessibleInterval, N5Writer, String, int[], int[], Codec)}
-	 *
-	 * @param <T>           the type parameter
-	 * @param source        the source image
-	 * @param n5            the n5 writer
-	 * @param dataset       the dataset path
-	 * @param shardSize     the shard size (in pixels)
-	 * @param blockSize     the block size (in pixels)
-	 * @param blocksCodecs  codecs for block data
-	 * @param indexCodecs   codecs for the shard index
-	 * @param indexLocation the shard index location
-	 */
-	public static <T extends NativeType<T>> void save(
-			final RandomAccessibleInterval<T> source,
-			final N5Writer n5,
-			final String dataset,
-			final int[] shardSize,
-			final int[] blockSize,
-			final Codec[] blocksCodecs,
-			final DeterministicSizeCodec[] indexCodecs,
-			final IndexLocation indexLocation) {
-
-		if (source.getType() instanceof LabelMultisetType) {
-			throw new N5ShardException("Sharded LabelMultisets not supported.");
-		}
-
-		final ShardedDatasetAttributes attributes = new ShardedDatasetAttributes(
-				source.dimensionsAsLongArray(),
-				shardSize,
-				blockSize,
-				dataType(source.getType()),
-				blocksCodecs,
-				indexCodecs,
-				indexLocation);
-
-		n5.createDataset(dataset, attributes);
-		saveShard(source, n5, dataset, attributes);
-	}
-
-	/**
-	 * Save a {@link RandomAccessibleInterval} as a sharded N5 dataset.
-	 *
-	 * @param <T>              the type parameter
-	 * @param source           the source image
-	 * @param n5               the n5 writer
-	 * @param dataset          the dataset path
-	 * @param shardSize        the shard size (in pixels)
-	 * @param blockSize        the block size (in pixels)
-	 * @param compressionCodec the compression codec
-	 * @param indexLocation    the shard index location
-	 */
-	public static <T extends NativeType<T>> void save(
-			final RandomAccessibleInterval<T> source,
-			final N5Writer n5,
-			final String dataset,
-			final int[] shardSize,
-			final int[] blockSize,
-			final Codec compressionCodec,
-			final IndexLocation indexLocation) {
-
-		Codec.ArrayCodec blockCodec;
-		if (n5 instanceof N5KeyValueWriter)
-			blockCodec = new N5BlockCodec();
-		else
-			blockCodec = new BytesCodec();
-
-		Codec[] blockCodecs;
-		if (compressionCodec == null || compressionCodec instanceof RawCompression)
-			blockCodecs = new Codec[]{blockCodec};
-		else
-			blockCodecs = new Codec[]{blockCodec, compressionCodec};
-
-		save(source, n5, dataset,
-				shardSize,
-				blockSize,
-				blockCodecs,
-				new DeterministicSizeCodec[]{new BytesCodec()},
-				indexLocation );
-	}
-
-	/**
-	 * Save a {@link RandomAccessibleInterval} as a sharded N5 dataset.
-	 * <p>
-	 * Writes the shard index at the end.
-	 *
-	 * @param <T>              the type parameter
-	 * @param source           the source image
-	 * @param n5               the n5 writer
-	 * @param dataset          the dataset path
-	 * @param shardSize        the shard size (in pixels)
-	 * @param blockSize        the block size (in pixels)
-	 * @param compressionCodec the compression codec
-	 */
-	public static <T extends NativeType<T>> void save(
-			final RandomAccessibleInterval<T> source,
-			final N5Writer n5,
-			final String dataset,
-			final int[] shardSize,
-			final int[] blockSize,
-			final Codec compressionCodec) {
-
-		save(source, n5, dataset, shardSize, blockSize, compressionCodec, IndexLocation.END);
 	}
 
 	/**
@@ -1556,6 +1514,245 @@ public class N5Utils {
 	}
 
 	/**
+	 * Save a {@link RandomAccessibleInterval} as a sharded N5 dataset.
+	 * <p>
+	 * Both the blocksCodecs and indexCodecus must contain a
+	 * {@link Codec.ArrayCodec}. We recommend only specifying a compression Codec
+	 * using the method:
+	 * {@link #save(RandomAccessibleInterval, N5Writer, String, int[], int[], Codec, IndexLocation)}
+	 * or
+	 * {@link #save(RandomAccessibleInterval, N5Writer, String, int[], int[], Codec)}
+	 *
+	 * @param <T>           the type parameter
+	 * @param source        the source image
+	 * @param n5            the n5 writer
+	 * @param dataset       the dataset path
+	 * @param shardSize     the shard size (in pixels)
+	 * @param blockSize     the block size (in pixels)
+	 * @param blocksCodecs  codecs for block data
+	 * @param indexCodecs   codecs for the shard index
+	 * @param indexLocation the shard index location
+	 */
+	public static <T extends NativeType<T>> void save(
+			final RandomAccessibleInterval<T> source,
+			final N5Writer n5,
+			final String dataset,
+			final int[] shardSize,
+			final int[] blockSize,
+			final Codec[] blocksCodecs,
+			final DeterministicSizeCodec[] indexCodecs,
+			final IndexLocation indexLocation) {
+
+		if (source.getType() instanceof LabelMultisetType) {
+			throw new N5ShardException("Sharded LabelMultisets not supported.");
+		}
+
+		final ShardedDatasetAttributes attributes = new ShardedDatasetAttributes(
+				source.dimensionsAsLongArray(),
+				shardSize,
+				blockSize,
+				dataType(source.getType()),
+				blocksCodecs,
+				indexCodecs,
+				indexLocation);
+
+		n5.createDataset(dataset, attributes);
+		saveShard(source, n5, dataset, attributes);
+	}
+	
+	/**
+	 * Save a {@link RandomAccessibleInterval} as a sharded N5 dataset in parallel 
+	 * using the given {@link ExecutorService}.
+	 * <p>
+	 * Both the blocksCodecs and indexCodecus must contain a
+	 * {@link Codec.ArrayCodec}. We recommend only specifying a compression Codec
+	 * using the method:
+	 * {@link #save(RandomAccessibleInterval, N5Writer, String, int[], int[], Codec, IndexLocation)}
+	 * or
+	 * {@link #save(RandomAccessibleInterval, N5Writer, String, int[], int[], Codec)}
+	 *
+	 * @param <T>           the type parameter
+	 * @param source        the source image
+	 * @param n5            the n5 writer
+	 * @param dataset       the dataset path
+	 * @param shardSize     the shard size (in pixels)
+	 * @param blockSize     the block size (in pixels)
+	 * @param blocksCodecs  codecs for block data
+	 * @param indexCodecs   codecs for the shard index
+	 * @param indexLocation the shard index location
+	 * @param exec the ExecutorService
+	 * @throws ExecutionException the execution exception 
+	 * @throws InterruptedException the interrupted exception
+	 */
+	public static <T extends NativeType<T>> void save(
+			final RandomAccessibleInterval<T> source,
+			final N5Writer n5,
+			final String dataset,
+			final int[] shardSize,
+			final int[] blockSize,
+			final Codec[] blocksCodecs,
+			final DeterministicSizeCodec[] indexCodecs,
+			final IndexLocation indexLocation,
+			final ExecutorService exec) throws InterruptedException, ExecutionException {
+
+		if (source.getType() instanceof LabelMultisetType) {
+			throw new N5ShardException("Sharded LabelMultisets not supported.");
+		}
+
+		final ShardedDatasetAttributes attributes = new ShardedDatasetAttributes(
+				source.dimensionsAsLongArray(),
+				shardSize,
+				blockSize,
+				dataType(source.getType()),
+				blocksCodecs,
+				indexCodecs,
+				indexLocation);
+
+		n5.createDataset(dataset, attributes);
+		saveShard(source, n5, dataset, attributes, exec);
+	}
+
+	/**
+	 * Save a {@link RandomAccessibleInterval} as a sharded N5 dataset.
+	 *
+	 * @param <T>              the type parameter
+	 * @param source           the source image
+	 * @param n5               the n5 writer
+	 * @param dataset          the dataset path
+	 * @param shardSize        the shard size (in pixels)
+	 * @param blockSize        the block size (in pixels)
+	 * @param compressionCodec the compression codec
+	 * @param indexLocation    the shard index location
+	 */
+	public static <T extends NativeType<T>> void save(
+			final RandomAccessibleInterval<T> source,
+			final N5Writer n5,
+			final String dataset,
+			final int[] shardSize,
+			final int[] blockSize,
+			final Codec compressionCodec,
+			final IndexLocation indexLocation) {
+
+		Codec.ArrayCodec blockCodec;
+		if (n5 instanceof N5KeyValueWriter)
+			blockCodec = new N5BlockCodec();
+		else
+			blockCodec = new BytesCodec();
+
+		Codec[] blockCodecs;
+		if (compressionCodec == null || compressionCodec instanceof RawCompression)
+			blockCodecs = new Codec[]{blockCodec};
+		else
+			blockCodecs = new Codec[]{blockCodec, compressionCodec};
+
+		save(source, n5, dataset,
+				shardSize,
+				blockSize,
+				blockCodecs,
+				new DeterministicSizeCodec[]{new BytesCodec()},
+				indexLocation );
+	}
+
+	/**
+	 * Save a {@link RandomAccessibleInterval} as a sharded N5 dataset in
+	 * parallel using the given {@link ExecutorService}.
+	 *
+	 * @param <T>              the type parameter
+	 * @param source           the source image
+	 * @param n5               the n5 writer
+	 * @param dataset          the dataset path
+	 * @param shardSize        the shard size (in pixels)
+	 * @param blockSize        the block size (in pixels)
+	 * @param compressionCodec the compression codec
+	 * @param indexLocation    the shard index location
+	 * @param executorService  the executor service
+	 * @throws ExecutionException   the execution exception
+	 * @throws InterruptedException the interrupted exception
+	 */
+	public static <T extends NativeType<T>> void save(
+			final RandomAccessibleInterval<T> source,
+			final N5Writer n5,
+			final String dataset,
+			final int[] shardSize,
+			final int[] blockSize,
+			final Codec compressionCodec,
+			final IndexLocation indexLocation,
+			final ExecutorService exec ) throws InterruptedException, ExecutionException {
+
+		Codec.ArrayCodec blockCodec;
+		if (n5 instanceof N5KeyValueWriter)
+			blockCodec = new N5BlockCodec();
+		else
+			blockCodec = new BytesCodec();
+
+		Codec[] blockCodecs;
+		if (compressionCodec == null || compressionCodec instanceof RawCompression)
+			blockCodecs = new Codec[]{blockCodec};
+		else
+			blockCodecs = new Codec[]{blockCodec, compressionCodec};
+
+		save(source, n5, dataset,
+				shardSize,
+				blockSize,
+				blockCodecs,
+				new DeterministicSizeCodec[]{new BytesCodec()},
+				indexLocation,
+				exec);
+	}
+
+	/**
+	 * Save a {@link RandomAccessibleInterval} as a sharded N5 dataset.
+	 * <p>
+	 * Writes the shard index at the end.
+	 *
+	 * @param <T>              the type parameter
+	 * @param source           the source image
+	 * @param n5               the n5 writer
+	 * @param dataset          the dataset path
+	 * @param shardSize        the shard size (in pixels)
+	 * @param blockSize        the block size (in pixels)
+	 * @param compressionCodec the compression codec
+	 */
+	public static <T extends NativeType<T>> void save(
+			final RandomAccessibleInterval<T> source,
+			final N5Writer n5,
+			final String dataset,
+			final int[] shardSize,
+			final int[] blockSize,
+			final Codec compressionCodec) {
+
+		save(source, n5, dataset, shardSize, blockSize, compressionCodec, IndexLocation.END);
+	}
+
+	/**
+	 * Save a {@link RandomAccessibleInterval} as a sharded N5 dataset in parallel
+	 * using the given {@link ExecutorService}.
+	 * <p>
+	 * Writes the shard index at the end.
+	 *
+	 * @param <T>              the type parameter
+	 * @param source           the source image
+	 * @param n5               the n5 writer
+	 * @param dataset          the dataset path
+	 * @param shardSize        the shard size (in pixels)
+	 * @param blockSize        the block size (in pixels)
+	 * @param compressionCodec the compression codec
+	 * @throws ExecutionException   the execution exception
+	 * @throws InterruptedException the interrupted exception
+	 */
+	public static <T extends NativeType<T>> void save(
+			final RandomAccessibleInterval<T> source,
+			final N5Writer n5,
+			final String dataset,
+			final int[] shardSize,
+			final int[] blockSize,
+			final Codec compressionCodec,
+			final ExecutorService exec) throws InterruptedException, ExecutionException {
+
+		save(source, n5, dataset, shardSize, blockSize, compressionCodec, IndexLocation.END, exec);
+	}
+
+	/**
 	 * Write an image into an existing n5 dataset, padding the dataset if
 	 * necessary. The min and max values of the input source interval define the
 	 * subset of the dataset to be written.
@@ -1571,15 +1768,11 @@ public class N5Utils {
 	 *            the n5 writer
 	 * @param dataset
 	 *            the dataset
-	 * @throws ExecutionException
-	 *             the execution exception
-	 * @throws InterruptedException
-	 *             the interrupted exception
 	 */
 	public static <T extends NativeType<T>> void saveRegion(
 			final RandomAccessibleInterval<T> source,
 			final N5Writer n5,
-			final String dataset) throws InterruptedException, ExecutionException {
+			final String dataset) {
 
 		saveRegion(source, n5, dataset, n5.getDatasetAttributes(dataset));
 	}
@@ -1623,7 +1816,7 @@ public class N5Utils {
 	 * subset of the dataset to be written.
 	 *
 	 * Warning! Avoid calling this method in parallel for multiple sources that
-	 * have blocks in common. This risks invalid or corrupting data blocks.
+	 * have blocks or shards in common. This risks invalid or corrupting data blocks.
 	 *
 	 * @param <T>
 	 *            the type parameter
@@ -1635,36 +1828,56 @@ public class N5Utils {
 	 *            the dataset
 	 * @param attributes
 	 *            dataset attributes
-	 * @throws ExecutionException
-	 *             the execution exception
-	 * @throws InterruptedException
-	 *             the interrupted exception
 	 */
 	public static <T extends NativeType<T>, P> void saveRegion(
 			final RandomAccessibleInterval<T> source,
 			final N5Writer n5,
 			final String dataset,
-			final DatasetAttributes attributes) throws InterruptedException, ExecutionException {
+			final DatasetAttributes attributes) {
 
 		final Optional<long[]> newDimensionsOpt = saveRegionPreprocessing(source, attributes);
 
 		final long[] dimensions;
 		if (newDimensionsOpt.isPresent()) {
+			// TODO not correct for zarr if mapDatasetAttributes not set. I think we need to create a new DatasetAttributes.
 			n5.setAttribute(dataset, "dimensions", newDimensionsOpt.get());
 			dimensions = newDimensionsOpt.get();
 		} else {
 			dimensions = attributes.getDimensions();
 		}
-
+		
 		// find the grid positions bounding the source image to save
 		final RandomAccessibleInterval<Interval> gridBlocks = findBoundingGridBlocks(
 				source, dimensions, attributes.getBlockSize());
+		
+		if( attributes instanceof ShardParameters ) {
+			
+			System.out.println("save region shards single");
+			final ShardParameters shardParameters = (ShardParameters)attributes;
 
-		// iterate over those blocks
-		final RegionBlockWriter writer = RegionBlockWriter.create(source, n5, dataset, attributes);
-		Streams.localizing(gridBlocks)
+			// find the grid positions of shards bounding the source image to save
+			// and iteratve over them
+			final RandomAccessibleInterval<Interval> gridShards = findBoundingGridBlocks(
+					source, dimensions, shardParameters.getShardSize());
+
+			final RegionShardWriter writer = RegionShardWriter.create(
+					source, n5, dataset, 
+					(DatasetAttributes & ShardParameters)attributes,
+					gridBlocks);
+
+			Streams.localizing(gridShards)
+					.map(writer::writeTask)
+					.forEach(Runnable::run);
+			
+		} else {
+
+			// iterate over those blocks
+			final RegionBlockWriter writer = RegionBlockWriter.create(source, n5, dataset, attributes);
+			Streams.localizing(gridBlocks)
 				.map(writer::writeTask)
 				.forEach(Runnable::run);
+		}
+
 	}
 
 	/**
@@ -1674,7 +1887,7 @@ public class N5Utils {
 	 * parallel using the given {@link ExecutorService}.
 	 *
 	 * Warning! Avoid calling this method in parallel for multiple sources that
-	 * have blocks in common. This risks invalid or corrupting data blocks.
+	 * have blocks or shards in common. This risks invalid or corrupting data blocks.
 	 *
 	 * @param <T>
 	 *            the type parameter
@@ -1705,6 +1918,7 @@ public class N5Utils {
 
 		final long[] dimensions;
 		if (newDimensionsOpt.isPresent()) {
+			// TODO not correct for zarr if mapDatasetAttributes not set. I think we need to create a new DatasetAttributes.
 			n5.setAttribute(dataset, "dimensions", newDimensionsOpt.get());
 			dimensions = newDimensionsOpt.get();
 		} else {
@@ -1715,14 +1929,43 @@ public class N5Utils {
 		final RandomAccessibleInterval<Interval> gridBlocks = findBoundingGridBlocks(
 				source, dimensions, attributes.getBlockSize());
 
-		// iterate over those blocks
-		final RegionBlockWriter writer = RegionBlockWriter.create(source, n5, dataset, attributes).threadSafe();
-		final List<Future<?>> futures = Streams.localizing(gridBlocks)
-				.map(writer::writeTask)
-				.map(exec::submit)
-				.collect(Collectors.toList());
-		for (final Future<?> f : futures)
-			f.get();
+		if( attributes instanceof ShardParameters ) {
+			
+			System.out.println("save region shards parallel");
+			final ShardParameters shardParameters = (ShardParameters)attributes;
+
+			// find the grid positions of shards bounding the source image to save
+			// and iteratve over them
+			final RandomAccessibleInterval<Interval> gridShards = findBoundingGridBlocks(
+					source, dimensions, shardParameters.getShardSize());
+
+			final RegionShardWriter writer = RegionShardWriter.create(
+					source, n5, dataset, 
+					(DatasetAttributes & ShardParameters)attributes,
+					gridBlocks).threadSafe();
+
+			Streams.localizing(gridShards)
+					.map(writer::writeTask)
+					.forEach(Runnable::run);
+
+			final List<Future<?>> futures = Streams.localizing(gridBlocks)
+					.map(writer::writeTask)
+					.map(exec::submit)
+					.collect(Collectors.toList());
+			for (final Future<?> f : futures)
+				f.get();
+			
+		} else {
+
+			// iterate over those blocks
+			final RegionBlockWriter writer = RegionBlockWriter.create(source, n5, dataset, attributes).threadSafe();
+			final List<Future<?>> futures = Streams.localizing(gridBlocks)
+					.map(writer::writeTask)
+					.map(exec::submit)
+					.collect(Collectors.toList());
+			for (final Future<?> f : futures)
+				f.get();
+		}
 	}
 
 	/**
@@ -1788,20 +2031,20 @@ public class N5Utils {
 	}
 
 	/**
-	 * Find the grid positions of DataBlocks overlapping the {@code sourceInterval}.
-	 * The position of a {@code RandomAccess} is the gridPosition of a block.
-	 * {@code RandomAccess.get()} gives the interval covered by the block.
+	 * Find the grid positions of DataBlocks or shards overlapping the {@code sourceInterval}.
+	 * The position of a {@code RandomAccess} is the gridPosition of a block or shard.
+	 * {@code RandomAccess.get()} gives the interval covered by the block or shard.
 	 *
 	 * @param sourceInterval
 	 * 		source interval to cover
 	 * @param datasetDimensions
 	 * 		dimensions of the dataset (must fully contain source)
 	 * @param blockSize
-	 * 		blocksize of the dataset
+	 * 		blocksize or shardsize of the dataset
 	 *
 	 * @return a {@code RandomAccessibleInterval} of the grid blocks (intervals) overlapping the {@code sourceInterval}.
 	 */
-	private static RandomAccessibleInterval<Interval> findBoundingGridBlocks(
+	public static RandomAccessibleInterval<Interval> findBoundingGridBlocks(
 			final Interval sourceInterval,
 			final long[] datasetDimensions,
 			final int[] blockSize
@@ -1818,6 +2061,36 @@ public class N5Utils {
 				.cellIntervals()
 				.view().interval(FinalInterval.wrap(gridMin, gridMax));
 	}
+	
+
+	/**
+	 * Return the subset of the grid blocks that corresponds to the shard
+	 * with the given position and size.
+	 * 
+	 * @param gridBlocks
+	 * @param shardPosition
+	 * @param shardSize
+	 * @param blockSize
+	 * @return
+	 */
+	public static RandomAccessibleInterval<Interval> shardSubBlocks(
+			final RandomAccessibleInterval<Interval> gridBlocks,
+			final long[] shardPosition,
+			final int[] blocksPerShard
+	) {
+
+		final int n = gridBlocks.numDimensions();
+
+		final long[] blockGridMin = new long[n];
+		final long[] blockGridMax = new long[n];
+		for( int i = 0; i < n; i++ ) {
+			blockGridMin[i] = shardPosition[i] * blocksPerShard[i];
+			blockGridMax[i] = blockGridMin[i] + blocksPerShard[i] - 1;
+		}
+
+		return Views.interval(gridBlocks, new FinalInterval( blockGridMin, blockGridMax));
+	}
+
 
 	/**
 	 * Delete an {@link Interval} in an N5 dataset at a given offset. The offset
@@ -1849,7 +2122,6 @@ public class N5Utils {
 				.view().translate(gridOffset);
 		Streams.localizing(gridBlocks)
 				.forEach(b -> n5.deleteBlock(dataset, b.positionAsLongArray()));
-
 	}
 
 	/**
@@ -1930,7 +2202,6 @@ public class N5Utils {
 			throw new N5IOException("Dataset " + dataset + " does not exist.");
 		}
 	}
-
 
 	/**
 	 * Write DataBlocks from a source image that aligns with the {@link
@@ -2025,6 +2296,7 @@ public class N5Utils {
 
 			@Override
 			public void write(final long[] gridPos, final long[] blockMin, final int[] blockSize) {
+
 				final DataBlock<P> dataBlock = createDataBlock(gridPos, blockMin, blockSize);
 				writeBlock.accept(dataBlock);
 			}
@@ -2039,7 +2311,6 @@ public class N5Utils {
 			}
 		}
 	}
-
 
 	/**
 	 * Write (or override) a DataBlocks which may fully or partially overlap the
@@ -2214,7 +2485,8 @@ public class N5Utils {
 				final String dataset,
 				final A attributes) {
 
-			return new Imp<>(source, attributes,
+			return new ShardImp<>(source, attributes,
+					blk -> true,
 					shard -> n5.writeShard(dataset, attributes, shard));
 		}
 
@@ -2225,8 +2497,11 @@ public class N5Utils {
 				final ShardedDatasetAttributes attributes,
 				final T defaultValue) {
 
-			// TODO implement me
-			return null;
+			return new ShardImp<>(source, attributes,
+					dataBlock -> {
+						return !allEqual(defaultValue, dataBlock.getData());
+					},
+					shard -> n5.writeShard(dataset, attributes, shard));
 		}
 
 		/**
@@ -2254,51 +2529,59 @@ public class N5Utils {
 			return () -> write(gridPos, blockMin, blockSize);
 		}
 
-		class Imp<T extends NativeType<T>, A extends DatasetAttributes & ShardParameters, P> implements ShardWriter {
+		default ShardWriter threadSafe() {return this;}
+
+		class ShardImp<T extends NativeType<T>, P> implements ShardWriter {
 
 			final DataType dataType;
-			final A attributes;
+			final DatasetAttributes attributes;
 			final Consumer<Shard<P>> writeShard;
+			final Predicate<DataBlock<P>> checkBlock;
 			final PrimitiveBlocks<T> sourceBlocks;
 			final int[] zeroPos;
 
-			Imp(
+			<A extends DatasetAttributes & ShardParameters> ShardImp(
 					final RandomAccessibleInterval<T> source,
 					final A attributes,
+					final Predicate<DataBlock<P>> checkBlock,
 					final Consumer<Shard<P>> writeShard) {
 
 				this.dataType = attributes.getDataType();
 				this.attributes = attributes;
 				this.writeShard = writeShard;
+				this.checkBlock = checkBlock;
 				sourceBlocks = PrimitiveBlocks.of(source, OnFallback.ACCEPT);
 				final int n = source.numDimensions();
 				zeroPos = new int[n];
 			}
 
-			Imp(final Imp<T, A, P> writer) {
+			ShardImp(final ShardImp<T, P> writer) {
 				this.dataType = writer.dataType;
 				this.attributes = writer.attributes;
 				this.writeShard = writer.writeShard;
+				this.checkBlock = writer.checkBlock;
 				this.sourceBlocks = writer.sourceBlocks.independentCopy();
 				this.zeroPos = writer.zeroPos;
 			}
 
 			public Shard<P> createShard(final long[] shardGridPos, final long[] shardMin, final int[] shardSize) {
 
+				final ShardParameters shardParams = (ShardParameters) attributes;
 				final int[] blockSize = attributes.getBlockSize();
-				final InMemoryShard<P> shard = new InMemoryShard<P>(attributes, shardGridPos);
-				final GridIterator it = new GridIterator(attributes.getBlocksPerShard());
+				final InMemoryShard<P> shard = new InMemoryShard<P>((DatasetAttributes & ShardParameters)attributes, shardGridPos);
+				final GridIterator it = new GridIterator(shardParams.getBlocksPerShard());
 
 				while( it.hasNext() ) {
 
 					final long[] blkPosShardRelative = it.next();
-					final long[] blockMin = attributes.getBlockMinFromShardPosition(shardGridPos, blkPosShardRelative);
-					final long[] blockPos = attributes.getBlockPositionFromShardPosition(shardGridPos, blkPosShardRelative);
+					final long[] blockMin = shardParams.getBlockMinFromShardPosition(shardGridPos, blkPosShardRelative);
+					final long[] blockPos = shardParams.getBlockPositionFromShardPosition(shardGridPos, blkPosShardRelative);
 
 					final DataBlock<P> dataBlock = Cast.unchecked(dataType.createDataBlock(blockSize, blockPos));
 					sourceBlocks.copy(blockMin, dataBlock.getData(), blockSize);
 
-					shard.addBlock(dataBlock);
+					if( checkBlock.test(dataBlock))
+						shard.addBlock(dataBlock);
 				}
 
 				return shard;
@@ -2308,13 +2591,132 @@ public class N5Utils {
 				final Shard<P> shard = createShard(gridPos, shardMin, shardSize);
 				writeShard.accept(shard);
 			}
+			
+			private Supplier<ShardImp<T, P>> threadSafeSupplier;
 
+			@Override
+			public ShardWriter threadSafe() {
+				if (threadSafeSupplier == null)
+					threadSafeSupplier = CloseableThreadLocal.withInitial(() -> new ShardImp<>(this))::get;
+				return (gridPos, blockMin, blockSize) -> threadSafeSupplier.get().write(gridPos, blockMin, blockSize);
+			}
+		}
+	}
+
+	private interface RegionShardWriter {
+
+		static <T extends NativeType<T>, A extends DatasetAttributes & ShardParameters> RegionShardWriter create(
+				final RandomAccessibleInterval<T> source,
+				final N5Writer n5,
+				final String dataset,
+				final A attributes,
+				RandomAccessibleInterval<Interval> gridBlocks) {
+
+			return new ShardImp<>(source, n5, dataset, attributes, gridBlocks,
+					shardPos -> {
+						return Cast.unchecked(InMemoryShard.fromShard(n5.readShard(dataset, attributes, shardPos)));
+					},
+					shard -> { n5.writeShard(dataset, attributes, shard); });
+		}
+
+		/**
+		 * Write (or override) a subset of {@link DataBlock}s contained in the 
+		 * {@link Shard} at {@code gridPos}.
+		 * <p>
+		 * The interval covered by the block in the source image is given by
+		 * {@code blockInterval}. {@code blockInterval} might only partially
+		 * overlap the source image. In that cas only a part of the block is
+		 * filled (or overridden) with data.
+		 *
+		 * @param shardPos
+		 * 		the grid coordinates of the shard
+		 */
+		void write(long[] shardPos);
+
+		default Runnable writeTask(LocalizableSampler<Interval> shardBlock) {
+			return () -> write(shardBlock.positionAsLongArray());
+		}
+
+		/**
+		 * Get a thread-safe version of this {@code RegionBlockWriter}.
+		 * (Implemented as a wrapper that makes {@link ThreadLocal} copies).
+		 */
+		default RegionShardWriter threadSafe() {return this;}
+
+		class ShardImp<T extends NativeType<T>, P> implements RegionShardWriter {
+
+			private final RandomAccessibleInterval<T> source;
+			private final ShardParameters attributes;
+			private final RandomAccessibleInterval<Interval> gridBlocks;
+
+			private final DataType dataType;
+			private final Function<long[], InMemoryShard<P>> readShard;
+			private final Consumer<Shard<P>> writeShard;
+
+			<A extends DatasetAttributes & ShardParameters> ShardImp(
+					final RandomAccessibleInterval<T> source,
+					final N5Writer n5,
+					final String dataset,
+					final A attributes,
+					RandomAccessibleInterval<Interval> gridBlocks,
+					final Function<long[], InMemoryShard<P>> readShard,
+					final Consumer<Shard<P>> writeShard) {
+
+				this.source = source;
+				this.attributes = attributes;
+				this.dataType = attributes.getDataType();
+
+				this.gridBlocks = gridBlocks;
+				this.readShard = readShard;
+				this.writeShard = writeShard;
+			}
+
+			private ShardImp(final ShardImp<T, P> writer) {
+
+				this.source = writer.source;
+				this.attributes = writer.attributes;
+				this.dataType = writer.dataType;
+
+				this.gridBlocks = writer.gridBlocks;
+				this.readShard = writer.readShard;
+				this.writeShard = writer.writeShard;
+			}
+
+			@Override
+			public void write(long[] shardPos) {
+
+				final InMemoryShard<P> shard = readShard.apply(shardPos);
+
+				org.janelia.saalfeldlab.n5.imglib2.N5Utils.RegionBlockWriter.Imp<T, P> blockWriter = new RegionBlockWriter.Imp<T, P>(
+						source,
+						dataType,
+						p -> Cast.unchecked(shard.getBlock(p)),
+						blk -> shard.addBlock(blk));
+
+				final RandomAccessibleInterval<Interval> shardBlocks = shardSubBlocks( gridBlocks, shardPos, attributes.getBlocksPerShard());
+				Streams.localizing(shardBlocks)
+						.map(blockWriter::writeTask)
+						.forEach(Runnable::run);
+
+				writeShard.accept(shard);
+			}
+
+			private Supplier<ShardImp<T, P>> threadSafeSupplier;
+
+			@Override
+			public RegionShardWriter threadSafe() {
+
+				if (threadSafeSupplier == null)
+					threadSafeSupplier = CloseableThreadLocal.withInitial(() -> new ShardImp<>(this))::get;
+
+				return (shardPos) -> threadSafeSupplier.get().write(shardPos);
+			}
 		}
 
 	}
 
 	/**
-	 * @return primitve array with one element corresponding to the given value
+	 * @return primitive array with one element corresponding to the given value
 	 */
 	private static < T extends NativeType< T > > Object extractValue( final T value )
 	{
