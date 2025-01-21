@@ -1572,6 +1572,10 @@ public class N5Utils {
 
 	/**
 	 * Save a {@link RandomAccessibleInterval} as an N5 dataset.
+	 * <p>
+	 * Warning: this method will overwrite / invalidate any existing data at the specified location.
+	 * Manually check if data exists with {@code n5.datasetExists(dataset)} before calling
+	 * to avoid overwriting existing data.
 	 *
 	 * @param <T>
 	 *            the type parameter
@@ -1611,6 +1615,10 @@ public class N5Utils {
 
 	/**
 	 * Save a {@link RandomAccessibleInterval} as an N5 dataset, multi-threaded.
+	 * <p>
+	 * Warning: this method will overwrite / invalidate any existing data at the specified location.
+	 * Manually check if data exists with {@code n5.datasetExists(dataset)} before calling
+	 * to avoid overwriting existing data.
 	 *
 	 * @param <T>
 	 *            the type parameter
@@ -1659,6 +1667,10 @@ public class N5Utils {
 	/**
 	 * Save a {@link RandomAccessibleInterval} as a sharded N5 dataset.
 	 * <p>
+	 * Warning: this method will overwrite / invalidate any existing data at the specified location.
+	 * Manually check if data exists with {@code n5.datasetExists(dataset)} before calling
+	 * to avoid overwriting existing data.
+	 * <p>
 	 * Both the blocksCodecs and indexCodecus must contain a
 	 * {@link Codec.ArrayCodec}. We recommend only specifying a compression Codec
 	 * using the method:
@@ -1706,6 +1718,10 @@ public class N5Utils {
 	/**
 	 * Save a {@link RandomAccessibleInterval} as a sharded N5 dataset in parallel 
 	 * using the given {@link ExecutorService}.
+	 * <p>
+	 * Warning: this method will overwrite / invalidate any existing data at the specified location.
+	 * Manually check if data exists with {@code n5.datasetExists(dataset)} before calling
+	 * to avoid overwriting existing data.
 	 * <p>
 	 * Both the blocksCodecs and indexCodecus must contain a
 	 * {@link Codec.ArrayCodec}. We recommend only specifying a compression Codec
@@ -1757,6 +1773,10 @@ public class N5Utils {
 
 	/**
 	 * Save a {@link RandomAccessibleInterval} as a sharded N5 dataset.
+	 * <p>
+	 * Warning: this method will overwrite / invalidate any existing data at the specified location.
+	 * Manually check if data exists with {@code n5.datasetExists(dataset)} before calling
+	 * to avoid overwriting existing data.
 	 *
 	 * @param <T>              the type parameter
 	 * @param source           the source image
@@ -1799,6 +1819,10 @@ public class N5Utils {
 	/**
 	 * Save a {@link RandomAccessibleInterval} as a sharded N5 dataset in
 	 * parallel using the given {@link ExecutorService}.
+	 * <p>
+	 * Warning: this method will overwrite / invalidate any existing data at the specified location.
+	 * Manually check if data exists with {@code n5.datasetExists(dataset)} before calling
+	 * to avoid overwriting existing data.
 	 *
 	 * @param <T>              the type parameter
 	 * @param source           the source image
@@ -1846,6 +1870,10 @@ public class N5Utils {
 	/**
 	 * Save a {@link RandomAccessibleInterval} as a sharded N5 dataset.
 	 * <p>
+	 * Warning: this method will overwrite / invalidate any existing data at the specified location.
+	 * Manually check if data exists with {@code n5.datasetExists(dataset)} before calling
+	 * to avoid overwriting existing data.
+	 * <p>
 	 * Writes the shard index at the end.
 	 *
 	 * @param <T>              the type parameter
@@ -1870,6 +1898,10 @@ public class N5Utils {
 	/**
 	 * Save a {@link RandomAccessibleInterval} as a sharded N5 dataset in parallel
 	 * using the given {@link ExecutorService}.
+	 * <p>
+	 * Warning: this method will overwrite / invalidate any existing data at the specified location.
+	 * Manually check if data exists with {@code n5.datasetExists(dataset)} before calling
+	 * to avoid overwriting existing data.
 	 * <p>
 	 * Writes the shard index at the end.
 	 *
@@ -1896,10 +1928,10 @@ public class N5Utils {
 	}
 
 	/**
-	 * Write an image into an existing n5 dataset, padding the dataset if
+	 * Write an image into an existing n5 dataset, overwriting any exising data, and padding the dataset if
 	 * necessary. The min and max values of the input source interval define the
 	 * subset of the dataset to be written.
-	 *
+	 * <p>
 	 * Warning! Avoid calling this method in parallel for multiple sources that
 	 * have blocks in common. This risks invalid or corrupting data blocks.
 	 *
@@ -1921,7 +1953,7 @@ public class N5Utils {
 	}
 
 	/**
-	 * Write an image into an existing n5 dataset, padding the dataset if
+	 * Write an image into an existing n5 dataset, overwriting any exising data, and padding the dataset if
 	 * necessary. The min and max values of the input source interval define the
 	 * subset of the dataset to be written. Blocks of the output at written in
 	 * parallel using the given {@link ExecutorService}.
@@ -1954,7 +1986,7 @@ public class N5Utils {
 	}
 
 	/**
-	 * Write an image into an existing n5 dataset, padding the dataset if
+	 * Write an image into an existing n5 dataset, overwriting any exising data, and padding the dataset if
 	 * necessary. The min and max values of the input source interval define the
 	 * subset of the dataset to be written.
 	 *
@@ -2024,7 +2056,7 @@ public class N5Utils {
 	}
 
 	/**
-	 * Write an image into an existing n5 dataset, padding the dataset if
+	 * Write an image into an existing n5 dataset, overwriting any exising data, and padding the dataset if
 	 * necessary. The min and max values of the input source interval define the
 	 * subset of the dataset to be written. Blocks of the output at written in
 	 * parallel using the given {@link ExecutorService}.
