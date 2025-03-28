@@ -26,6 +26,9 @@
  */
 package org.janelia.saalfeldlab.n5.imglib2;
 
+import java.util.Collections;
+import java.util.Set;
+
 import org.janelia.saalfeldlab.n5.Compression;
 import org.janelia.saalfeldlab.n5.DatasetAttributes;
 import org.janelia.saalfeldlab.n5.N5Reader;
@@ -38,6 +41,7 @@ import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealRandomAccessible;
 import net.imglib2.converter.Converter;
 import net.imglib2.converter.Converters;
+import net.imglib2.img.basictypeaccess.AccessFlags;
 import net.imglib2.interpolation.InterpolatorFactory;
 import net.imglib2.interpolation.randomaccess.NLinearInterpolatorFactory;
 import net.imglib2.realtransform.AffineGet;
@@ -616,8 +620,7 @@ public class N5DisplacementField {
 	/**
 	 * Returns a deformation field from the given n5 dataset.
 	 *
-	 * If the data is an {@link IntegerType}, returns an un-quantized view of
-	 * the dataset, otherwise, returns the raw {@link RandomAccessibleInterval}.
+	 * If the data is an {@link IntegerType}, returns an un-quantized view of the dataset, otherwise, returns the raw {@link RandomAccessibleInterval}.
 	 *
 	 * @param <T>
 	 *            the type parameter
@@ -629,13 +632,16 @@ public class N5DisplacementField {
 	 *            the dataset path
 	 * @param defaultType
 	 *            the default type
+	 * @param accessFlags
+	 *            the accessFlags
 	 * @return the deformation field as a RandomAccessibleInterval
 	 */
 	@SuppressWarnings("unchecked")
 	public static <T extends NativeType<T> & RealType<T>, Q extends NativeType<Q> & IntegerType<Q>> RandomAccessibleInterval<T> openField(
 			final N5Reader n5,
 			final String dataset,
-			final T defaultType) {
+			final T defaultType,
+			final Set<AccessFlags> accessFlags) {
 
 		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
 		switch (attributes.getDataType()) {
@@ -656,19 +662,41 @@ public class N5DisplacementField {
 		case UINT64:
 			return openQuantized(n5, dataset, (Q)new UnsignedLongType(), defaultType);
 		default:
-			return openRaw(n5, dataset, defaultType);
+			return openRaw(n5, dataset, defaultType, accessFlags);
 		}
 	}
 
 	/**
-	 * Returns a deformation field in physical coordinates as a
-	 * {@link RealRandomAccessible} from an n5 dataset.
+	 * Returns a deformation field from the given n5 dataset.
 	 *
-	 * Internally, opens the given n5 dataset as a
-	 * {@link RandomAccessibleInterval}, un-quantizes if necessary, uses the
-	 * input {@link InterpolatorFactory} for interpolation, and transforms to
-	 * physical coordinates using the pixel spacing stored in the "spacing"
-	 * attribute, if present.
+	 * If the data is an {@link IntegerType}, returns an un-quantized view of the dataset, otherwise, returns the raw {@link RandomAccessibleInterval}.
+	 *
+	 * @param <T>
+	 *            the type parameter
+	 * @param <Q>
+	 *            the quantized type parameter
+	 * @param n5
+	 *            the n5 reader
+	 * @param dataset
+	 *            the dataset path
+	 * @param defaultType
+	 *            the default type
+	 * @return the deformation field as a RandomAccessibleInterval
+	 */
+	@SuppressWarnings("unchecked")
+	public static final <T extends NativeType<T> & RealType<T>, Q extends NativeType<Q> & IntegerType<Q>> RandomAccessibleInterval<T> openField(
+			final N5Reader n5,
+			final String dataset,
+			final T defaultType) {
+
+		return openField(n5, dataset, defaultType, Collections.EMPTY_SET);
+	}
+
+	/**
+	 * Returns a deformation field in physical coordinates as a {@link RealRandomAccessible} from an n5 dataset.
+	 *
+	 * Internally, opens the given n5 dataset as a {@link RandomAccessibleInterval}, un-quantizes if necessary, uses the input {@link InterpolatorFactory} for interpolation, and
+	 * transforms to physical coordinates using the pixel spacing stored in the "spacing" attribute, if present.
 	 *
 	 * @param <T>
 	 *            the type parameter
@@ -771,6 +799,31 @@ public class N5DisplacementField {
 	}
 
 	/**
+	 * Returns a deformation field as a {@link RandomAccessibleInterval}, ensuring that the vector is stored in the last dimension.
+	 *
+	 * @param <T>
+	 *            the type parameter
+	 * @param n5
+	 *            the n5 reader
+	 * @param dataset
+	 *            the dataset path
+	 * @param defaultType
+	 *            the default type
+	 * @param accessFlags
+	 *            the access flags
+	 * @return the deformation field
+	 */
+	public static final <T extends RealType<T> & NativeType<T>> RandomAccessibleInterval<T> openRaw(
+			final N5Reader n5,
+			final String dataset,
+			final T defaultType,
+			final Set<AccessFlags> accessFlags) {
+
+		final RandomAccessibleInterval<T> src = N5Utils.open(n5, dataset, N5CacheLoader.setToDefaultValue(defaultType), accessFlags);
+		return vectorAxisLast(src);
+	}
+
+	/**
 	 * Returns a deformation field as a {@link RandomAccessibleInterval},
 	 * ensuring that the vector is stored in the last dimension.
 	 *
@@ -794,8 +847,7 @@ public class N5DisplacementField {
 	}
 
 	/**
-	 * Open a quantized (integer) {@link RandomAccessibleInterval} from an n5
-	 * dataset.
+	 * Open a quantized (integer) {@link RandomAccessibleInterval} from an n5 dataset.
 	 *
 	 * @param <T>
 	 *            the type parameter
@@ -809,15 +861,18 @@ public class N5DisplacementField {
 	 *            the quantized type
 	 * @param defaultType
 	 *            the original type
+	 * @param accessFlags
+	 *            the access flags
 	 * @return the un-quantized data
 	 */
 	public static <Q extends RealType<Q> & NativeType<Q>, T extends RealType<T>> RandomAccessibleInterval<T> openQuantized(
 			final N5Reader n5,
 			final String dataset,
 			final Q defaultQuantizedType,
-			final T defaultType) {
+			final T defaultType,
+			final Set<AccessFlags> accessFlags) {
 
-		final RandomAccessibleInterval<Q> src = N5Utils.open(n5, dataset, defaultQuantizedType);
+		final RandomAccessibleInterval<Q> src = N5Utils.open(n5, dataset, N5CacheLoader.setToDefaultValue(defaultQuantizedType), accessFlags);
 
 		// get the factor going from quantized to original values
 		final Double mattr = n5.getAttribute(dataset, MULTIPLIER_ATTR, Double.TYPE);
@@ -844,8 +899,33 @@ public class N5DisplacementField {
 	}
 
 	/**
-	 * Returns a deformation field as a {@link RandomAccessibleInterval} with
-	 * the vector stored in the last dimension.
+	 * Open a quantized (integer) {@link RandomAccessibleInterval} from an n5 dataset.
+	 *
+	 * @param <T>
+	 *            the type parameter
+	 * @param <Q>
+	 *            the quantized type parameter
+	 * @param n5
+	 *            the n5 reader
+	 * @param dataset
+	 *            the dataset path
+	 * @param defaultQuantizedType
+	 *            the quantized type
+	 * @param defaultType
+	 *            the original type
+	 * @return the un-quantized data
+	 */
+	public static final <Q extends RealType<Q> & NativeType<Q>, T extends RealType<T>> RandomAccessibleInterval<T> openQuantized(
+			final N5Reader n5,
+			final String dataset,
+			final Q defaultQuantizedType,
+			final T defaultType) {
+
+		return openQuantized(n5, dataset, defaultQuantizedType, defaultType, Collections.EMPTY_SET);
+	}
+
+	/**
+	 * Returns a deformation field as a {@link RandomAccessibleInterval} with the vector stored in the last dimension.
 	 *
 	 * @param <T>
 	 *            the type parameter
