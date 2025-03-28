@@ -123,7 +123,7 @@ public class N5DisplacementField {
 	 * @param compression
 	 *            the compression type
 	 */
-	public static final <T extends NativeType<T> & RealType<T>> void save(
+	public static <T extends NativeType<T> & RealType<T>> void save(
 			final N5Writer n5Writer,
 			final AffineGet affine,
 			final RandomAccessibleInterval<T> forwardDfield,
@@ -159,7 +159,7 @@ public class N5DisplacementField {
 	 * @param compression
 	 *            the compression type
 	 */
-	public static final <T extends NativeType<T> & RealType<T>> void save(
+	public static <T extends NativeType<T> & RealType<T>> void save(
 			final N5Writer n5Writer,
 			final String dataset,
 			final AffineGet affine,
@@ -200,7 +200,7 @@ public class N5DisplacementField {
 	 * @param compression
 	 *            the compression type
 	 */
-	public static final <T extends NativeType<T> & RealType<T>> void save(
+	public static <T extends NativeType<T> & RealType<T>> void save(
 			final N5Writer n5Writer,
 			final String dataset,
 			final AffineGet affine,
@@ -254,7 +254,7 @@ public class N5DisplacementField {
 	 * @param maxError
 	 *            the desired maximum quantization error
 	 */
-	public static final <T extends NativeType<T> & RealType<T>, Q extends NativeType<Q> & IntegerType<Q>> void save(
+	public static <T extends NativeType<T> & RealType<T>, Q extends NativeType<Q> & IntegerType<Q>> void save(
 			final N5Writer n5Writer,
 			final String dataset,
 			final AffineGet affine,
@@ -305,7 +305,7 @@ public class N5DisplacementField {
 	 * @param maxError
 	 *            the desired maximum quantization error
 	 */
-	public static final <T extends NativeType<T> & RealType<T>, Q extends NativeType<Q> & IntegerType<Q>> void save(
+	public static <T extends NativeType<T> & RealType<T>, Q extends NativeType<Q> & IntegerType<Q>> void save(
 			final N5Writer n5Writer,
 			final String dataset,
 			final AffineGet affine,
@@ -335,7 +335,7 @@ public class N5DisplacementField {
 	 * @param dataset
 	 *            the dataset path
 	 */
-	public static final void saveAffine(
+	public static void saveAffine(
 			final AffineGet affine,
 			final N5Writer n5Writer,
 			final String dataset) {
@@ -372,7 +372,7 @@ public class N5DisplacementField {
 	 * @param maxError
 	 *            the desired maximum quantization error
 	 */
-	public static final <T extends RealType<T>, Q extends NativeType<Q> & IntegerType<Q>> void saveQuantized(
+	public static <T extends RealType<T>, Q extends NativeType<Q> & IntegerType<Q>> void saveQuantized(
 			final N5Writer n5Writer,
 			final String dataset,
 			final RandomAccessibleInterval<T> source,
@@ -425,7 +425,7 @@ public class N5DisplacementField {
 	 *            the interpolator factory
 	 * @return the invertible transformation
 	 */
-	public static final <T extends RealType<T> & NativeType<T>> ExplicitInvertibleRealTransform openInvertible(
+	public static <T extends RealType<T> & NativeType<T>> ExplicitInvertibleRealTransform openInvertible(
 			final N5Reader n5,
 			final String forwardDataset,
 			final String inverseDataset,
@@ -457,7 +457,7 @@ public class N5DisplacementField {
 	 *            the n5 reader
 	 * @return the invertible transformation
 	 */
-	public static final <T extends RealType<T> & NativeType<T>> ExplicitInvertibleRealTransform openInvertible(
+	public static <T extends RealType<T> & NativeType<T>> ExplicitInvertibleRealTransform openInvertible(
 			final N5Reader n5) {
 
 		return openInvertible(n5, FORWARD_ATTR, INVERSE_ATTR, new DoubleType(), new NLinearInterpolatorFactory<>());
@@ -475,7 +475,7 @@ public class N5DisplacementField {
 	 *            the scale level to open, if present
 	 * @return the invertible transformation
 	 */
-	public static final <T extends RealType<T> & NativeType<T>> ExplicitInvertibleRealTransform openInvertible(
+	public static <T extends RealType<T> & NativeType<T>> ExplicitInvertibleRealTransform openInvertible(
 			final N5Reader n5,
 			final int level) {
 
@@ -495,7 +495,7 @@ public class N5DisplacementField {
 	 *            the interpolator factory
 	 * @return the invertible transformation
 	 */
-	public static final <T extends RealType<T> & NativeType<T>> ExplicitInvertibleRealTransform openInvertible(
+	public static <T extends RealType<T> & NativeType<T>> ExplicitInvertibleRealTransform openInvertible(
 			final N5Reader n5,
 			final T defaultType,
 			final InterpolatorFactory<RealComposite<T>, RandomAccessible<RealComposite<T>>> interpolator) {
@@ -522,7 +522,7 @@ public class N5DisplacementField {
 	 *            the interpolator factory
 	 * @return the transformation
 	 */
-	public static final <T extends RealType<T> & NativeType<T>> RealTransform open(
+	public static <T extends RealType<T> & NativeType<T>> RealTransform open(
 			final N5Reader n5,
 			final String dataset,
 			final boolean inverse,
@@ -556,7 +556,7 @@ public class N5DisplacementField {
 	 *            the dataset path
 	 * @return the affine transform
 	 */
-	public static final AffineGet openPixelToPhysical(final N5Reader n5, final String dataset) {
+	public static AffineGet openPixelToPhysical(final N5Reader n5, final String dataset) {
 
 		final double[] spacing = n5.getAttribute(dataset, SPACING_ATTR, double[].class);
 		final double[] offset = n5.getAttribute(dataset, OFFSET_ATTR, double[].class);
@@ -592,7 +592,7 @@ public class N5DisplacementField {
 	 *            the dataset path
 	 * @return the affine transformation
 	 */
-	public static final AffineGet openAffine(final N5Reader n5, final String dataset) {
+	public static AffineGet openAffine(final N5Reader n5, final String dataset) {
 
 		final double[] affineMtxRow = n5.getAttribute(dataset, AFFINE_ATTR, double[].class);
 		if (affineMtxRow == null)
@@ -632,7 +632,7 @@ public class N5DisplacementField {
 	 * @return the deformation field as a RandomAccessibleInterval
 	 */
 	@SuppressWarnings("unchecked")
-	public static final <T extends NativeType<T> & RealType<T>, Q extends NativeType<Q> & IntegerType<Q>> RandomAccessibleInterval<T> openField(
+	public static <T extends NativeType<T> & RealType<T>, Q extends NativeType<Q> & IntegerType<Q>> RandomAccessibleInterval<T> openField(
 			final N5Reader n5,
 			final String dataset,
 			final T defaultType) {
@@ -784,7 +784,7 @@ public class N5DisplacementField {
 	 *            the default type
 	 * @return the deformation field
 	 */
-	public static final <T extends RealType<T> & NativeType<T>> RandomAccessibleInterval<T> openRaw(
+	public static <T extends RealType<T> & NativeType<T>> RandomAccessibleInterval<T> openRaw(
 			final N5Reader n5,
 			final String dataset,
 			final T defaultType) {
@@ -811,7 +811,7 @@ public class N5DisplacementField {
 	 *            the original type
 	 * @return the un-quantized data
 	 */
-	public static final <Q extends RealType<Q> & NativeType<Q>, T extends RealType<T>> RandomAccessibleInterval<T> openQuantized(
+	public static <Q extends RealType<Q> & NativeType<Q>, T extends RealType<T>> RandomAccessibleInterval<T> openQuantized(
 			final N5Reader n5,
 			final String dataset,
 			final Q defaultQuantizedType,
@@ -853,7 +853,7 @@ public class N5DisplacementField {
 	 *            the source displacement field
 	 * @return the possibly permuted deformation field
 	 */
-	public static final <T extends RealType<T>> RandomAccessibleInterval<T> vectorAxisLast(final RandomAccessibleInterval<T> source) {
+	public static <T extends RealType<T>> RandomAccessibleInterval<T> vectorAxisLast(final RandomAccessibleInterval<T> source) {
 
 		final int n = source.numDimensions();
 
@@ -883,7 +883,7 @@ public class N5DisplacementField {
 	 *            the source displacement field
 	 * @return the possibly permuted deformation field
 	 */
-	public static final <T extends RealType<T>> RandomAccessibleInterval<T> vectorAxisFirst(final RandomAccessibleInterval<T> source) {
+	public static <T extends RealType<T>> RandomAccessibleInterval<T> vectorAxisFirst(final RandomAccessibleInterval<T> source) {
 
 		final int n = source.numDimensions();
 
@@ -916,7 +916,7 @@ public class N5DisplacementField {
 	 *            the permutation
 	 * @return the permuted source
 	 */
-	public static final <T> IntervalView<T> permute(final RandomAccessibleInterval<T> source, final int[] p) {
+	public static <T> IntervalView<T> permute(final RandomAccessibleInterval<T> source, final int[] p) {
 
 		final int n = source.numDimensions();
 
