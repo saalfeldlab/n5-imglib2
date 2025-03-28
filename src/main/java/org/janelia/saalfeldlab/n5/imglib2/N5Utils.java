@@ -41,6 +41,7 @@ import org.janelia.saalfeldlab.n5.Compression;
 import org.janelia.saalfeldlab.n5.DataBlock;
 import org.janelia.saalfeldlab.n5.DataType;
 import org.janelia.saalfeldlab.n5.DatasetAttributes;
+import org.janelia.saalfeldlab.n5.N5Exception;
 import org.janelia.saalfeldlab.n5.N5Exception.N5IOException;
 import org.janelia.saalfeldlab.n5.N5Reader;
 import org.janelia.saalfeldlab.n5.N5Writer;
@@ -789,7 +790,6 @@ public class N5Utils {
 	 *            the type
 	 * @return the image
 	 */
-	@SuppressWarnings({"unchecked", "rawtypes"})
 	public static final <T extends NativeType<T>, A extends ArrayDataAccess<A>> CachedCellImg<T, A> open(
 			final N5Reader n5,
 			final String dataset,
@@ -1432,32 +1432,35 @@ public class N5Utils {
 	 *            the n5 writer
 	 * @param dataset
 	 *            the dataset path
-	 * @param blockSize
-	 *            the block size
-	 * @param compression
-	 *            the compression type
+	 * @param attributes
+	 *            the DatasetAttributes
+	 * @throws N5Exception
+	 *             if the number of source and attributes dimensions do not match
 	 */
 	public static final <T extends NativeType<T>> void save(
 			RandomAccessibleInterval<T> source,
 			final N5Writer n5,
 			final String dataset,
-			final int[] blockSize,
-			final Compression compression) {
+			final DatasetAttributes attributes) {
+
+		if(!areConsistentDimensions(source, attributes)) {
+
+			throw new N5Exception(String.format("Dimension of input source (%d) does not "
+					+ "match dimensions of dataset attributes (%d)",
+					source.numDimensions(),
+					attributes.getNumDimensions()));
+		}
+
+		source = Views.zeroMin(source);
+		final long[] dimensions = attributes.getDimensions();
+		final int[] blockSize = attributes.getBlockSize();
 
 		if (Util.getTypeFromInterval(source) instanceof LabelMultisetType) {
 			@SuppressWarnings("unchecked")
 			final RandomAccessibleInterval<LabelMultisetType> labelMultisetSource = (RandomAccessibleInterval<LabelMultisetType>)source;
-			N5LabelMultisets.saveLabelMultiset(labelMultisetSource, n5, dataset, blockSize, compression);
+			N5LabelMultisets.saveLabelMultiset(labelMultisetSource, n5, dataset, blockSize, attributes.getCompression());
 			return;
 		}
-
-		source = Views.zeroMin(source);
-		final long[] dimensions = Intervals.dimensionsAsLongArray(source);
-		final DatasetAttributes attributes = new DatasetAttributes(
-				dimensions,
-				blockSize,
-				dataType(Util.getTypeFromInterval(source)),
-				compression);
 
 		n5.createDataset(dataset, attributes);
 
@@ -1487,6 +1490,52 @@ public class N5Utils {
 					offset[d] = 0;
 			}
 		}
+	}
+
+	private static <T> boolean areConsistentDimensions(RandomAccessibleInterval<T> source, DatasetAttributes attributes) {
+
+		final int nd = source.numDimensions();
+		if (nd != attributes.getNumDimensions())
+			return false;
+
+		final long[] dims = attributes.getDimensions();
+		for (int i = 0; i < nd; i++) {
+			if (source.dimension(i) != dims[i])
+				return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Save a {@link RandomAccessibleInterval} as an N5 dataset.
+	 *
+	 * @param <T>
+	 *            the type parameter
+	 * @param source
+	 *            the source image
+	 * @param n5
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset path
+	 * @param blockSize
+	 *            the block size
+	 * @param compression
+	 *            the compression type
+	 */
+	public static final <T extends NativeType<T>> void save(
+			RandomAccessibleInterval<T> source,
+			final N5Writer n5,
+			final String dataset,
+			final int[] blockSize,
+			final Compression compression) {
+
+		save(source, n5, dataset,
+				new DatasetAttributes(
+						Intervals.dimensionsAsLongArray(source),
+						blockSize,
+						dataType(Util.getTypeFromInterval(source)),
+						compression));
 	}
 
 	/**
