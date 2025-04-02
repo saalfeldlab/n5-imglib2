@@ -43,13 +43,14 @@ import org.janelia.saalfeldlab.n5.Compression;
 import org.janelia.saalfeldlab.n5.DataBlock;
 import org.janelia.saalfeldlab.n5.DataType;
 import org.janelia.saalfeldlab.n5.DatasetAttributes;
+import org.janelia.saalfeldlab.n5.N5Exception;
 import org.janelia.saalfeldlab.n5.N5KeyValueWriter;
 import org.janelia.saalfeldlab.n5.N5Exception.N5IOException;
 import org.janelia.saalfeldlab.n5.N5Exception.N5ShardException;
-import org.janelia.saalfeldlab.n5.codec.BytesCodec;
 import org.janelia.saalfeldlab.n5.codec.Codec;
 import org.janelia.saalfeldlab.n5.codec.DeterministicSizeCodec;
 import org.janelia.saalfeldlab.n5.codec.N5BlockCodec;
+import org.janelia.saalfeldlab.n5.codec.RawBytes;
 import org.janelia.saalfeldlab.n5.N5Reader;
 import org.janelia.saalfeldlab.n5.N5Writer;
 import org.janelia.saalfeldlab.n5.RawCompression;
@@ -1296,19 +1297,18 @@ public class N5Utils {
 			RandomAccessibleInterval<T> source,
 			final N5Writer n5,
 			final String dataset,
-			final ShardedDatasetAttributes attributes,
+			final DatasetAttributes attributes,
 			final long[] gridOffset) {
 
 		if (N5LabelMultisets.isLabelMultisetType(n5, dataset)) {
-			throw new N5ShardException("Sharded LabelMultisets not supported.");
+			throw new N5Exception("Sharded LabelMultisets not supported.");
 		}
 
 		if (!(attributes instanceof ShardedDatasetAttributes)) {
-			throw new N5ShardException("Dataset " + dataset + " is not sharded.");
+			throw new N5Exception("Dataset " + dataset + " is not sharded.");
 		}
 
-		final ShardedDatasetAttributes shardAttrs = (ShardedDatasetAttributes)attributes;
-		final RandomAccessibleInterval<Interval> shardBlocks = new CellGrid( source.dimensionsAsLongArray(),shardAttrs.getShardSize())
+		final RandomAccessibleInterval<Interval> shardBlocks = new CellGrid( source.dimensionsAsLongArray(), attributes.getShardSize())
 				.cellIntervals()
 				.view().translate(gridOffset);
 
@@ -1800,7 +1800,7 @@ public class N5Utils {
 		if (n5 instanceof N5KeyValueWriter)
 			blockCodec = new N5BlockCodec();
 		else
-			blockCodec = new BytesCodec();
+			blockCodec = new RawBytes();
 
 		Codec[] blockCodecs;
 		if (compressionCodec == null || compressionCodec instanceof RawCompression)
@@ -1812,7 +1812,7 @@ public class N5Utils {
 				shardSize,
 				blockSize,
 				blockCodecs,
-				new DeterministicSizeCodec[]{new BytesCodec()},
+				new DeterministicSizeCodec[]{new RawBytes()},
 				indexLocation );
 	}
 
@@ -1850,7 +1850,7 @@ public class N5Utils {
 		if (n5 instanceof N5KeyValueWriter)
 			blockCodec = new N5BlockCodec();
 		else
-			blockCodec = new BytesCodec();
+			blockCodec = new RawBytes();
 
 		Codec[] blockCodecs;
 		if (compressionCodec == null || compressionCodec instanceof RawCompression)
@@ -1862,7 +1862,7 @@ public class N5Utils {
 				shardSize,
 				blockSize,
 				blockCodecs,
-				new DeterministicSizeCodec[]{new BytesCodec()},
+				new DeterministicSizeCodec[]{new RawBytes()},
 				indexLocation,
 				exec);
 	}

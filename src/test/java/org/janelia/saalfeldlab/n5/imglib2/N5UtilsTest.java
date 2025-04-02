@@ -58,7 +58,7 @@ import org.janelia.saalfeldlab.n5.N5Writer;
 import org.janelia.saalfeldlab.n5.RawCompression;
 import org.janelia.saalfeldlab.n5.ShardedDatasetAttributes;
 import org.janelia.saalfeldlab.n5.ShortArrayDataBlock;
-import org.janelia.saalfeldlab.n5.codec.BytesCodec;
+import org.janelia.saalfeldlab.n5.codec.RawBytes;
 import org.janelia.saalfeldlab.n5.codec.Codec;
 import org.janelia.saalfeldlab.n5.codec.DeterministicSizeCodec;
 import org.janelia.saalfeldlab.n5.codec.checksum.Crc32cChecksumCodec;
@@ -317,8 +317,8 @@ public class N5UtilsTest {
 
 	private ShardedDatasetAttributes shardedDatasetAttributes() {
 		return new ShardedDatasetAttributes(dimensions, shardSize, blockSize, DataType.UINT16,
-				new Codec[] { new BytesCodec(), new GzipCompression(4) },
-				new DeterministicSizeCodec[] { new BytesCodec(), new Crc32cChecksumCodec() }, IndexLocation.END);
+				new Codec[] { new RawBytes(), new GzipCompression(4) },
+				new DeterministicSizeCodec[] { new RawBytes(), new Crc32cChecksumCodec() }, IndexLocation.END);
 	}
 
 	private DatasetAttributes datasetAttributes() {
