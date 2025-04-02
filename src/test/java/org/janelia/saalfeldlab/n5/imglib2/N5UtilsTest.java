@@ -240,17 +240,17 @@ public class N5UtilsTest {
 		);
 	}
 
-	public <T extends IntegerType<T> & NativeType<T>> void testSaveAndOpenHelper(
+	public void testSaveAndOpenHelper(
 			final String dataset,
-			final Consumer<RandomAccessibleInterval<T>> save,
-			final Consumer<RandomAccessibleInterval<T>> saveRegion,
-			final Consumer<RandomAccessibleInterval<T>> saveParallel,
-			final Consumer<RandomAccessibleInterval<T>> saveRegionParallel) {
+			final Consumer<RandomAccessibleInterval<UnsignedShortType>> save,
+			final Consumer<RandomAccessibleInterval<UnsignedShortType>> saveRegion,
+			final Consumer<RandomAccessibleInterval<UnsignedShortType>> saveParallel,
+			final Consumer<RandomAccessibleInterval<UnsignedShortType>> saveRegionParallel) {
 
-		final ArrayImg<T, ?> img = (ArrayImg<T, ?>) ArrayImgs.unsignedShorts(data, dimensions);
+		ArrayImg<UnsignedShortType, ShortArray> img = ArrayImgs.unsignedShorts(data, dimensions);
 		save.accept(img);
-		RandomAccessibleInterval<T> loaded = N5Utils.open(n5, dataset);
-		for (final Pair<T, T> pair : Views
+		RandomAccessibleInterval<UnsignedShortType> loaded = N5Utils.open(n5, dataset);
+		for (final Pair<UnsignedShortType, UnsignedShortType> pair : Views
 				.flatIterable(Views.interval(Views.pair(img, loaded), img)))
 			Assert.assertEquals(pair.getA().getInteger(), pair.getB().getInteger());
 
@@ -261,8 +261,8 @@ public class N5UtilsTest {
 		final long[] newDims = Intervals.dimensionsAsLongArray(loaded);
 		Assert.assertArrayEquals("saveRegion padded dims", expectedPaddedDims, newDims);
 
-		final IntervalView<T> loadedSubset = Views.offsetInterval(loaded, dimensions, dimensions);
-		for (final Pair<T, T> pair : Views
+		final IntervalView<UnsignedShortType> loadedSubset = Views.offsetInterval(loaded, dimensions, dimensions);
+		for (final Pair<UnsignedShortType, UnsignedShortType> pair : Views
 				.flatIterable(Views.interval(Views.pair(img, loadedSubset), img)))
 			Assert.assertEquals(pair.getA().getInteger(), pair.getB().getInteger());
 
@@ -270,7 +270,7 @@ public class N5UtilsTest {
 		saveParallel.accept(img);;
 
 		loaded = N5Utils.open(n5, dataset);
-		for (final Pair<T, T> pair : Views
+		for (final Pair<UnsignedShortType, UnsignedShortType> pair : Views
 				.flatIterable(Views.interval(Views.pair(img, loaded), img)))
 			Assert.assertEquals(pair.getA().getInteger(), pair.getB().getInteger());
 
@@ -278,8 +278,8 @@ public class N5UtilsTest {
 		saveRegionParallel.accept(Views.translate(img, dimensions));
 
 		loaded = N5Utils.open(n5, dataset);
-		final IntervalView<T> loadedSubsetParallel = Views.offsetInterval(loaded, dimensions, dimensions);
-		for (final Pair<T, T> pair : Views.flatIterable(Views.interval(Views.pair(img, loadedSubsetParallel), img)))
+		final IntervalView<UnsignedShortType> loadedSubsetParallel = Views.offsetInterval(loaded, dimensions, dimensions);
+		for (final Pair<UnsignedShortType, UnsignedShortType> pair : Views.flatIterable(Views.interval(Views.pair(img, loadedSubsetParallel), img)))
 			Assert.assertEquals(pair.getA().getInteger(), pair.getB().getInteger());
 	}
 
