@@ -178,6 +178,8 @@ def n5vToDataset: {
 } + (.attributes | n5vToSequence);
 
 def n5vToNgffMultiscales($path; $axes ):
+($path | toTreePath + ["attributes"]) as $treePath |
+setpath( $treePath; getpath($treePath) +
 {
     "multiscales" : {
         "version" : "0.4",
@@ -186,7 +188,7 @@ def n5vToNgffMultiscales($path; $axes ):
         "datasets" : (getSubTree($path) | [flattenTree] | map(select(isN5VGroup) | n5vToDataset)),
         "metadata" : { "description": "translated from n5-viewer" }
     }
-};
+});
 
 
 def n5vToTransformF: . + {
