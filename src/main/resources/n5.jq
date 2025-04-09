@@ -18,6 +18,15 @@ def attrPaths: paths | select(.[-1] == "attributes");
 
 def addPaths: reduce attrPaths as $path ( . ; setpath( [ ($path | .[]), "path"]; ( $path | parentPath )));
 
+def toTreePath: ltrimstr( "/") | split("/") | map_values( ["children", . ] ) | flatten;
+
+def fromTreePath: if (length == 0) then "" else [.[range(1;length;2)]] | join("/") end;
+
+def getSubTree( $path ): getpath( $path | toTreePath );
+
+def moveSubTree( $srcPath; $dstPath ): getSubTree( $srcPath ) as $subTree | setpath( $dstPath | toTreePath; $subTree ) 
+    | delpaths([$srcPath | toTreePath]);
+
 def id3d: [1,0,0,0, 0,1,0,0, 0,0,1,0];
 
 def id2d: [1,0,0, 0,1,0];
@@ -112,6 +121,8 @@ def applyDownsamplingToFlatAffine( $a; $f ):
 
 def isN5V: type == "object" and has("pixelResolution");
 
+def isN5VGroup: type == "object" and has("attributes") and (.attributes | has("pixelResolution"));
+
 def n5vTransformArr: { "type":"affine", "affine": (.pixelResolution | affineFromScaleArray)};
 
 def n5vTransformObj: { "type":"affine", "affine": (.pixelResolution.dimensions | affineFromScaleArray )};
@@ -145,6 +156,38 @@ def n5vToScaleOffset:
     "offset": ($scaleOffset | .[1])
   }
 };
+
+def n5vToSequence:
+( [ (if n5visResObj then .pixelResolution.dimensions elif n5visResArr then .pixelResolution else null end),
+(.downsamplingFactors // [1, 1, 1] )] | scaleOffsetFromScaleAndFactorsArr ) as $scaleOffset |
+{
+  "coordinateTransformations": [
+      {
+        "type": "scale",
+        "scale": ($scaleOffset | .[0])
+      },
+      {
+        "type": "translation",
+        "translation": ($scaleOffset | .[1])
+      }
+  ]
+};
+
+def n5vToDataset: {
+    "path": (.path | sub(".*/"; ""))
+} + (.attributes | n5vToSequence);
+
+def n5vToNgffMultiscales($path; $axes ):
+{
+    "multiscales" : {
+        "version" : "0.4",
+        "name" : $path,
+        "axes": $axes,
+        "datasets" : (getSubTree($path) | [flattenTree] | map(select(isN5VGroup) | n5vToDataset)),
+        "metadata" : { "description": "translated from n5-viewer" }
+    }
+};
+
 
 def n5vToTransformF: . + {
   "transform": {
@@ -288,19 +331,12 @@ def arrMultiply( $s1; $s2 ): [$s1, $s2] | transpose | map(.[0] * .[1]) ;
 
 def scaleTransform( $scales ): { "type" : "scale", "scale" : $scales };
 
-def toTreePath: ltrimstr( "/") | split("/") | map_values( ["children", . ] ) | flatten;
 
-def fromTreePath: if (length == 0) then "" else [.[range(1;length;2)]] | join("/") end;
-
-def getSubTree( $path ): getpath( $path | toTreePath );
-
-def moveSubTree( $srcPath; $dstPath ): getSubTree( $srcPath ) as $subTree | setpath( $dstPath | toTreePath; $subTree ) 
-    | delpaths([$srcPath | toTreePath]);
-
-def treeAddAttrs( $path; $attrs ):
+def treeEditAttrs( $path; f ):
     ($path | toTreePath | . + ["attributes"]) as $p |
-    getpath( $p ) as $currentAttrs |
-    setpath( $p; $currentAttrs + $attrs );
+    setpath( $p; getpath($p) | f );
+
+def treeAddAttrs( $path; $attrs ): treeEditAttrs( $path; . + $attrs );
 
 def canonicalAxis( $type; $lbl; $unit ): {
     "type" : $type,
