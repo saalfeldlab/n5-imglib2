@@ -54,9 +54,9 @@ import org.janelia.saalfeldlab.n5.DatasetAttributes;
 import org.janelia.saalfeldlab.n5.GzipCompression;
 import org.janelia.saalfeldlab.n5.KeyValueAccess;
 import org.janelia.saalfeldlab.n5.N5FSWriter;
+import org.janelia.saalfeldlab.n5.N5Reader;
 import org.janelia.saalfeldlab.n5.N5Writer;
 import org.janelia.saalfeldlab.n5.RawCompression;
-import org.janelia.saalfeldlab.n5.ShardedDatasetAttributes;
 import org.janelia.saalfeldlab.n5.ShortArrayDataBlock;
 import org.janelia.saalfeldlab.n5.codec.RawBytes;
 import org.janelia.saalfeldlab.n5.codec.Codec;
@@ -64,7 +64,8 @@ import org.janelia.saalfeldlab.n5.codec.DeterministicSizeCodec;
 import org.janelia.saalfeldlab.n5.codec.checksum.Crc32cChecksumCodec;
 import org.janelia.saalfeldlab.n5.shard.Shard;
 import org.janelia.saalfeldlab.n5.shard.ShardIndex;
-import org.janelia.saalfeldlab.n5.shard.ShardParameters;
+import org.janelia.saalfeldlab.n5.shard.ShardTest.ShardedN5Writer;
+import org.janelia.saalfeldlab.n5.shard.ShardingCodec;
 import org.janelia.saalfeldlab.n5.shard.ShardingCodec.IndexLocation;
 import org.janelia.saalfeldlab.n5.util.GridIterator;
 import org.junit.After;
@@ -119,6 +120,8 @@ public class N5UtilsTest {
 
 	static private N5Writer n5;
 
+	static private N5Writer n5sharded;
+
 	private static final int MAX_NUM_CACHE_ENTRIES = 10;
 
 	private static final String EMPTY_DATASET = "/test/group/empty-dataset";
@@ -141,6 +144,7 @@ public class N5UtilsTest {
 			throw new IOException("Could not create test directory for HDF5Utils test.");
 
 		n5 = new N5FSWriter(testDirPath);
+		n5sharded = new ShardedN5Writer(testDirPath);
 
 		final Random rnd = new Random();
 
@@ -176,6 +180,7 @@ public class N5UtilsTest {
 	public void testSaveAndOpen() throws InterruptedException, ExecutionException {
 
 		testSaveAndOpenHelper(
+			n5,
 			datasetName,
 			img -> N5Utils.save(img, n5, datasetName, blockSize, new RawCompression()),
 			img -> {
@@ -210,30 +215,34 @@ public class N5UtilsTest {
 	public void testSaveAndOpenShard() throws InterruptedException, ExecutionException {
 
 		testSaveAndOpenHelper(
+			n5sharded,
 			shardDatasetName,
-			img -> N5Utils.save(img, n5, shardDatasetName, shardSize, blockSize, new RawCompression()),
+			img -> N5Utils.save(img, n5sharded, shardDatasetName, shardSize, blockSize, new RawCompression()),
 			img -> {
 				try {
-					N5Utils.saveRegion(img, n5, shardDatasetName);
+					N5Utils.saveRegion(img, n5sharded, shardDatasetName);
 				} catch (Exception e) {
+					e.printStackTrace();
 					fail();
 				}
 			},
 			img -> {
 				final ExecutorService exec = Executors.newFixedThreadPool(4);
 				try {
-					N5Utils.save(img, n5, shardDatasetName, shardSize, blockSize, new RawCompression(), exec);
+					N5Utils.save(img, n5sharded, shardDatasetName, shardSize, blockSize, new RawCompression(), exec);
 					exec.shutdown();
 				} catch (Exception e) {
+					e.printStackTrace();
 					fail();
 				}
 			},
 			img -> {
 				final ExecutorService exec = Executors.newFixedThreadPool(4);
 				try {
-					N5Utils.saveRegion(img, n5, shardDatasetName, exec);
+					N5Utils.saveRegion(img, n5sharded, shardDatasetName, exec);
 					exec.shutdown();
 				} catch (Exception e) {
+					e.printStackTrace();
 					fail();
 				}
 			}
@@ -241,6 +250,7 @@ public class N5UtilsTest {
 	}
 
 	public void testSaveAndOpenHelper(
+			final N5Reader n5r,
 			final String dataset,
 			final Consumer<RandomAccessibleInterval<UnsignedShortType>> save,
 			final Consumer<RandomAccessibleInterval<UnsignedShortType>> saveRegion,
@@ -249,14 +259,14 @@ public class N5UtilsTest {
 
 		ArrayImg<UnsignedShortType, ShortArray> img = ArrayImgs.unsignedShorts(data, dimensions);
 		save.accept(img);
-		RandomAccessibleInterval<UnsignedShortType> loaded = N5Utils.open(n5, dataset);
+		RandomAccessibleInterval<UnsignedShortType> loaded = N5Utils.open(n5r, dataset);
 		for (final Pair<UnsignedShortType, UnsignedShortType> pair : Views
 				.flatIterable(Views.interval(Views.pair(img, loaded), img)))
 			Assert.assertEquals(pair.getA().getInteger(), pair.getB().getInteger());
 
 		// test save region single thread
 		saveRegion.accept(Views.translate(img, dimensions));
-		loaded = N5Utils.open(n5, dataset);
+		loaded = N5Utils.open(n5r, dataset);
 		final long[] expectedPaddedDims = Arrays.stream(dimensions).map(x -> 2 * x).toArray();
 		final long[] newDims = Intervals.dimensionsAsLongArray(loaded);
 		Assert.assertArrayEquals("saveRegion padded dims", expectedPaddedDims, newDims);
@@ -269,7 +279,7 @@ public class N5UtilsTest {
 		// test multithreaded writing
 		saveParallel.accept(img);;
 
-		loaded = N5Utils.open(n5, dataset);
+		loaded = N5Utils.open(n5r, dataset);
 		for (final Pair<UnsignedShortType, UnsignedShortType> pair : Views
 				.flatIterable(Views.interval(Views.pair(img, loaded), img)))
 			Assert.assertEquals(pair.getA().getInteger(), pair.getB().getInteger());
@@ -277,7 +287,7 @@ public class N5UtilsTest {
 		// test save region multi thread
 		saveRegionParallel.accept(Views.translate(img, dimensions));
 
-		loaded = N5Utils.open(n5, dataset);
+		loaded = N5Utils.open(n5r, dataset);
 		final IntervalView<UnsignedShortType> loadedSubsetParallel = Views.offsetInterval(loaded, dimensions, dimensions);
 		for (final Pair<UnsignedShortType, UnsignedShortType> pair : Views.flatIterable(Views.interval(Views.pair(img, loadedSubsetParallel), img)))
 			Assert.assertEquals(pair.getA().getInteger(), pair.getB().getInteger());
@@ -293,7 +303,7 @@ public class N5UtilsTest {
 		testSaveNonEmptyShardHelper(
 				datasetPath,
 				this::datasetAttributes,
-				img -> { N5Utils.saveNonEmptyBlock(img, n5, datasetPath, zero); });
+				img -> { N5Utils.saveNonEmptyBlock(img, n5sharded, datasetPath, zero); });
 	}
 
 	@Test
@@ -306,19 +316,21 @@ public class N5UtilsTest {
 		testSaveNonEmptyShardHelper(
 				datasetPath,
 				this::shardedDatasetAttributes,
-				img -> { N5Utils.saveNonEmptyBlock(img, n5, datasetPath, zero); });
+				img -> { N5Utils.saveNonEmptyBlock(img, n5sharded, datasetPath, zero); });
 
 		final String datasetPath2 = "nonEmptyTestShard2";
 		testSaveNonEmptyShardHelper(
 				datasetPath2,
 				this::shardedDatasetAttributes,
-				img -> { N5Utils.saveNonEmptyShard(img, n5, datasetPath2, zero); });
+				img -> { N5Utils.saveNonEmptyShard(img, n5sharded, datasetPath2, zero); });
 	}
 
-	private ShardedDatasetAttributes shardedDatasetAttributes() {
-		return new ShardedDatasetAttributes(dimensions, shardSize, blockSize, DataType.UINT16,
-				new Codec[] { new RawBytes(), new GzipCompression(4) },
-				new DeterministicSizeCodec[] { new RawBytes(), new Crc32cChecksumCodec() }, IndexLocation.END);
+	private DatasetAttributes shardedDatasetAttributes() {
+		final ShardingCodec codec = new ShardingCodec(blockSize,
+				new Codec[]{new RawBytes(), new GzipCompression(4)},
+				new DeterministicSizeCodec[]{new RawBytes(), new Crc32cChecksumCodec()},
+				IndexLocation.END);
+		return new DatasetAttributes(dimensions, shardSize, blockSize, DataType.UINT16, codec);
 	}
 
 	private DatasetAttributes datasetAttributes() {
@@ -350,8 +362,8 @@ public class N5UtilsTest {
 
 		final DatasetAttributes attrs = datasetAttributes.get();
 
-		n5.remove(datasetPath);
-		n5.createDataset(datasetPath, attrs);
+		n5sharded.remove(datasetPath);
+		n5sharded.createDataset(datasetPath, attrs);
 		saveNonEmpty.accept(img);
 
 		final CellIntervals blocks = new CellGrid(dimensions, blockSize).cellIntervals();
@@ -360,7 +372,7 @@ public class N5UtilsTest {
 		while (c.hasNext()) {
 			c.fwd();
 			c.localize(blockPos);
-			final DataBlock<?> blk = n5.readBlock(datasetPath, attrs, blockPos);
+			final DataBlock<?> blk = n5sharded.readBlock(datasetPath, attrs, blockPos);
 			if (blockPos[0] == blockPos[1] && blockPos[0] == blockPos[2]) {
 				assertNotNull(blk);
 			} else {
@@ -545,21 +557,20 @@ public class N5UtilsTest {
 		final int[] readData = new int[data.length];
 		final ArrayImg<IntType, IntArray> imgRead = ArrayImgs.ints(readData, nx, ny);
 
-		final long[] imgSize = new long[] { nx, ny };
 		final int[] shardSize = new int[] { 10, 8 };
 		final int[] blkSize = new int[] { 5, 4 };
 
-		n5.remove(shardDset);
-		N5Utils.save(img, n5, shardDset, shardSize, blkSize, new RawCompression());
+		n5sharded.remove(shardDset);
+		N5Utils.save(img, n5sharded, shardDset, shardSize, blkSize, new RawCompression());
 
-		assertTrue(n5.datasetExists(shardDset));
+		assertTrue(n5sharded.datasetExists(shardDset));
 
-		final DatasetAttributes attrs = n5.getDatasetAttributes(shardDset);
-		assertTrue("attributes not sharded", attrs instanceof ShardParameters);
+		final DatasetAttributes attrs = n5sharded.getDatasetAttributes(shardDset);
+		assertTrue("attributes not sharded", attrs.isSharded());
 		assertArrayEquals("block size incorrect", blkSize, attrs.getBlockSize());
-		assertArrayEquals("shard size incorrect", shardSize, ((ShardParameters) attrs).getShardSize());
+		assertArrayEquals("shard size incorrect", shardSize, attrs.getShardSize());
 
-		CachedCellImg<IntType, ?> tmp = N5Utils.open(n5, shardDset);
+		CachedCellImg<IntType, ?> tmp = N5Utils.open(n5sharded, shardDset);
 		LoopBuilder.setImages(tmp, imgRead).forEachPixel((x, y) -> {
 			y.set(x);
 		});
