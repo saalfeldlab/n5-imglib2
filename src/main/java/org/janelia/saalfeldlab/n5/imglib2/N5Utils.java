@@ -2038,6 +2038,14 @@ public class N5Utils {
 	
 	/**
 	 * Write shards from a source image that aligns with the shard grid of the dataset.
+	 * <p>
+	 * This interface determines the grid appropriate for parallel writing from the 
+	 * {@link DatasetAttributes}' {@link NestedGrid}, and as a result can be used to write
+	 * un-sharded datasets as well (in this case simply using the block grid).
+	 * <p>
+	 * In this interface, "lowest-level" blocks refers to the finest block grid (smallest blocks).
+	 * This lowest-level is where compression is applied. The "highest-level" blocks refer to
+	 * the unit that can be written in parallel, i.e. that are unique keys in n5 and zarr.
 	 */
 	private interface ShardWriter {
 
@@ -2064,20 +2072,21 @@ public class N5Utils {
 		}
 
 		/**
-		 * Write a Shard at {@code gridPos}.
+		 * Write a shard at {@code shardGridPos}, where the shard is the unit
+		 * appropriate for parallel writing. This may be a
 		 * <p>
 		 * The interval covered by the block in the source image is given by
 		 * {@code blockMin} and {@code blockSize}. It must be fully inside the
 		 * source image.
 		 *
-		 * @param gridPos
+		 * @param shardGridPos
 		 * 		the grid coordinates of the block
-		 * @param blockMin
-		 * 		minimum of the interval covered by the block in the source image
-		 * @param blockSize
-		 * 		dimensions of the interval covered by the block in the source image
+		 * @param shardMin
+		 * 		minimum of the interval covered by the shard in the source image
+		 * @param shardSize
+		 * 		dimensions of the interval covered by the shard in the source image
 		 */
-		void write(long[] gridPos, long[] blockMin, int[] blockSize);
+		void write(long[] shardGridPos, long[] shardMin, int[] shardSize);
 
 		default Runnable writeTask(LocalizableSampler<Interval> gridShard) {
 			final long[] gridPos = gridShard.positionAsLongArray();
@@ -2128,16 +2137,14 @@ public class N5Utils {
 			}
 
 			/**
-			 * Creates all blocks for the shard at the given position.
-			 * <p>
-			 * Assumes exactly one level of sharding
+			 * Creates all lowest-level blocks for the shard at the given position.
 			 * 
-			 * @param shardGridPos 
+			 * @param outerPosition 
 			 * @param shardMin
 			 * @param shardSize
 			 * @return
 			 */
-			public DataBlock<T>[] createShardBlocks(final long[] outerPosition, final long[] shardMin, final int[] shardSize) {
+			public DataBlock<T>[] createShardBlocks(final long[] outerPosition) { //final long[] outerPosition, final long[] outerMin, final int[] outerSize) {
 
 				final int nd = attributes.getNumDimensions();
 
@@ -2166,8 +2173,15 @@ public class N5Utils {
 				return blocks.toArray(new DataBlock[0]);
 			}
 
-			public void write(final long[] gridPos, final long[] shardMin, final int[] shardSize) {
-				n5.writeBlocks(dataset, attributes, createShardBlocks(gridPos, shardMin, shardSize));
+			/**
+			 * Writes all lowest-level blocks for the shard at the given
+			 * position.
+			 * <p>
+			 * Note the latter two arguments are ignored as that information is
+			 * accessible through the DatasetAttributes.
+			 */
+			public void write(final long[] shardGridPos, final long[] shardMin, final int[] shardSize) {
+				n5.writeBlocks(dataset, attributes, createShardBlocks(shardGridPos));
 			}
 
 			private Supplier<ShardImp<T, P>> threadSafeSupplier;
