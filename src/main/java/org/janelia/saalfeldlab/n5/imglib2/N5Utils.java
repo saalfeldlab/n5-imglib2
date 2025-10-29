@@ -50,7 +50,6 @@ import org.janelia.saalfeldlab.n5.N5Exception.N5IOException;
 import org.janelia.saalfeldlab.n5.N5Reader;
 import org.janelia.saalfeldlab.n5.N5Writer;
 import org.janelia.saalfeldlab.n5.shard.Nesting.NestedGrid;
-import org.janelia.saalfeldlab.n5.util.GridIterator;
 
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -944,6 +943,96 @@ public class N5Utils {
 				.collect(Collectors.toList());
 		for (final Future<?> f : futures)
 			f.get();
+	}
+
+	/**
+	 * Save a {@link RandomAccessibleInterval} into an N5 dataset at a given
+	 * offset, multi-threaded. The offset is given in {@link DataBlock} grid
+	 * coordinates and the source is assumed to align with the {@link DataBlock}
+	 * grid of the dataset.
+	 *
+	 * @param <T>
+	 *            the type parameter
+	 * @param source
+	 *            the source block
+	 * @param n5
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset path
+	 * @param attributes
+	 *            the dataset attributes
+	 * @param gridOffset
+	 *            the position in the block grid
+	 * @param exec
+	 *            the executor service
+	 * @throws InterruptedException
+	 *             the interrupted exception
+	 * @throws ExecutionException
+	 *             the execution exception
+	 */
+	public static <T extends NativeType<T>> void saveNestedBlock(
+			final RandomAccessibleInterval<T> source,
+			final N5Writer n5,
+			final String dataset,
+			final DatasetAttributes attributes,
+			final long[] gridOffset,
+			final ExecutorService exec) throws InterruptedException, ExecutionException {
+
+		if (N5LabelMultisets.isLabelMultisetType(n5, dataset)) {
+			@SuppressWarnings("unchecked")
+			final RandomAccessibleInterval<LabelMultisetType> labelMultisetSource = (RandomAccessibleInterval<LabelMultisetType>)source;
+			N5LabelMultisets.saveLabelMultisetBlock(labelMultisetSource, n5, dataset, gridOffset, exec);
+			return;
+		}
+
+		final NestedGrid grid = attributes.getNestedBlockGrid();
+		final int numLevels = grid.numLevels();
+		final int[] outerSize = grid.getBlockSize(numLevels - 1);
+
+		final RandomAccessibleInterval<Interval> gridBlocks = new CellGrid(source.dimensionsAsLongArray(), outerSize)
+				.cellIntervals()
+				.view().translate(gridOffset);
+		final ShardWriter writer = ShardWriter.create(source.view().zeroMin(), n5, dataset, attributes).threadSafe();
+		final List<Future<?>> futures = Streams.localizing(gridBlocks)
+				.map(writer::writeTask)
+				.map(exec::submit)
+				.collect(Collectors.toList());
+		for (final Future<?> f : futures)
+			f.get();
+	}
+
+	/**
+	 * Save a {@link RandomAccessibleInterval} into an N5 dataset at a given
+	 * offset, multi-threaded. The offset is given in {@link DataBlock} grid
+	 * coordinates and the source is assumed to align with the {@link DataBlock}
+	 * grid of the dataset.
+	 *
+	 * @param <T>
+	 *            the type parameter
+	 * @param source
+	 *            the source block
+	 * @param n5
+	 *            the n5 writer
+	 * @param dataset
+	 *            the dataset path
+	 * @param attributes
+	 *            the dataset attributes
+	 * @param exec
+	 *            the executor service
+	 * @throws InterruptedException
+	 *             the interrupted exception
+	 * @throws ExecutionException
+	 *             the execution exception
+	 */
+	public static <T extends NativeType<T>> void saveNestedBlock(
+			final RandomAccessibleInterval<T> source,
+			final N5Writer n5,
+			final String dataset,
+			final DatasetAttributes attributes,
+			final ExecutorService exec) throws InterruptedException, ExecutionException {
+
+		saveNestedBlock(source, n5, dataset, attributes,
+				new long[source.numDimensions()], exec);
 	}
 
 	/**
@@ -1950,7 +2039,7 @@ public class N5Utils {
 	/**
 	 * Write shards from a source image that aligns with the shard grid of the dataset.
 	 */
-	public interface ShardWriter {
+	private interface ShardWriter {
 
 		static <T extends NativeType<T>> ShardWriter create(
 				final RandomAccessibleInterval<T> source,
@@ -2048,22 +2137,28 @@ public class N5Utils {
 			 * @param shardSize
 			 * @return
 			 */
-			public DataBlock<?>[] createShardBlocks(final long[] shardGridPos, final long[] shardMin, final int[] shardSize) {
+			public DataBlock<T>[] createShardBlocks(final long[] outerPosition, final long[] shardMin, final int[] shardSize) {
 
 				final int nd = attributes.getNumDimensions();
-				final int[] blockSize = attributes.getBlockSize();
-				final NestedGrid grid = attributes.getDatasetAccess().getGrid();
-				final ArrayList<DataBlock<P>> blocks = new ArrayList<>();
 
-				// Assumes one level of sharding
-				grid.positionInSubGrid(shardGridPos, 1, 0).forEach(blockPos -> {
+				final NestedGrid grid = attributes.getNestedBlockGrid();
+				final int numLevels = grid.numLevels();
+				final int highestLevel = numLevels - 1;
+				int[] innerSize = grid.getBlockSize(0);
+
+				final ArrayList<DataBlock<P>> blocks = new ArrayList<>();
+				grid.positionInSubGrid(outerPosition, highestLevel, 0).forEach(innerPos -> {
 
 					final long[] blockMin = IntStream.range(0, nd)
-							.mapToLong(i -> blockPos[i] * blockSize[i]).toArray();
+							.mapToLong(i -> innerPos[i] * innerSize[i]).toArray();
 
-					final DataBlock<P> dataBlock = Cast.unchecked(dataType.createDataBlock(blockSize, blockPos));
-					sourceBlocks.copy(blockMin, dataBlock.getData(), blockSize);
+					final DataBlock<P> dataBlock = Cast.unchecked(dataType.createDataBlock(innerSize, innerPos));
 
+					// TODO use the sourceBlocks to figure out if all values == fill value 
+					// so we can avoid the check below
+					sourceBlocks.copy(blockMin, dataBlock.getData(), innerSize);
+
+					// this can check if all values of the dataBlock are the fill value
 					if (checkBlock.test(dataBlock))
 						blocks.add(dataBlock);
 				});
@@ -2072,9 +2167,9 @@ public class N5Utils {
 			}
 
 			public void write(final long[] gridPos, final long[] shardMin, final int[] shardSize) {
-				n5.writeBlocks( dataset, attributes, createShardBlocks(gridPos, shardMin, shardSize));
+				n5.writeBlocks(dataset, attributes, createShardBlocks(gridPos, shardMin, shardSize));
 			}
-			
+
 			private Supplier<ShardImp<T, P>> threadSafeSupplier;
 
 			@Override
