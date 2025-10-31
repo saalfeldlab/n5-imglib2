@@ -1246,7 +1246,7 @@ public class N5Utils {
 			return;
 		}
 
-		final DatasetAttributes attributes = new DatasetAttributes(
+		final DatasetAttributes attributes = n5.createDatasetAttributes(
 				source.dimensionsAsLongArray(),
 				blockSize,
 				dataType(source.getType()),
@@ -1296,7 +1296,7 @@ public class N5Utils {
 			return;
 		}
 
-		final DatasetAttributes attributes = new DatasetAttributes(
+		final DatasetAttributes attributes = n5.createDatasetAttributes(
 				source.dimensionsAsLongArray(),
 				blockSize,
 				dataType(source.getType()),

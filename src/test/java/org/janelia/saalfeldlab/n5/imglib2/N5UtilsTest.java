@@ -327,10 +327,10 @@ public class N5UtilsTest {
 //		return new DatasetAttributes(dimensions, shardSize, blockSize, DataType.UINT16, codec);
 //	}
 
-	private DatasetAttributes datasetAttributes() {
-		return new DatasetAttributes(dimensions, blockSize, DataType.UINT16,
-				new RawCompression());
-	}
+//	private DatasetAttributes datasetAttributes() {
+//		return new DatasetAttributes(dimensions, blockSize, DataType.UINT16,
+//				new RawCompression());
+//	}
 
 //	public void testSaveNonEmptyShardHelper(
 //			final String datasetPath,
@@ -479,7 +479,7 @@ public class N5UtilsTest {
 	public void testBlockSize() throws IOException {
 
 		n5.remove(datasetName);
-		final DatasetAttributes datasetAttributes = new DatasetAttributes(
+		final DatasetAttributes datasetAttributes = n5.createDatasetAttributes(
 				dimensions,
 				blockSize,
 				DataType.UINT16,

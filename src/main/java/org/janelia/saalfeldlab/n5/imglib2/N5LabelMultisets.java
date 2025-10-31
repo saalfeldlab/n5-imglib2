@@ -198,7 +198,7 @@ public class N5LabelMultisets {
 
 		source = Views.zeroMin(source);
 		final long[] dimensions = Intervals.dimensionsAsLongArray(source);
-		final DatasetAttributes attributes = new DatasetAttributes(
+		final DatasetAttributes attributes = n5.createDatasetAttributes(
 				dimensions,
 				blockSize,
 				DataType.UINT8,
@@ -261,7 +261,7 @@ public class N5LabelMultisets {
 
 		final RandomAccessibleInterval<LabelMultisetType> zeroMinSource = Views.zeroMin(source);
 		final long[] dimensions = Intervals.dimensionsAsLongArray(zeroMinSource);
-		final DatasetAttributes attributes = new DatasetAttributes(
+		final DatasetAttributes attributes = n5.createDatasetAttributes(
 				dimensions,
 				blockSize,
 				DataType.UINT8,
