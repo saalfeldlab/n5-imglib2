@@ -41,6 +41,7 @@ import java.util.function.IntFunction;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+import net.imglib2.blocks.BlockInterval;
 import org.janelia.saalfeldlab.n5.Compression;
 import org.janelia.saalfeldlab.n5.DataBlock;
 import org.janelia.saalfeldlab.n5.DataType;
@@ -1812,11 +1813,8 @@ public class N5Utils {
 
 		default Runnable writeTask(LocalizableSampler<Interval> gridBlock) {
 			final long[] gridPos = gridBlock.positionAsLongArray();
-			final Interval blockInterval = gridBlock.get();
-			final long[] blockMin = blockInterval.minAsLongArray();
-			final int[] blockSize = new int[ blockInterval.numDimensions() ];
-			Arrays.setAll(blockSize, d -> (int) blockInterval.dimension(d));
-			return () -> write(gridPos, blockMin, blockSize);
+			final BlockInterval interval = BlockInterval.asBlockInterval(gridBlock.get());
+			return () -> write(gridPos, interval.min(), interval.size());
 		}
 
 		/**
@@ -1911,11 +1909,8 @@ public class N5Utils {
 
 		default Runnable writeTask(LocalizableSampler<Interval> gridBlock) {
 			final long[] gridPos = gridBlock.positionAsLongArray();
-			final Interval blockInterval = gridBlock.get();
-			final long[] blockMin = blockInterval.minAsLongArray();
-			final int[] blockSize = new int[blockInterval.numDimensions()];
-			Arrays.setAll(blockSize, d -> (int) blockInterval.dimension(d));
-			return () -> write(gridPos, blockMin, blockSize);
+			final BlockInterval interval = BlockInterval.asBlockInterval(gridBlock.get());
+			return () -> write(gridPos, interval.min(), interval.size());
 		}
 
 		/**
@@ -2090,11 +2085,8 @@ public class N5Utils {
 
 		default Runnable writeTask(LocalizableSampler<Interval> gridShard) {
 			final long[] gridPos = gridShard.positionAsLongArray();
-			final Interval blockInterval = gridShard.get();
-			final long[] blockMin = blockInterval.minAsLongArray();
-			final int[] blockSize = new int[ blockInterval.numDimensions() ];
-			Arrays.setAll(blockSize, d -> (int) blockInterval.dimension(d));
-			return () -> write(gridPos, blockMin, blockSize);
+			final BlockInterval interval = BlockInterval.asBlockInterval(gridShard.get());
+			return () -> write(gridPos, interval.min(), interval.size());
 		}
 
 		default ShardWriter threadSafe() {return this;}
