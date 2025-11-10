@@ -26,39 +26,17 @@
  */
 package org.janelia.saalfeldlab.n5.imglib2;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.IntFunction;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
-
-import net.imglib2.blocks.BlockInterval;
-import org.janelia.saalfeldlab.n5.Compression;
-import org.janelia.saalfeldlab.n5.DataBlock;
-import org.janelia.saalfeldlab.n5.DataType;
-import org.janelia.saalfeldlab.n5.DatasetAttributes;
-import org.janelia.saalfeldlab.n5.N5Exception.N5IOException;
-
-import org.janelia.saalfeldlab.n5.N5Reader;
-import org.janelia.saalfeldlab.n5.N5Writer;
-import org.janelia.saalfeldlab.n5.shard.Nesting.NestedGrid;
-
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-
-import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
 import net.imglib2.IterableInterval;
-import net.imglib2.LocalizableSampler;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.blocks.PrimitiveBlocks;
 import net.imglib2.blocks.PrimitiveBlocks.OnFallback;
@@ -101,7 +79,14 @@ import net.imglib2.util.CloseableThreadLocal;
 import net.imglib2.util.Intervals;
 import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
-import net.imglib2.view.Views;
+import org.janelia.saalfeldlab.n5.Compression;
+import org.janelia.saalfeldlab.n5.DataBlock;
+import org.janelia.saalfeldlab.n5.DataType;
+import org.janelia.saalfeldlab.n5.DatasetAttributes;
+import org.janelia.saalfeldlab.n5.N5Exception.N5IOException;
+import org.janelia.saalfeldlab.n5.N5Reader;
+import org.janelia.saalfeldlab.n5.N5Writer;
+import org.janelia.saalfeldlab.n5.N5Writer.DataBlockSupplier;
 
 /**
  * Static utility methods to open N5 datasets as ImgLib2
@@ -799,13 +784,8 @@ public class N5Utils {
 			return;
 		}
 
-		final RandomAccessibleInterval<Interval> gridBlocks = new CellGrid(source.dimensionsAsLongArray(), attributes.getBlockSize())
-				.cellIntervals()
-				.view().translate(gridOffset);
-		final BlockWriter writer = BlockWriter.create(source.view().zeroMin(), n5, dataset, attributes);
-		Streams.localizing(gridBlocks)
-				.map(writer::writeTask)
-				.forEach(Runnable::run);
+		final Blocks<T,?> blocks = new DefaultDataBlockSupplier<>(attributes, source, gridOffset);
+		n5.writeRegion(dataset, attributes, blocks.regionMin(), blocks.regionSize(), blocks, true);
 	}
 
 	/**
@@ -934,106 +914,8 @@ public class N5Utils {
 			return;
 		}
 
-		final RandomAccessibleInterval<Interval> gridBlocks = new CellGrid(source.dimensionsAsLongArray(), attributes.getBlockSize())
-				.cellIntervals()
-				.view().translate(gridOffset);
-		final BlockWriter writer = BlockWriter.create(source.view().zeroMin(), n5, dataset, attributes).threadSafe();
-		final List<Future<?>> futures = Streams.localizing(gridBlocks)
-				.map(writer::writeTask)
-				.map(exec::submit)
-				.collect(Collectors.toList());
-		for (final Future<?> f : futures)
-			f.get();
-	}
-
-	/**
-	 * Save a {@link RandomAccessibleInterval} into an N5 dataset at a given
-	 * offset, multi-threaded. The offset is given in {@link DataBlock} grid
-	 * coordinates and the source is assumed to align with the {@link DataBlock}
-	 * grid of the dataset.
-	 *
-	 * @param <T>
-	 *            the type parameter
-	 * @param source
-	 *            the source block
-	 * @param n5
-	 *            the n5 writer
-	 * @param dataset
-	 *            the dataset path
-	 * @param attributes
-	 *            the dataset attributes
-	 * @param gridOffset
-	 *            the position in the block grid
-	 * @param exec
-	 *            the executor service
-	 * @throws InterruptedException
-	 *             the interrupted exception
-	 * @throws ExecutionException
-	 *             the execution exception
-	 */
-	public static <T extends NativeType<T>> void saveNestedBlock(
-			final RandomAccessibleInterval<T> source,
-			final N5Writer n5,
-			final String dataset,
-			final DatasetAttributes attributes,
-			final long[] gridOffset,
-			final ExecutorService exec) throws InterruptedException, ExecutionException {
-
-		if (N5LabelMultisets.isLabelMultisetType(n5, dataset)) {
-			@SuppressWarnings("unchecked")
-			final RandomAccessibleInterval<LabelMultisetType> labelMultisetSource = (RandomAccessibleInterval<LabelMultisetType>)source;
-			N5LabelMultisets.saveLabelMultisetBlock(labelMultisetSource, n5, dataset, gridOffset, exec);
-			return;
-		}
-
-		final NestedGrid grid = attributes.getNestedBlockGrid();
-		final int numLevels = grid.numLevels();
-		final int[] outerSize = grid.getBlockSize(numLevels - 1);
-
-		final RandomAccessibleInterval<Interval> gridBlocks = new CellGrid(source.dimensionsAsLongArray(), outerSize)
-				.cellIntervals()
-				.view().translate(gridOffset);
-		final ShardWriter writer = ShardWriter.create(source.view().zeroMin(), n5, dataset, attributes).threadSafe();
-		final List<Future<?>> futures = Streams.localizing(gridBlocks)
-				.map(writer::writeTask)
-				.map(exec::submit)
-				.collect(Collectors.toList());
-		for (final Future<?> f : futures)
-			f.get();
-	}
-
-	/**
-	 * Save a {@link RandomAccessibleInterval} into an N5 dataset at a given
-	 * offset, multi-threaded. The offset is given in {@link DataBlock} grid
-	 * coordinates and the source is assumed to align with the {@link DataBlock}
-	 * grid of the dataset.
-	 *
-	 * @param <T>
-	 *            the type parameter
-	 * @param source
-	 *            the source block
-	 * @param n5
-	 *            the n5 writer
-	 * @param dataset
-	 *            the dataset path
-	 * @param attributes
-	 *            the dataset attributes
-	 * @param exec
-	 *            the executor service
-	 * @throws InterruptedException
-	 *             the interrupted exception
-	 * @throws ExecutionException
-	 *             the execution exception
-	 */
-	public static <T extends NativeType<T>> void saveNestedBlock(
-			final RandomAccessibleInterval<T> source,
-			final N5Writer n5,
-			final String dataset,
-			final DatasetAttributes attributes,
-			final ExecutorService exec) throws InterruptedException, ExecutionException {
-
-		saveNestedBlock(source, n5, dataset, attributes,
-				new long[source.numDimensions()], exec);
+		final Blocks<T,?> blocks = new DefaultDataBlockSupplier<>(attributes, source, gridOffset).threadSafe();
+		n5.writeRegion(dataset, attributes, blocks.regionMin(), blocks.regionSize(), blocks, true, exec);
 	}
 
 	/**
@@ -1104,13 +986,8 @@ public class N5Utils {
 			final long[] gridOffset,
 			final T defaultValue) {
 
-		final RandomAccessibleInterval<Interval> gridBlocks = new CellGrid(source.dimensionsAsLongArray(), attributes.getBlockSize())
-				.cellIntervals()
-				.view().translate(gridOffset);
-		final BlockWriter writer = BlockWriter.createNonEmpty(source.view().zeroMin(), n5, dataset, attributes, defaultValue);
-		Streams.localizing(gridBlocks)
-				.map(writer::writeTask)
-				.forEach(Runnable::run);
+		final Blocks<T,?> blocks = new NonEmptyDataBlockSupplier<>(attributes, source, gridOffset, defaultValue);
+		n5.writeRegion(dataset, attributes, blocks.regionMin(), blocks.regionSize(), blocks, true);
 	}
 
 	/**
@@ -1307,20 +1184,6 @@ public class N5Utils {
 		saveBlock(source, n5, dataset, attributes, gridOffset, exec);
 	}
 
-	public static <T extends NativeType<T>> void save(
-			final RandomAccessibleInterval<T> source,
-			final N5Writer n5,
-			final String dataset,
-			DatasetAttributes attributes ) throws InterruptedException, ExecutionException {
-
-		n5.createDataset(dataset, attributes);
-		final long[] gridOffset = new long[source.numDimensions()];
-
-		// TODO: make this work in parallel when dataset is sharded
-		saveBlock(source, n5, dataset, attributes, gridOffset, 
-				Executors.newSingleThreadExecutor());
-	}
-
 	/**
 	 * Write an image into an existing n5 dataset, overwriting any exising data, and padding the dataset if
 	 * necessary. The min and max values of the input source interval define the
@@ -1351,9 +1214,9 @@ public class N5Utils {
 	 * necessary. The min and max values of the input source interval define the
 	 * subset of the dataset to be written. Blocks of the output at written in
 	 * parallel using the given {@link ExecutorService}.
-	 *
+	 * <p>
 	 * Warning! Avoid calling this method in parallel for multiple sources that
-	 * have blocks in common. This risks invalid or corrupting data blocks.
+	 * have blocks or shards in common. This risks invalid or corrupting data blocks.
 	 *
 	 * @param <T>
 	 *            the type parameter
@@ -1383,7 +1246,7 @@ public class N5Utils {
 	 * Write an image into an existing n5 dataset, overwriting any exising data, and padding the dataset if
 	 * necessary. The min and max values of the input source interval define the
 	 * subset of the dataset to be written.
-	 *
+	 * <p>
 	 * Warning! Avoid calling this method in parallel for multiple sources that
 	 * have blocks or shards in common. This risks invalid or corrupting data blocks.
 	 *
@@ -1402,48 +1265,18 @@ public class N5Utils {
 			final RandomAccessibleInterval<T> source,
 			final N5Writer n5,
 			final String dataset,
-			final DatasetAttributes attributes) {
+			DatasetAttributes attributes) {
 
 		final Optional<long[]> newDimensionsOpt = saveRegionPreprocessing(source, attributes);
 
-		final long[] dimensions;
 		if (newDimensionsOpt.isPresent()) {
 			// TODO not correct for zarr if mapDatasetAttributes not set. I think we need to create a new DatasetAttributes.
 			n5.setAttribute(dataset, "dimensions", newDimensionsOpt.get());
-			dimensions = newDimensionsOpt.get();
-		} else {
-			dimensions = attributes.getDimensions();
+			attributes = n5.getDatasetAttributes(dataset);
 		}
-		
-		// find the grid positions bounding the source image to save
-		final RandomAccessibleInterval<Interval> gridBlocks = findBoundingGridBlocks(
-				source, dimensions, attributes.getBlockSize());
-		
-//		if (attributes.isSharded()) {
-//
-//			// find the grid positions of shards bounding the source image to save
-//			// and iteratve over them
-//			final RandomAccessibleInterval<Interval> gridShards = findBoundingGridBlocks(
-//					source, dimensions, attributes.getShardSize());
-//
-//			final RegionShardWriter writer = RegionShardWriter.create(
-//					source, n5, dataset, 
-//					attributes,
-//					gridBlocks);
-//
-//			Streams.localizing(gridShards)
-//					.map(writer::writeTask)
-//					.forEach(Runnable::run);
-//			
-//		} else {
 
-			// iterate over those blocks
-			final RegionBlockWriter writer = RegionBlockWriter.create(source, n5, dataset, attributes);
-			Streams.localizing(gridBlocks)
-				.map(writer::writeTask)
-				.forEach(Runnable::run);
-//		}
-
+		final Blocks<T, ?> blocks = new MergeDataBlockSupplier<>(attributes, source);
+		n5.writeRegion(dataset, attributes, blocks.regionMin(), blocks.regionSize(), blocks, false);
 	}
 
 	/**
@@ -1451,7 +1284,7 @@ public class N5Utils {
 	 * necessary. The min and max values of the input source interval define the
 	 * subset of the dataset to be written. Blocks of the output at written in
 	 * parallel using the given {@link ExecutorService}.
-	 *
+	 * <p>
 	 * Warning! Avoid calling this method in parallel for multiple sources that
 	 * have blocks or shards in common. This risks invalid or corrupting data blocks.
 	 *
@@ -1471,64 +1304,24 @@ public class N5Utils {
 	 *             the execution exception
 	 * @throws InterruptedException
 	 *             the interrupted exception
-	 *
 	 */
 	public static <T extends NativeType<T>, P> void saveRegion(
 			final RandomAccessibleInterval<T> source,
 			final N5Writer n5,
 			final String dataset,
-			final DatasetAttributes attributes,
+			DatasetAttributes attributes,
 			final ExecutorService exec) throws InterruptedException, ExecutionException {
 
 		final Optional<long[]> newDimensionsOpt = saveRegionPreprocessing(source, attributes);
 
-		final long[] dimensions;
 		if (newDimensionsOpt.isPresent()) {
 			// TODO not correct for zarr if mapDatasetAttributes not set. I think we need to create a new DatasetAttributes.
 			n5.setAttribute(dataset, "dimensions", newDimensionsOpt.get());
-			dimensions = newDimensionsOpt.get();
-		} else {
-			dimensions = attributes.getDimensions();
+			attributes = n5.getDatasetAttributes(dataset);
 		}
 
-		// find the grid positions bounding the source image to save
-		final RandomAccessibleInterval<Interval> gridBlocks = findBoundingGridBlocks(
-				source, dimensions, attributes.getBlockSize());
-
-//		if (attributes.isSharded()) {
-//
-//			// find the grid positions of shards bounding the source image to save
-//			// and iteratve over them
-//			final RandomAccessibleInterval<Interval> gridShards = findBoundingGridBlocks(
-//					source, dimensions, attributes.getShardSize());
-//
-//			final RegionShardWriter writer = RegionShardWriter.create(
-//					source, n5, dataset, 
-//					attributes,
-//					gridBlocks).threadSafe();
-//
-//			Streams.localizing(gridShards)
-//					.map(writer::writeTask)
-//					.forEach(Runnable::run);
-//
-//			final List<Future<?>> futures = Streams.localizing(gridBlocks)
-//					.map(writer::writeTask)
-//					.map(exec::submit)
-//					.collect(Collectors.toList());
-//			for (final Future<?> f : futures)
-//				f.get();
-//			
-//		} else {
-
-			// iterate over those blocks
-			final RegionBlockWriter writer = RegionBlockWriter.create(source, n5, dataset, attributes).threadSafe();
-			final List<Future<?>> futures = Streams.localizing(gridBlocks)
-					.map(writer::writeTask)
-					.map(exec::submit)
-					.collect(Collectors.toList());
-			for (final Future<?> f : futures)
-				f.get();
-//		}
+		final Blocks<T, ?> blocks = new MergeDataBlockSupplier<>(attributes, source).threadSafe();
+		n5.writeRegion(dataset, attributes, blocks.regionMin(), blocks.regionSize(), blocks, false, exec);
 	}
 
 	/**
@@ -1592,68 +1385,6 @@ public class N5Utils {
 		else
 			return Optional.empty();
 	}
-
-	/**
-	 * Find the grid positions of DataBlocks or shards overlapping the {@code sourceInterval}.
-	 * The position of a {@code RandomAccess} is the gridPosition of a block or shard.
-	 * {@code RandomAccess.get()} gives the interval covered by the block or shard.
-	 *
-	 * @param sourceInterval
-	 * 		source interval to cover
-	 * @param datasetDimensions
-	 * 		dimensions of the dataset (must fully contain source)
-	 * @param blockSize
-	 * 		blocksize or shardsize of the dataset
-	 *
-	 * @return a {@code RandomAccessibleInterval} of the grid blocks (intervals) overlapping the {@code sourceInterval}.
-	 */
-	public static RandomAccessibleInterval<Interval> findBoundingGridBlocks(
-			final Interval sourceInterval,
-			final long[] datasetDimensions,
-			final int[] blockSize
-	) {
-		// find the grid positions bounding the source image to save
-		final int n = sourceInterval.numDimensions();
-		final long[] gridMin = new long[n];
-		final long[] gridMax = new long[n];
-		for (int d = 0; d < n; d++) {
-			gridMin[d] = Math.floorDiv(sourceInterval.min(d), blockSize[d]);
-			gridMax[d] = Math.floorDiv(sourceInterval.max(d), blockSize[d]);
-		}
-		return new CellGrid(datasetDimensions, blockSize)
-				.cellIntervals()
-				.view().interval(FinalInterval.wrap(gridMin, gridMax));
-	}
-	
-
-	/**
-	 * Return the subset of the grid blocks that corresponds to the shard
-	 * with the given position and size.
-	 * 
-	 * @param gridBlocks
-	 * @param shardPosition
-	 * @param shardSize
-	 * @param blockSize
-	 * @return
-	 */
-	public static RandomAccessibleInterval<Interval> shardSubBlocks(
-			final RandomAccessibleInterval<Interval> gridBlocks,
-			final long[] shardPosition,
-			final int[] blocksPerShard
-	) {
-
-		final int n = gridBlocks.numDimensions();
-
-		final long[] blockGridMin = new long[n];
-		final long[] blockGridMax = new long[n];
-		for( int i = 0; i < n; i++ ) {
-			blockGridMin[i] = shardPosition[i] * blocksPerShard[i];
-			blockGridMax[i] = blockGridMin[i] + blocksPerShard[i] - 1;
-		}
-
-		return Views.interval(gridBlocks, new FinalInterval( blockGridMin, blockGridMax));
-	}
-
 
 	/**
 	 * Delete an {@link Interval} in an N5 dataset at a given offset. The offset
@@ -1766,544 +1497,288 @@ public class N5Utils {
 		}
 	}
 
-	/**
-	 * Write DataBlocks from a source image that aligns with the {@link
-	 * DataBlock} grid of the dataset.
-	 */
-	private interface BlockWriter {
+	// ------------------------------------------------------------------------
+	//   DataBlockSupplier implementations
+	// ------------------------------------------------------------------------
 
-		static <T extends NativeType<T>> BlockWriter create(
-				final RandomAccessibleInterval<T> source,
-				final N5Writer n5,
-				final String dataset,
-				final DatasetAttributes attributes) {
+	private static abstract class Blocks<T extends NativeType<T>, P> implements DataBlockSupplier<P> {
 
-			return new Imp<>(source, attributes.getDataType(), dataBlock ->
-					n5.writeBlock(dataset, attributes, dataBlock));
-		}
+		abstract Blocks<T, P> independentCopy();
 
-		static <T extends NativeType<T>> BlockWriter createNonEmpty(
-				final RandomAccessibleInterval<T> source,
-				final N5Writer n5,
-				final String dataset,
-				final DatasetAttributes attributes,
-				final T defaultValue) {
+		private Supplier<Blocks<T, P>> threadSafeSupplier;
 
-			return new Imp<>(source, attributes.getDataType(), dataBlock -> {
-				if (!allEqual(defaultValue, dataBlock.getData()))
-					n5.writeBlock(dataset, attributes, dataBlock);
-			});
-		}
+		abstract long[] regionMin();
 
-		/**
-		 * Write a DataBlock at {@code gridPos}.
-		 * <p>
-		 * The interval covered by the block in the source image is given by
-		 * {@code blockMin} and {@code blockSize}. It must be fully inside the
-		 * source image.
-		 *
-		 * @param gridPos
-		 * 		the grid coordinates of the block
-		 * @param blockMin
-		 * 		minimum of the interval covered by the block in the source image
-		 * @param blockSize
-		 * 		dimensions of the interval covered by the block in the source image
-		 */
-		void write(long[] gridPos, long[] blockMin, int[] blockSize);
+		abstract long[] regionSize();
 
-		default Runnable writeTask(LocalizableSampler<Interval> gridBlock) {
-			final long[] gridPos = gridBlock.positionAsLongArray();
-			final BlockInterval interval = BlockInterval.asBlockInterval(gridBlock.get());
-			return () -> write(gridPos, interval.min(), interval.size());
-		}
+		Blocks<T, P> threadSafe() {
+			if (threadSafeSupplier == null)
+				threadSafeSupplier = CloseableThreadLocal.withInitial(this::independentCopy)::get;
+			return new Blocks<T, P>() {
 
-		/**
-		 * Get a thread-safe version of this {@code RegionBlockWriter}.
-		 * (Implemented as a wrapper that makes {@link ThreadLocal} copies).
-		 */
-		default BlockWriter threadSafe() {return this;}
+				@Override
+				Blocks<T, P> independentCopy() {
+					return Blocks.this.independentCopy().threadSafe();
+				}
 
-		class Imp<T extends NativeType<T>, P> implements BlockWriter {
+				@Override
+				long[] regionMin() {
+					return Blocks.this.regionMin();
+				}
 
-			final DataType dataType;
-			final Consumer<DataBlock<P>> writeBlock;
-			final PrimitiveBlocks<T> sourceBlocks;
-			final int[] zeroPos;
+				@Override
+				long[] regionSize() {
+					return Blocks.this.regionSize();
+				}
 
-			Imp(
-					final RandomAccessibleInterval<T> source,
-					final DataType dataType,
-					final Consumer<DataBlock<P>> writeBlock) {
-				this.dataType = dataType;
-				this.writeBlock = writeBlock;
-				sourceBlocks = PrimitiveBlocks.of(source, OnFallback.ACCEPT);
-				final int n = source.numDimensions();
-				zeroPos = new int[n];
-			}
+				@Override
+				public DataBlock<P> get(final long[] gridPos, final DataBlock<P> existingDataBlock) {
+					return threadSafeSupplier.get().get(gridPos, existingDataBlock);
+				}
 
-			Imp(final Imp<T, P> writer) {
-				this.dataType = writer.dataType;
-				this.writeBlock = writer.writeBlock;
-				this.sourceBlocks = writer.sourceBlocks.independentCopy();
-				this.zeroPos = writer.zeroPos;
-			}
-
-			public DataBlock<P> createDataBlock(final long[] gridPos, final long[] blockMin, final int[] blockSize) {
-				final DataBlock<P> dataBlock = Cast.unchecked(dataType.createDataBlock(blockSize, gridPos));
-				sourceBlocks.copy(blockMin, dataBlock.getData(), blockSize);
-				return dataBlock;
-			}
-
-			@Override
-			public void write(final long[] gridPos, final long[] blockMin, final int[] blockSize) {
-
-				final DataBlock<P> dataBlock = createDataBlock(gridPos, blockMin, blockSize);
-				writeBlock.accept(dataBlock);
-			}
-
-			private Supplier<Imp<T, P>> threadSafeSupplier;
-
-			@Override
-			public BlockWriter threadSafe() {
-				if (threadSafeSupplier == null)
-					threadSafeSupplier = CloseableThreadLocal.withInitial(() -> new Imp<>(this))::get;
-				return (gridPos, blockMin, blockSize) -> threadSafeSupplier.get().write(gridPos, blockMin, blockSize);
-			}
+				@Override
+				Blocks<T, P> threadSafe() {
+					return this;
+				}
+			};
 		}
 	}
 
-	/**
-	 * Write (or override) a DataBlocks which may fully or partially overlap the
-	 * source image. In the latter case only a part of the block is filled (or
-	 * overridden) with data.
-	 */
-	private interface RegionBlockWriter {
+	private static class NonEmptyDataBlockSupplier<T extends NativeType<T>, P> extends Blocks<T, P> {
 
-		static <T extends NativeType<T>> RegionBlockWriter create(
+		private DefaultDataBlockSupplier<T, P> blocks;
+		private final T defaultValue;
+
+		NonEmptyDataBlockSupplier(
+				final DatasetAttributes attributes,
 				final RandomAccessibleInterval<T> source,
-				final N5Writer n5,
-				final String dataset,
-				final DatasetAttributes attributes) {
-
-			return new Imp<>(source, attributes.getDataType(),
-					gridPosition -> Cast.unchecked(n5.readBlock(dataset, attributes, gridPosition)),
-					dataBlock -> n5.writeBlock(dataset, attributes, dataBlock));
+				final long[] gridOffset,
+				final T defaultValue) {
+			blocks = new DefaultDataBlockSupplier<>(attributes, source, gridOffset);
+			this.defaultValue = defaultValue;
 		}
 
-		/**
-		 * Write (or override) a DataBlock at {@code gridPos}.
-		 * <p>
-		 * The interval covered by the block in the source image is given by
-		 * {@code blockInterval}. {@code blockInterval} might only partially
-		 * overlap the source image. In that cas only a part of the block is
-		 * filled (or overridden) with data.
-		 *
-		 * @param gridPos
-		 * 		the grid coordinates of the block
-		 * @param blockMin
-		 * 		minimum of the interval covered by the block in the source image
-		 * @param blockSize
-		 * 		dimensions of the interval covered by the block in the source image
-		 */
-		void write(long[] gridPos, long[] blockMin, int[] blockSize);
-
-		default Runnable writeTask(LocalizableSampler<Interval> gridBlock) {
-			final long[] gridPos = gridBlock.positionAsLongArray();
-			final BlockInterval interval = BlockInterval.asBlockInterval(gridBlock.get());
-			return () -> write(gridPos, interval.min(), interval.size());
+		private NonEmptyDataBlockSupplier(final NonEmptyDataBlockSupplier<T, P> supplier) {
+			blocks = supplier.blocks.independentCopy();
+			defaultValue = supplier.defaultValue;
 		}
 
-		/**
-		 * Get a thread-safe version of this {@code RegionBlockWriter}.
-		 * (Implemented as a wrapper that makes {@link ThreadLocal} copies).
-		 */
-		default RegionBlockWriter threadSafe() {return this;}
+		@Override
+		Blocks<T, P> independentCopy() {
+			return new NonEmptyDataBlockSupplier<>(this);
+		}
 
-		class Imp<T extends NativeType<T>, P> implements RegionBlockWriter {
+		@Override
+		long[] regionMin() {
+			return blocks.regionMin();
+		}
 
-			private final DataType dataType;
-			private final Function<long[], DataBlock<P>> readBlock;
-			private final Consumer<DataBlock<P>> writeBlock;
+		@Override
+		long[] regionSize() {
+			return blocks.regionSize();
+		}
 
-			private final Interval sourceInterval;
-			private final PrimitiveBlocks<T> sourceBlocks;
-			private final SubArrayCopy.Typed<P, P> subArrayCopy;
-			private final TempArray<P> tempArray;
+		@Override
+		public DataBlock<P> get(final long[] gridPos, final DataBlock<P> existingDataBlock) {
+			final DataBlock<P> dataBlock = blocks.get(gridPos, existingDataBlock);
+			return allEqual(defaultValue, dataBlock.getData()) ? null : dataBlock;
+		}
+	}
 
-			private final int[] zeroPos;
-			private final long[] intersectionMin;
-			private final int[] intersectionSize;
-			private final int[] intersectionOffset;
+	private static class DefaultDataBlockSupplier<T extends NativeType<T>, P> extends Blocks<T, P> {
 
-			Imp(final RandomAccessibleInterval<T> source,
-					final DataType dataType,
-					final Function<long[], DataBlock<P>> readBlock,
-					final Consumer<DataBlock<P>> writeBlock) {
-				this.dataType = dataType;
-				this.readBlock = readBlock;
-				this.writeBlock = writeBlock;
+		private final DataType dataType;
+		private final int[] blockSize; // (of the dataset)
+		private final PrimitiveBlocks<T> sourceBlocks;
+		private final long[] gridOffset;
+		private final long[] regionMin;
+		private final long[] regionSize;
+		private final long[] currentBlockMin;
+		private final int[] currentBlockSize;
 
-				this.sourceInterval = source;
-				sourceBlocks = PrimitiveBlocks.of(source, OnFallback.ACCEPT);
-				final PrimitiveType p = source.getType().getNativeTypeFactory().getPrimitiveType();
-				subArrayCopy = SubArrayCopy.forPrimitiveType(p);
-				tempArray = TempArray.forPrimitiveType(p);
+		DefaultDataBlockSupplier(
+				final DatasetAttributes attributes,
+				final RandomAccessibleInterval<T> source,
+				final long[] gridOffset) {
+			dataType = attributes.getDataType();
+			blockSize = attributes.getBlockSize();
 
-				final int n = source.numDimensions();
-				zeroPos = new int[n];
-				intersectionMin = new long[n];
-				intersectionSize = new int[n];
-				intersectionOffset = new int[n];
-			}
+			sourceBlocks = PrimitiveBlocks.of(source.view().zeroMin(), OnFallback.ACCEPT);
+			this.gridOffset = gridOffset;
 
-			private Imp(final Imp<T, P> writer) {
-				this.dataType = writer.dataType;
-				this.readBlock = writer.readBlock;
-				this.writeBlock = writer.writeBlock;
+			final int n = source.numDimensions();
+			regionMin = new long[n];
+			regionSize = new long[n];
+			Arrays.setAll(regionMin, d -> gridOffset[d] * blockSize[d]);
+			source.dimensions(regionSize);
 
-				this.sourceInterval = writer.sourceInterval;
-				this.sourceBlocks = writer.sourceBlocks.independentCopy();
-				this.subArrayCopy = writer.subArrayCopy;
-				this.tempArray = writer.tempArray.newInstance();
+			currentBlockMin = new long[n];
+			currentBlockSize = new int[n];
+		}
 
-				this.zeroPos = writer.zeroPos;
-				final int n = writer.zeroPos.length;
-				this.intersectionMin = new long[n];
-				this.intersectionSize = new int[n];
-				this.intersectionOffset = new int[n];
-			}
+		private DefaultDataBlockSupplier(final DefaultDataBlockSupplier<T, P> supplier) {
+			dataType = supplier.dataType;
+			blockSize = supplier.blockSize;
+			sourceBlocks = supplier.sourceBlocks.independentCopy();
+			gridOffset = supplier.gridOffset;
+			regionMin = supplier.regionMin;
+			regionSize = supplier.regionSize;
+			final int n = blockSize.length;
+			currentBlockMin = new long[n];
+			currentBlockSize = new int[n];
+		}
 
-			@Override
-			public void write(final long[] gridPos, final long[] blockMin, final int[] blockSize) {
+		@Override
+		DefaultDataBlockSupplier<T, P > independentCopy() {
+			return new DefaultDataBlockSupplier<>(this);
+		}
 
-				final int n = gridPos.length;
-				for (int d = 0; d < n; d++) {
-					intersectionMin[d] = Math.max(sourceInterval.min(d), blockMin[d]);
-					intersectionSize[d] = (int) (Math.min(sourceInterval.max(d) + 1, blockMin[d] + blockSize[d]) - intersectionMin[d]);
-				}
+		@Override
+		long[] regionMin() {
+			return regionMin;
+		}
 
-				if (Arrays.equals(intersectionSize, blockSize)) {
-					// Full overlap: Fill a new DataBlock with source data.
-					// (It doesn't matter, whether a block already exists at gridPos, we would override everything anyway.)
-					final DataBlock<P> dataBlock = Cast.unchecked(dataType.createDataBlock(blockSize, gridPos));
-					sourceBlocks.copy(blockMin, dataBlock.getData(), blockSize);
-					writeBlock.accept(dataBlock);
+		@Override
+		long[] regionSize() {
+			return regionSize;
+		}
+
+		@Override
+		public DataBlock<P> get(final long[] gridPos, final DataBlock<P> existingDataBlock) {
+			Arrays.setAll(currentBlockMin, d -> (gridPos[d] - gridOffset[d]) * blockSize[d]);
+			Arrays.setAll(currentBlockSize, d -> (int) Math.min(blockSize[d], regionSize[d] - currentBlockMin[d]));
+			final DataBlock<P> dataBlock = Cast.unchecked(dataType.createDataBlock(currentBlockSize, gridPos));
+			sourceBlocks.copy(currentBlockMin, dataBlock.getData(), currentBlockSize);
+			return dataBlock;
+		}
+	}
+
+	private static class MergeDataBlockSupplier<T extends NativeType<T>, P> extends Blocks<T, P> {
+
+		private final DataType dataType;
+		private final int[] blockSize; // (of the dataset)
+		private final long[] datasetSize;
+
+		private final PrimitiveBlocks<T> sourceBlocks;
+		private final SubArrayCopy.Typed<P, P> subArrayCopy;
+		private final TempArray<P> tempArray;
+
+		private final long[] regionMin;
+		private final long[] regionSize;
+
+		private final long[] currentBlockMin;
+		private final int[] currentBlockSize;
+
+		private final int[] zeroPos;
+		private final long[] intersectionMin;
+		private final int[] intersectionSize;
+		private final int[] intersectionOffset;
+
+		MergeDataBlockSupplier(
+				final DatasetAttributes attributes,
+				final RandomAccessibleInterval<T> source) {
+			dataType = attributes.getDataType();
+			blockSize = attributes.getBlockSize();
+			datasetSize = attributes.getDimensions();
+
+			sourceBlocks = PrimitiveBlocks.of(source, OnFallback.ACCEPT);
+			final PrimitiveType p = source.getType().getNativeTypeFactory().getPrimitiveType();
+			subArrayCopy = SubArrayCopy.forPrimitiveType(p);
+			tempArray = TempArray.forPrimitiveType(p);
+
+			final int n = source.numDimensions();
+			regionMin = new long[n];
+			regionSize = new long[n];
+			source.min(regionMin);
+			source.dimensions(regionSize);
+
+			currentBlockMin = new long[n];
+			currentBlockSize = new int[n];
+			zeroPos = new int[n];
+			intersectionMin = new long[n];
+			intersectionSize = new int[n];
+			intersectionOffset = new int[n];
+		}
+
+		private MergeDataBlockSupplier(final MergeDataBlockSupplier<T, P> supplier) {
+			dataType = supplier.dataType;
+			blockSize = supplier.blockSize;
+			datasetSize = supplier.datasetSize;
+
+			sourceBlocks = supplier.sourceBlocks.independentCopy();
+			subArrayCopy = supplier.subArrayCopy;
+			tempArray = supplier.tempArray.newInstance();
+
+			regionMin = supplier.regionMin;
+			regionSize = supplier.regionSize;
+			final int n = blockSize.length;
+			currentBlockMin = new long[n];
+			currentBlockSize = new int[n];
+			zeroPos = supplier.zeroPos;
+			intersectionMin = new long[n];
+			intersectionSize = new int[n];
+			intersectionOffset = new int[n];
+		}
+
+		@Override
+		MergeDataBlockSupplier<T, P > independentCopy() {
+			return new MergeDataBlockSupplier<>(this);
+		}
+
+		@Override
+		long[] regionMin() {
+			return regionMin;
+		}
+
+		@Override
+		long[] regionSize() {
+			return regionSize;
+		}
+
+		@Override
+		public DataBlock<P> get(final long[] gridPos, final DataBlock<P> existingDataBlock) {
+
+			Arrays.setAll(currentBlockMin, d -> gridPos[d] * blockSize[d]);
+			Arrays.setAll(currentBlockSize, d -> (int) Math.min(blockSize[d], datasetSize[d] - currentBlockMin[d]));
+
+			Arrays.setAll(intersectionMin, d -> Math.max(regionMin[d], currentBlockMin[d]));
+			Arrays.setAll(intersectionSize, d -> (int) (Math.min(regionMin[d] + regionSize[d], currentBlockMin[d] + currentBlockSize[d]) - intersectionMin[d]));
+
+			final DataBlock<P> dataBlock;
+			if (Arrays.equals(intersectionSize, currentBlockSize)) {
+				// Full overlap: Fill a new DataBlock with source data.
+				// (It doesn't matter, whether a block already exists at gridPos, we would override everything anyway.)
+				dataBlock = Cast.unchecked(dataType.createDataBlock(currentBlockSize, gridPos));
+				sourceBlocks.copy(currentBlockMin, dataBlock.getData(), currentBlockSize);
+			} else {
+				if (existingDataBlock == null) {
+					// There is no existing DataBlock. Create a new one.
+					dataBlock = Cast.unchecked(dataType.createDataBlock(currentBlockSize, gridPos));
 				} else {
-					final DataBlock<P> dataBlock;
-					// Partial overlap: Try to read the DataBlock at gridPos.
-					final DataBlock<P> existingBlock = readBlock.apply(gridPos);
-					if (existingBlock == null) {
-						// There is no existing DataBlock. Create a new one.
-						dataBlock = Cast.unchecked(dataType.createDataBlock(blockSize, gridPos));
+					// There is an existing DataBlock. Is it large enough?
+					// Perhaps it was a truncated border block, and now we
+					// expanded the dataset.
+					if (Arrays.equals(existingDataBlock.getSize(), currentBlockSize)) {
+						dataBlock = existingDataBlock;
 					} else {
-						// There is an existing DataBlock. Is it large enough?
-						// Perhaps it was a truncated border block, and now we
-						// expanded the dataset.
-						if (Arrays.equals(existingBlock.getSize(), blockSize)) {
-							dataBlock = existingBlock;
-						} else {
-							// Create a new DataBlock and copy existing data over.
-							dataBlock = Cast.unchecked(dataType.createDataBlock(blockSize, gridPos));
-							subArrayCopy.copy(
-									existingBlock.getData(), existingBlock.getSize(), zeroPos,
-									dataBlock.getData(), dataBlock.getSize(), zeroPos, existingBlock.getSize());
-						}
+						// Create a new DataBlock and copy existing data over.
+						dataBlock = Cast.unchecked(dataType.createDataBlock(currentBlockSize, gridPos));
+						subArrayCopy.copy(
+								existingDataBlock.getData(), existingDataBlock.getSize(), zeroPos,
+								dataBlock.getData(), dataBlock.getSize(), zeroPos, existingDataBlock.getSize());
 					}
-					// Copy intersecting portion of source data into the DataBlock
-					final P sourceData = tempArray.get((int) Intervals.numElements(intersectionSize));
-					sourceBlocks.copy(intersectionMin, sourceData, intersectionSize);
-					Arrays.setAll(intersectionOffset, d -> (int) (intersectionMin[d] - blockMin[d]));
-					subArrayCopy.copy(
-							sourceData, intersectionSize, zeroPos,
-							dataBlock.getData(), dataBlock.getSize(), intersectionOffset, intersectionSize);
-					writeBlock.accept(dataBlock);
 				}
+				// Copy intersecting portion of source data into the DataBlock
+				final P sourceData = tempArray.get((int) Intervals.numElements(intersectionSize));
+				sourceBlocks.copy(intersectionMin, sourceData, intersectionSize);
+				Arrays.setAll(intersectionOffset, d -> (int) (intersectionMin[d] - currentBlockMin[d]));
+				subArrayCopy.copy(
+						sourceData, intersectionSize, zeroPos,
+						dataBlock.getData(), dataBlock.getSize(), intersectionOffset, intersectionSize);
 			}
-
-			private Supplier<Imp<T, P>> threadSafeSupplier;
-
-			@Override
-			public RegionBlockWriter threadSafe() {
-				if (threadSafeSupplier == null)
-					threadSafeSupplier = CloseableThreadLocal.withInitial(() -> new Imp<>(this))::get;
-				return (gridPos, blockMin, blockSize) -> threadSafeSupplier.get().write(gridPos, blockMin, blockSize);
-			}
+			return dataBlock;
 		}
 	}
-	
-	/**
-	 * Write shards from a source image that aligns with the shard grid of the dataset.
-	 * <p>
-	 * This interface determines the grid appropriate for parallel writing from the 
-	 * {@link DatasetAttributes}' {@link NestedGrid}, and as a result can be used to write
-	 * un-sharded datasets as well (in this case simply using the block grid).
-	 * <p>
-	 * In this interface, "lowest-level" blocks refers to the finest block grid (smallest blocks).
-	 * This lowest-level is where compression is applied. The "highest-level" blocks refer to
-	 * the unit that can be written in parallel, i.e. that are unique keys in n5 and zarr.
-	 */
-	private interface ShardWriter {
-
-		static <T extends NativeType<T>> ShardWriter create(
-				final RandomAccessibleInterval<T> source,
-				final N5Writer n5,
-				final String dataset,
-				final DatasetAttributes attributes) {
-
-			return new ShardImp<>(n5, source, dataset, attributes, dataBlock -> true);
-		}
-
-		static <T extends NativeType<T>> ShardWriter createNonEmpty(
-				final RandomAccessibleInterval<T> source,
-				final N5Writer n5,
-				final String dataset,
-				final DatasetAttributes attributes,
-				final T defaultValue) {
-
-			return new ShardImp<>(n5, source, dataset, attributes,
-					dataBlock -> {
-						return !allEqual(defaultValue, dataBlock.getData());
-					});
-		}
-
-		/**
-		 * Write a shard at {@code shardGridPos}, where the shard is the unit
-		 * appropriate for parallel writing. This may be a
-		 * <p>
-		 * The interval covered by the block in the source image is given by
-		 * {@code blockMin} and {@code blockSize}. It must be fully inside the
-		 * source image.
-		 *
-		 * @param shardGridPos
-		 * 		the grid coordinates of the block
-		 * @param shardMin
-		 * 		minimum of the interval covered by the shard in the source image
-		 * @param shardSize
-		 * 		dimensions of the interval covered by the shard in the source image
-		 */
-		void write(long[] shardGridPos, long[] shardMin, int[] shardSize);
-
-		default Runnable writeTask(LocalizableSampler<Interval> gridShard) {
-			final long[] gridPos = gridShard.positionAsLongArray();
-			final BlockInterval interval = BlockInterval.asBlockInterval(gridShard.get());
-			return () -> write(gridPos, interval.min(), interval.size());
-		}
-
-		default ShardWriter threadSafe() {return this;}
-
-		class ShardImp<T extends NativeType<T>, P> implements ShardWriter {
-
-			final N5Writer n5;
-			final DataType dataType;
-			final String dataset;
-			final DatasetAttributes attributes;
-			final Predicate<DataBlock<P>> checkBlock;
-			final PrimitiveBlocks<T> sourceBlocks;
-			final int[] zeroPos;
-
-			ShardImp(
-					final N5Writer n5,
-					final RandomAccessibleInterval<T> source,
-					final String dataset,
-					final DatasetAttributes attributes,
-					final Predicate<DataBlock<P>> checkBlock) {
-
-				this.n5 = n5;
-				this.dataset = dataset;
-				this.dataType = attributes.getDataType();
-				this.attributes = attributes;
-				this.checkBlock = checkBlock;
-				sourceBlocks = PrimitiveBlocks.of(source, OnFallback.ACCEPT);
-				final int n = source.numDimensions();
-				zeroPos = new int[n];
-			}
-
-			ShardImp(final ShardImp<T, P> writer) {
-				this.n5 = writer.n5;
-				this.dataset = writer.dataset;
-				this.dataType = writer.dataType;
-				this.attributes = writer.attributes;
-				this.checkBlock = writer.checkBlock;
-				this.sourceBlocks = writer.sourceBlocks.independentCopy();
-				this.zeroPos = writer.zeroPos;
-			}
-
-			/**
-			 * Creates all lowest-level blocks for the shard at the given position.
-			 * 
-			 * @param outerPosition 
-			 * @param shardMin
-			 * @param shardSize
-			 * @return
-			 */
-			public DataBlock<T>[] createShardBlocks(final long[] outerPosition) { //final long[] outerPosition, final long[] outerMin, final int[] outerSize) {
-
-				final int nd = attributes.getNumDimensions();
-
-				final NestedGrid grid = attributes.getNestedBlockGrid();
-				final int numLevels = grid.numLevels();
-				final int highestLevel = numLevels - 1;
-				int[] innerSize = grid.getBlockSize(0);
-
-				final ArrayList<DataBlock<P>> blocks = new ArrayList<>();
-				grid.positionInSubGrid(outerPosition, highestLevel, 0).forEach(innerPos -> {
-
-					final long[] blockMin = IntStream.range(0, nd)
-							.mapToLong(i -> innerPos[i] * innerSize[i]).toArray();
-
-					final DataBlock<P> dataBlock = Cast.unchecked(dataType.createDataBlock(innerSize, innerPos));
-
-					// TODO use the sourceBlocks to figure out if all values == fill value 
-					// so we can avoid the check below
-					sourceBlocks.copy(blockMin, dataBlock.getData(), innerSize);
-
-					// this can check if all values of the dataBlock are the fill value
-					if (checkBlock.test(dataBlock))
-						blocks.add(dataBlock);
-				});
-
-				return blocks.toArray(new DataBlock[0]);
-			}
-
-			/**
-			 * Writes all lowest-level blocks for the shard at the given
-			 * position.
-			 * <p>
-			 * Note the latter two arguments are ignored as that information is
-			 * accessible through the DatasetAttributes.
-			 */
-			public void write(final long[] shardGridPos, final long[] shardMin, final int[] shardSize) {
-				n5.writeBlocks(dataset, attributes, createShardBlocks(shardGridPos));
-			}
-
-			private Supplier<ShardImp<T, P>> threadSafeSupplier;
-
-			@Override
-			public ShardWriter threadSafe() {
-				if (threadSafeSupplier == null)
-					threadSafeSupplier = CloseableThreadLocal.withInitial(() -> new ShardImp<>(this))::get;
-				return (gridPos, blockMin, blockSize) -> threadSafeSupplier.get().write(gridPos, blockMin, blockSize);
-			}
-		}
-	}
-
-	// TODO
-//	private interface RegionShardWriter {
-//
-//		static <T extends NativeType<T>> RegionShardWriter create(
-//				final RandomAccessibleInterval<T> source,
-//				final N5Writer n5,
-//				final String dataset,
-//				final DatasetAttributes attributes,
-//				RandomAccessibleInterval<Interval> gridBlocks) {
-//
-//			return new ShardImp<>(source, n5, dataset, attributes, gridBlocks,
-//					shardPos -> {
-//						Shard<?> shard = n5
-//
-//.readShard(dataset, attributes, shardPos);
-//						if( shard == null )
-//							shard = new InMemoryShard<>(attributes, shardPos);
-//						return Cast.unchecked(InMemoryShard.fromShard(shard));
-//					},
-//					shard -> { n5.writeShard(dataset, attributes, shard); });
-//		}
-//
-//		/**
-//		 * Write (or override) a subset of {@link DataBlock}s contained in the 
-//		 * {@link Shard} at {@code gridPos}.
-//		 * <p>
-//		 * The interval covered by the block in the source image is given by
-//		 * {@code blockInterval}. {@code blockInterval} might only partially
-//		 * overlap the source image. In that cas only a part of the block is
-//		 * filled (or overridden) with data.
-//		 *
-//		 * @param shardPos
-//		 * 		the grid coordinates of the shard
-//		 */
-//		void write(long[] shardPos);
-//
-//		default Runnable writeTask(LocalizableSampler<Interval> shardBlock) {
-//			return () -> write(shardBlock.positionAsLongArray());
-//		}
-//
-//		/**
-//		 * Get a thread-safe version of this {@code RegionBlockWriter}.
-//		 * (Implemented as a wrapper that makes {@link ThreadLocal} copies).
-//		 */
-//		default RegionShardWriter threadSafe() {return this;}
-//
-//		class ShardImp<T extends NativeType<T>, P> implements RegionShardWriter {
-//
-//			private final RandomAccessibleInterval<T> source;
-//			private final DatasetAttributes attributes;
-//			private final RandomAccessibleInterval<Interval> gridBlocks;
-//
-//			private final DataType dataType;
-//			private final Function<long[], InMemoryShard<P>> readShard;
-//			private final Consumer<Shard<P>> writeShard;
-//
-//			 ShardImp(
-//					final RandomAccessibleInterval<T> source,
-//					final N5Writer n5,
-//					final String dataset,
-//					final DatasetAttributes attributes,
-//					RandomAccessibleInterval<Interval> gridBlocks,
-//					final Function<long[], InMemoryShard<P>> readShard,
-//					final Consumer<Shard<P>> writeShard) {
-//
-//				this.source = source;
-//				this.attributes = attributes;
-//				this.dataType = attributes.getDataType();
-//
-//				this.gridBlocks = gridBlocks;
-//				this.readShard = readShard;
-//				this.writeShard = writeShard;
-//			}
-//
-//			private ShardImp(final ShardImp<T, P> writer) {
-//
-//				this.source = writer.source;
-//				this.attributes = writer.attributes;
-//				this.dataType = writer.dataType;
-//
-//				this.gridBlocks = writer.gridBlocks;
-//				this.readShard = writer.readShard;
-//				this.writeShard = writer.writeShard;
-//			}
-//
-//			@Override
-//			public void write(long[] shardPos) {
-//
-//				final InMemoryShard<P> shard = readShard.apply(shardPos);
-//
-//				org.janelia.saalfeldlab.n5.imglib2.N5Utils.RegionBlockWriter.Imp<T, P> blockWriter = new RegionBlockWriter.Imp<T, P>(
-//						source,
-//						dataType,
-//						p -> Cast.unchecked(shard.getBlock(shard.getRelativeBlockPosition(p))),
-//						blk -> shard.addBlock(blk));
-//
-//				final RandomAccessibleInterval<Interval> shardBlocks = shardSubBlocks( gridBlocks, shardPos, attributes.getBlocksPerShard());
-//				Streams.localizing(shardBlocks)
-//						.map(blockWriter::writeTask)
-//						.forEach(Runnable::run);
-//
-//				writeShard.accept(shard);
-//			}
-//
-//			private Supplier<ShardImp<T, P>> threadSafeSupplier;
-//
-//			@Override
-//			public RegionShardWriter threadSafe() {
-//
-//				if (threadSafeSupplier == null)
-//					threadSafeSupplier = CloseableThreadLocal.withInitial(() -> new ShardImp<>(this))::get;
-//
-//				return (shardPos) -> threadSafeSupplier.get().write(shardPos);
-//			}
-//		}
-//
-//	}
 
 	/**
 	 * @return primitive array with one element corresponding to the given value
