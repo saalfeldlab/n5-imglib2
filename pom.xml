@@ -5,13 +5,13 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>42.0.0</version>
+		<version>43.0.0</version>
 		<relativePath />
 	</parent>
 
 	<groupId>org.janelia.saalfeldlab</groupId>
 	<artifactId>n5-imglib2</artifactId>
-	<version>7.1.0-alpha-6-SNAPSHOT</version>
+	<version>7.1.0-alpha-7-SNAPSHOT</version>
 
 	<name>N5 ImgLib2 Bindings</name>
 	<description>Open N5 datasets as ImgLib2 RandomAccessibles, and write ImgLib2 RandomAccessibles as/ into N5 datasets.</description>
@@ -142,6 +142,8 @@
 		<license.projectName>N5 Cache Loader</license.projectName>
 		<license.organizationName>Saalfeld Lab</license.organizationName>
 		<license.copyrightOwners>Philipp Hanslovsky, Stephan Saalfeld</license.copyrightOwners>
+
+		<license.excludes>**/*.json</license.excludes>
 
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
 		<releaseProfiles>sign,deploy-to-scijava</releaseProfiles>
