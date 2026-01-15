@@ -1232,8 +1232,8 @@ public class N5Utils {
 				blockSize,
 				dataType(source.getType()),
 				compression);
-		n5.createDataset(dataset, attributes);
-		saveBlock(source, n5, dataset, attributes);
+		final DatasetAttributes writtenAttributes = n5.createDataset(dataset, attributes);
+		saveBlock(source, n5, dataset, writtenAttributes);
 	}
 
 	/**
@@ -1282,9 +1282,9 @@ public class N5Utils {
 				blockSize,
 				dataType(source.getType()),
 				compression);
-		n5.createDataset(dataset, attributes);
+		DatasetAttributes writtenAttributes = n5.createDataset(dataset, attributes);
 		final long[] gridOffset = new long[source.numDimensions()];
-		saveBlock(source, n5, dataset, attributes, gridOffset, exec);
+		saveBlock(source, n5, dataset, writtenAttributes, gridOffset, exec);
 	}
 
 	/**
