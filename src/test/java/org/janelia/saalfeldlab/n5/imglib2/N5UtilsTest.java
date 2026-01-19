@@ -26,36 +26,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-/**
- * Copyright (c) 2017-2021, Saalfeld lab, HHMI Janelia
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * Redistributions of source code must retain the above copyright notice, this
- *  list of conditions and the following disclaimer.
- *
- * Redistributions in binary form must reproduce the above copyright notice,
- * this list of conditions and the following disclaimer in the documentation
- * and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
- */
 package org.janelia.saalfeldlab.n5.imglib2;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -70,9 +42,11 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.MatcherAssert;
+import org.janelia.saalfeldlab.n5.DataBlock;
 import org.janelia.saalfeldlab.n5.DataType;
 import org.janelia.saalfeldlab.n5.DatasetAttributes;
 import org.janelia.saalfeldlab.n5.GzipCompression;
@@ -81,7 +55,11 @@ import org.janelia.saalfeldlab.n5.N5Reader;
 import org.janelia.saalfeldlab.n5.N5Writer;
 import org.janelia.saalfeldlab.n5.RawCompression;
 import org.janelia.saalfeldlab.n5.ShortArrayDataBlock;
-import org.janelia.saalfeldlab.n5.shard.ShardTest.ShardedN5Writer;
+import org.janelia.saalfeldlab.n5.codec.DataCodecInfo;
+import org.janelia.saalfeldlab.n5.codec.N5BlockCodecInfo;
+import org.janelia.saalfeldlab.n5.codec.RawBlockCodecInfo;
+import org.janelia.saalfeldlab.n5.shard.DefaultShardCodecInfo;
+import org.janelia.saalfeldlab.n5.shard.ShardIndex.IndexLocation;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -91,13 +69,17 @@ import org.junit.Test;
 
 import net.imglib2.Cursor;
 import net.imglib2.FinalInterval;
+import net.imglib2.Interval;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.cache.img.CachedCellImg;
 import net.imglib2.img.array.ArrayImg;
 import net.imglib2.img.array.ArrayImgs;
+import net.imglib2.img.array.ArrayRandomAccess;
 import net.imglib2.img.basictypeaccess.ShortAccess;
 import net.imglib2.img.basictypeaccess.array.ShortArray;
 import net.imglib2.img.basictypeaccess.volatiles.VolatileAccess;
+import net.imglib2.img.cell.CellGrid;
+import net.imglib2.img.cell.CellGrid.CellIntervals;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.util.Intervals;
 import net.imglib2.util.Pair;
@@ -124,8 +106,6 @@ public class N5UtilsTest {
 
 	static private N5Writer n5;
 
-	static private N5Writer n5sharded;
-
 	private static final int MAX_NUM_CACHE_ENTRIES = 10;
 
 	private static final String EMPTY_DATASET = "/test/group/empty-dataset";
@@ -148,7 +128,6 @@ public class N5UtilsTest {
 			throw new IOException("Could not create test directory for HDF5Utils test.");
 
 		n5 = new N5FSWriter(testDirPath);
-		n5sharded = new ShardedN5Writer(testDirPath);
 
 		final Random rnd = new Random();
 
@@ -297,93 +276,108 @@ public class N5UtilsTest {
 			Assert.assertEquals(pair.getA().getInteger(), pair.getB().getInteger());
 	}
 
-//	@Test
-//	public void testSaveNonEmpty() throws InterruptedException, ExecutionException {
-//
-//		final String datasetPath = "nonEmptyTest";
-//		final UnsignedShortType zero = new UnsignedShortType();
-//		zero.setZero();
-//
-//		testSaveNonEmptyShardHelper(
-//				datasetPath,
-//				this::datasetAttributes,
-//				img -> { N5Utils.saveNonEmptyBlock(img, n5sharded, datasetPath, zero); });
-//	}
+	@Test
+	public void testSaveNonEmpty() throws InterruptedException, ExecutionException {
 
-//	@Test
-//	public void testSaveNonEmptyShard() throws InterruptedException, ExecutionException {
-//
-//		final String datasetPath = "nonEmptyTestShard";
-//		final UnsignedShortType zero = new UnsignedShortType();
-//		zero.setZero();
-//
-//		testSaveNonEmptyShardHelper(
-//				datasetPath,
-//				this::shardedDatasetAttributes,
-//				img -> { N5Utils.saveNonEmptyBlock(img, n5sharded, datasetPath, zero); });
-//
-//		final String datasetPath2 = "nonEmptyTestShard2";
-//		testSaveNonEmptyShardHelper(
-//				datasetPath2,
-//				this::shardedDatasetAttributes,
-//				img -> { N5Utils.saveNonEmptyShard(img, n5sharded, datasetPath2, zero); });
-//	}
-//
-//	private DatasetAttributes shardedDatasetAttributes() {
-//		final ShardingCodec codec = new ShardingCodec(blockSize,
-//				new Codec[]{new RawBytes(), new GzipCompression(4)},
-//				new DeterministicSizeCodec[]{new RawBytes(), new Crc32cChecksumCodec()},
-//				IndexLocation.END);
-//		return new DatasetAttributes(dimensions, shardSize, blockSize, DataType.UINT16, codec);
-//	}
+		final String datasetPath = "nonEmptyTest";
+		final UnsignedShortType zero = new UnsignedShortType();
+		zero.setZero();
+
+		testSaveNonEmptyShardHelper(
+				datasetPath,
+				this::datasetAttributes,
+				img -> { N5Utils.saveNonEmptyBlock(img, n5, datasetPath, zero); });
+	}
+
+	@Test
+	public void testSaveNonEmptyShard() throws InterruptedException, ExecutionException {
+
+		final String datasetPath = "nonEmptyTestShard";
+		final UnsignedShortType zero = new UnsignedShortType();
+		zero.setZero();
+
+		final DatasetAttributes shardedAttributes = shardedDatasetAttributes();
+
+		// need to pass the DatasetAttributes to saveNonEmptyBlock because
+		// the n5 format does not support sharding, but wqe can get around it
+		// by using the ShardedN5Writer instance and passing a DatasetAttributes instance with the correct codecs
+		testSaveNonEmptyShardHelper(
+				datasetPath,
+				() -> shardedAttributes,
+				img -> { N5Utils.saveNonEmptyBlock(img, n5, datasetPath, shardedAttributes, zero); });
+
+		final String datasetPath2 = "nonEmptyTestShard2";
+		testSaveNonEmptyShardHelper(
+				datasetPath2,
+				() -> shardedAttributes,
+				img -> { N5Utils.saveNonEmptyBlock(img, n5, datasetPath2, shardedAttributes, zero); });
+	}
+
+	private DatasetAttributes shardedDatasetAttributes() {
+
+		final DefaultShardCodecInfo blockCodec = new DefaultShardCodecInfo(
+				blockSize,
+				new N5BlockCodecInfo(),
+				new DataCodecInfo[]{new RawCompression()},
+				new RawBlockCodecInfo(),
+				new DataCodecInfo[]{new RawCompression()},
+				IndexLocation.END);
+
+		return new DatasetAttributes(
+				dimensions,
+				shardSize,
+				DataType.UINT16,
+				blockCodec);
+	}
 
 	private DatasetAttributes datasetAttributes() {
 		return new DatasetAttributes(dimensions, blockSize, DataType.UINT16,
 				new RawCompression());
 	}
 
-//	public void testSaveNonEmptyShardHelper(
-//			final String datasetPath,
-//			final Supplier<DatasetAttributes> datasetAttributes,
-//			final Consumer<RandomAccessibleInterval<UnsignedShortType>> saveNonEmpty
-//			) throws InterruptedException, ExecutionException {
-//
-//		final ArrayImg<UnsignedShortType, ?> img = ArrayImgs.unsignedShorts(dimensions);
-//
-//		// dimensions are : {20, 28, 36}
-//		// block size is 	{ 5,  7,  9}
-//		// shard size is 	{10, 14, 18}
-//		// 4x4x4 block grid, set only "diagonal blocks" (i,i,i) i in [0,3]
-//		// 2x2x2 shard grid, set only "diagonal blocks" (i,i,i) i in [0,3]
-//		ArrayRandomAccess<UnsignedShortType> ra = img.randomAccess();
-//		ra.setPositionAndGet(0,0,0).set(1);
-//		ra.setPositionAndGet(5,7,9).set(1);
-//		ra.setPositionAndGet(10,14,18).set(1);
-//		ra.setPositionAndGet(15,21,27).set(1);
-//
-//		final UnsignedShortType zero = new UnsignedShortType();
-//		zero.setZero();
-//
-//		final DatasetAttributes attrs = datasetAttributes.get();
-//
-//		n5sharded.remove(datasetPath);
-//		n5sharded.createDataset(datasetPath, attrs);
-//		saveNonEmpty.accept(img);
-//
-//		final CellIntervals blocks = new CellGrid(dimensions, blockSize).cellIntervals();
-//		final Cursor<Interval> c = blocks.cursor();
-//		final long[] blockPos = new long[3];
-//		while (c.hasNext()) {
-//			c.fwd();
-//			c.localize(blockPos);
-//			final DataBlock<?> blk = n5sharded.readBlock(datasetPath, attrs, blockPos);
-//			if (blockPos[0] == blockPos[1] && blockPos[0] == blockPos[2]) {
-//				assertNotNull(blk);
-//			} else {
-//				assertNull(blk);
-//			}
-//		}
-//	}
+	public void testSaveNonEmptyShardHelper(
+			final String datasetPath,
+			final Supplier<DatasetAttributes> datasetAttributes,
+			final Consumer<RandomAccessibleInterval<UnsignedShortType>> saveNonEmpty
+			) throws InterruptedException, ExecutionException {
+
+		final ArrayImg<UnsignedShortType, ?> img = ArrayImgs.unsignedShorts(dimensions);
+
+		// dimensions are : {20, 28, 36}
+		// block size is 	{ 5,  7,  9}
+		// shard size is 	{10, 14, 18}
+		// 4x4x4 block grid, set only "diagonal blocks" (i,i,i) i in [0,3]
+		// as a result, in the  2x2x2 shard grid, only the "diagonal shards" (i,i,i) i in [0,1]
+		// will exist (because they contain non-empty blocks)
+		ArrayRandomAccess<UnsignedShortType> ra = img.randomAccess();
+		ra.setPositionAndGet(0,0,0).set(1);
+		ra.setPositionAndGet(5,7,9).set(1);
+		ra.setPositionAndGet(10,14,18).set(1);
+		ra.setPositionAndGet(15,21,27).set(1);
+
+		final UnsignedShortType zero = new UnsignedShortType();
+		zero.setZero();
+
+		final DatasetAttributes attrs = datasetAttributes.get();
+
+		n5.remove(datasetPath);
+		DatasetAttributes attributes = n5.createDataset(datasetPath, attrs);
+		saveNonEmpty.accept(img);
+
+		final CellIntervals blocks = new CellGrid(dimensions, blockSize).cellIntervals();
+		final Cursor<Interval> c = blocks.cursor();
+		final long[] blockPos = new long[3];
+		while (c.hasNext()) {
+			c.fwd();
+			c.localize(blockPos);
+			final DataBlock<?> blk = n5.readBlock(datasetPath, attributes, blockPos);
+			if (blockPos[0] == blockPos[1] && blockPos[0] == blockPos[2]) {
+				assertNotNull(blk);
+			} else {
+				assertNull(blk);
+			}
+		}
+	}
 
 	@Test
 	public void testOpenWithBoundedSoftRefCache() throws IOException {

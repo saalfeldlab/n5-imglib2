@@ -26,32 +26,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-/**
- * Copyright (c) 2017-2021, Saalfeld lab, HHMI Janelia
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * Redistributions of source code must retain the above copyright notice, this
- *  list of conditions and the following disclaimer.
- *
- * Redistributions in binary form must reproduce the above copyright notice,
- * this list of conditions and the following disclaimer in the documentation
- * and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
- */
 package org.janelia.saalfeldlab.n5.imglib2;
 
 import java.util.Arrays;
@@ -115,6 +89,9 @@ import org.janelia.saalfeldlab.n5.N5Exception.N5IOException;
 import org.janelia.saalfeldlab.n5.N5Reader;
 import org.janelia.saalfeldlab.n5.N5Writer;
 import org.janelia.saalfeldlab.n5.N5Writer.DataBlockSupplier;
+import org.janelia.saalfeldlab.n5.util.FloatValueParser;
+
+import com.google.gson.JsonElement;
 
 /**
  * Static utility methods to open N5 datasets as ImgLib2
@@ -180,6 +157,73 @@ public class N5Utils {
 			return (T)new FloatType();
 		case FLOAT64:
 			return (T)new DoubleType();
+		default:
+			return null;
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <T extends NativeType<T>> T type(final DataType dataType, final JsonElement defaultValue) {
+
+		if (defaultValue == null || defaultValue.isJsonNull())
+			return null;
+
+		switch (dataType) {
+		case INT8:
+			return (T)new ByteType(defaultValue.getAsByte());
+		case UINT8:
+			return (T)new UnsignedByteType(defaultValue.getAsInt());
+		case INT16:
+			return (T)new ShortType(defaultValue.getAsShort());
+		case UINT16:
+			return (T)new UnsignedShortType(defaultValue.getAsInt());
+		case INT32:
+			return (T)new IntType(defaultValue.getAsInt());
+		case UINT32:
+			return (T)new UnsignedIntType(defaultValue.getAsInt());
+		case INT64:
+			return (T)new LongType(defaultValue.getAsLong());
+		case UINT64:
+			return (T)new UnsignedLongType(defaultValue.getAsLong());
+		case FLOAT32:
+
+			try {
+				return (T)new FloatType(defaultValue.getAsFloat());
+			} catch (Exception e) {}
+
+			try {
+				String str = defaultValue.getAsString();
+				float val;
+				if (str.startsWith("0x"))
+					val = FloatValueParser.parseFloat(str);
+				else
+					val = Float.parseFloat(str);
+
+				return (T)new FloatType(val);
+			} catch (Exception e) {
+				e.printStackTrace();
+				return null;
+			}
+
+		case FLOAT64:
+
+			try {
+				return (T)new DoubleType(defaultValue.getAsDouble());
+			} catch (Exception e) {}
+
+			try {
+				String str = defaultValue.getAsString();
+				double val;
+				if (str.startsWith("0x"))
+					val = FloatValueParser.parseDouble(str);
+				else
+					val = Double.parseDouble(str);
+
+				return (T)new DoubleType(val);
+			} catch (Exception e) {
+				return null;
+			}
+
 		default:
 			return null;
 		}
@@ -517,8 +561,8 @@ public class N5Utils {
 	 *            n5 reader
 	 * @param dataset
 	 *            the dataset path
-	 * @param blockNotFoundHandler
-	 *            consumer handling missing blocks
+	 * @param defaultBlockNotFoundHandler
+	 *            consumer handling missing blocks if not specified in DatasetAttributes
 	 * @param loaderCacheFactory
 	 *            the cache factory
 	 * @param accessFlags
@@ -529,16 +573,17 @@ public class N5Utils {
 	public static <T extends NativeType<T>> CachedCellImg<T, ?> open(
 			final N5Reader n5,
 			final String dataset,
-			final Consumer<IterableInterval<T>> blockNotFoundHandler,
+			final Consumer<IterableInterval<T>> defaultBlockNotFoundHandler,
 			final Function<DataType, LoaderCache> loaderCacheFactory,
 			final Set<AccessFlags> accessFlags) {
 
 		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
+		final Consumer<IterableInterval<T>> missingBlockHandler = missingBlockHandler(attributes, defaultBlockNotFoundHandler);
 		final LoaderCache loaderCache = loaderCacheFactory.apply(attributes.getDataType());
 		final T type = type(attributes.getDataType());
 		return type == null
 				? null
-				: open(n5, dataset, blockNotFoundHandler, loaderCache, accessFlags, type);
+				: open(n5, dataset, missingBlockHandler, loaderCache, accessFlags, type);
 	}
 
 	/**
@@ -552,8 +597,8 @@ public class N5Utils {
 	 *            n5 reader
 	 * @param dataset
 	 *            the dataset path
-	 * @param blockNotFoundHandler
-	 *            consumer handling missing blocks
+	 * @param defaultBlockNotFoundHandler
+	 *            consumer handling missing blocks if not specified in DatasetAttributes
 	 * @param loaderCache
 	 *            the cache
 	 * @param accessFlags
@@ -565,7 +610,7 @@ public class N5Utils {
 	public static <T extends NativeType<T>, A extends ArrayDataAccess<A>> CachedCellImg<T, A> open(
 			final N5Reader n5,
 			final String dataset,
-			final Consumer<IterableInterval<T>> blockNotFoundHandler,
+			final Consumer<IterableInterval<T>> defaultBlockNotFoundHandler,
 			final LoaderCache<Long, Cell<A>> loaderCache,
 			final Set<AccessFlags> accessFlags,
 			final T type) {
@@ -574,10 +619,39 @@ public class N5Utils {
 		final long[] dimensions = attributes.getDimensions();
 		final int[] blockSize = attributes.getBlockSize();
 		final CellGrid grid = new CellGrid(dimensions, blockSize);
+		final Consumer<IterableInterval<T>> blockNotFoundHandler = missingBlockHandler(attributes, defaultBlockNotFoundHandler);
 		final CacheLoader<Long, Cell<A>> loader = new N5CacheLoader<>(n5, dataset, grid, type, accessFlags, blockNotFoundHandler);
 		final Cache<Long, Cell<A>> cache = loaderCache.withLoader(loader);
 		final CachedCellImg<T, A> img = new CachedCellImg<>(grid, type, cache, ArrayDataAccessFactory.get(type, accessFlags));
 		return img;
+	}
+
+	/**
+	 * Returns a handler for missing blocks.
+	 * <p>
+	 * If the {@link DatasetAttributes} specify a default value, the resulting
+	 * consumer will fill blocks with that default value. Otherwise, the given
+	 * handler will be returned.
+	 * 
+	 * @param <T>
+	 *            the type
+	 * @param attributes
+	 *            the Dataset Attributes
+	 * @param defaultBlockNotFoundHandler
+	 *            a default handler for missing blocks
+	 * 
+	 * @return a consumer for missing blocks.
+	 */
+	private static <T extends NativeType<T>> Consumer<IterableInterval<T>> missingBlockHandler(
+			DatasetAttributes attributes,
+			final Consumer<IterableInterval<T>> defaultBlockNotFoundHandler) {
+
+		// use the default value specified by attributes if present,
+		// otherwise use the passed defaultBlockNotFoundHandler
+		final T defaultValue = type(attributes.getDataType(), attributes.getDefaultValue());
+		return defaultValue == null
+				? defaultBlockNotFoundHandler
+				: N5CacheLoader.setToDefaultValue(defaultValue);
 	}
 
 	/**
@@ -749,14 +823,14 @@ public class N5Utils {
 	 *            n5 reader
 	 * @param dataset
 	 *            the dataset path
-	 * @param blockNotFoundHandler
+	 * @param defaultBlockNotFoundHandler
 	 *            consumer handling missing blocks
 	 * @return the image
 	 */
 	public static <T extends NativeType<T>, A extends ArrayDataAccess<A>> CachedCellImg<T, ?> openWithDiskCache(
 			final N5Reader n5,
 			final String dataset,
-			final Consumer<IterableInterval<T>> blockNotFoundHandler) {
+			final Consumer<IterableInterval<T>> defaultBlockNotFoundHandler) {
 
 		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
 		final long[] dimensions = attributes.getDimensions();
@@ -765,6 +839,7 @@ public class N5Utils {
 		final CellGrid grid = new CellGrid(dimensions, blockSize);
 		final T type = type(attributes.getDataType());
 		final Set<AccessFlags> accessFlags = AccessFlags.setOf(AccessFlags.VOLATILE, AccessFlags.DIRTY);
+		final Consumer<IterableInterval<T>> blockNotFoundHandler = missingBlockHandler(attributes, defaultBlockNotFoundHandler);
 		final CacheLoader<Long, Cell<A>> loader = new N5CacheLoader<>(n5, dataset, grid, type, accessFlags, blockNotFoundHandler);
 
 		final DiskCachedCellImgOptions options = DiskCachedCellImgOptions
@@ -1157,8 +1232,8 @@ public class N5Utils {
 				blockSize,
 				dataType(source.getType()),
 				compression);
-		n5.createDataset(dataset, attributes);
-		saveBlock(source, n5, dataset, attributes);
+		final DatasetAttributes writtenAttributes = n5.createDataset(dataset, attributes);
+		saveBlock(source, n5, dataset, writtenAttributes);
 	}
 
 	/**
@@ -1207,9 +1282,9 @@ public class N5Utils {
 				blockSize,
 				dataType(source.getType()),
 				compression);
-		n5.createDataset(dataset, attributes);
+		DatasetAttributes writtenAttributes = n5.createDataset(dataset, attributes);
 		final long[] gridOffset = new long[source.numDimensions()];
-		saveBlock(source, n5, dataset, attributes, gridOffset, exec);
+		saveBlock(source, n5, dataset, writtenAttributes, gridOffset, exec);
 	}
 
 	/**
