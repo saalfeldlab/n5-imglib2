@@ -220,7 +220,7 @@ public class N5LabelMultisets {
 			final RandomAccessibleInterval<LabelMultisetType> sourceBlock = Views.offsetInterval(source, offset, longCroppedBlockSize);
 			final ByteArrayDataBlock dataBlock = createDataBlock(sourceBlock, gridPosition);
 
-			n5.writeBlock(dataset, attributes, dataBlock);
+			n5.writeChunk(dataset, attributes, dataBlock);
 
 			for (d = 0; d < n; ++d) {
 				offset[d] += blockSize[d];
@@ -299,7 +299,7 @@ public class N5LabelMultisets {
 								final RandomAccessibleInterval<LabelMultisetType> sourceBlock = Views
 										.offsetInterval(zeroMinSource, fOffset, longCroppedBlockSize);
 								final ByteArrayDataBlock dataBlock = createDataBlock(sourceBlock, gridPosition);
-								n5.writeBlock(dataset, attributes, dataBlock);
+								n5.writeChunk(dataset, attributes, dataBlock);
 							}));
 
 			for (d = 0; d < n; ++d) {
@@ -361,7 +361,7 @@ public class N5LabelMultisets {
 			final RandomAccessibleInterval<LabelMultisetType> sourceBlock = Views.offsetInterval(source, offset, longCroppedBlockSize);
 			final ByteArrayDataBlock dataBlock = createDataBlock(sourceBlock, gridPosition);
 
-			n5.writeBlock(dataset, attributes, dataBlock);
+			n5.writeChunk(dataset, attributes, dataBlock);
 
 			for (d = 0; d < n; ++d) {
 				offset[d] += blockSize[d];
@@ -516,7 +516,7 @@ public class N5LabelMultisets {
 											.offsetInterval(zeroMinSource, fOffset, longCroppedBlockSize);
 									final ByteArrayDataBlock dataBlock = createDataBlock(sourceBlock, gridPosition);
 
-									n5.writeBlock(dataset, attributes, dataBlock);
+									n5.writeChunk(dataset, attributes, dataBlock);
 								}));
 
 				for (d = 0; d < n; ++d) {
@@ -589,7 +589,7 @@ public class N5LabelMultisets {
 			final ByteArrayDataBlock dataBlock = createNonEmptyDataBlock(sourceBlock, gridPosition, defaultLabelId);
 
 			if (dataBlock != null)
-				n5.writeBlock(dataset, attributes, dataBlock);
+				n5.writeChunk(dataset, attributes, dataBlock);
 
 			for (d = 0; d < n; ++d) {
 				offset[d] += blockSize[d];

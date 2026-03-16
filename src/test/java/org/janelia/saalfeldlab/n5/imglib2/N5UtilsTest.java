@@ -194,44 +194,6 @@ public class N5UtilsTest {
 		);
 	}
 
-//	@Test
-//	public void testSaveAndOpenShard() throws InterruptedException, ExecutionException {
-//
-//		testSaveAndOpenHelper(
-//			n5sharded,
-//			shardDatasetName,
-//			img -> N5Utils.save(img, n5sharded, shardDatasetName, shardSize, blockSize, new RawCompression()),
-//			img -> {
-//				try {
-//					N5Utils.saveRegion(img, n5sharded, shardDatasetName);
-//				} catch (Exception e) {
-//					e.printStackTrace();
-//					fail();
-//				}
-//			},
-//			img -> {
-//				final ExecutorService exec = Executors.newFixedThreadPool(4);
-//				try {
-//					N5Utils.save(img, n5sharded, shardDatasetName, shardSize, blockSize, new RawCompression(), exec);
-//					exec.shutdown();
-//				} catch (Exception e) {
-//					e.printStackTrace();
-//					fail();
-//				}
-//			},
-//			img -> {
-//				final ExecutorService exec = Executors.newFixedThreadPool(4);
-//				try {
-//					N5Utils.saveRegion(img, n5sharded, shardDatasetName, exec);
-//					exec.shutdown();
-//				} catch (Exception e) {
-//					e.printStackTrace();
-//					fail();
-//				}
-//			}
-//		);
-//	}
-
 	public void testSaveAndOpenHelper(
 			final N5Reader n5r,
 			final String dataset,
@@ -370,7 +332,7 @@ public class N5UtilsTest {
 		while (c.hasNext()) {
 			c.fwd();
 			c.localize(blockPos);
-			final DataBlock<?> blk = n5.readBlock(datasetPath, attributes, blockPos);
+			final DataBlock<?> blk = n5.readChunk(datasetPath, attributes, blockPos);
 			if (blockPos[0] == blockPos[1] && blockPos[0] == blockPos[2]) {
 				assertNotNull(blk);
 			} else {
@@ -467,7 +429,7 @@ public class N5UtilsTest {
 				.flatIterable(Views.interval(Views.pair(img, loaded), img)))
 			Assert.assertEquals(pair.getA().get(), pair.getB().get());
 
-		N5Utils.deleteBlock(new FinalInterval(dimensions), n5, datasetName);
+		N5Utils.deleteChunk(new FinalInterval(dimensions), n5, datasetName);
 
 		loaded = N5Utils.open(n5, datasetName);
 		for (final UnsignedShortType val : Views.iterable(loaded))
@@ -496,7 +458,7 @@ public class N5UtilsTest {
 				blockSize000,
 				new long[]{0, 0, 0},
 				fillData(blockSize000));
-		n5.writeBlock(datasetName, datasetAttributes, block000);
+		n5.writeChunk(datasetName, datasetAttributes, block000);
 
 		final int[] blockSize001 = new int[blockSize.length];
 		Arrays.setAll(blockSize001, i -> blockSize[i] + 2);
@@ -504,7 +466,7 @@ public class N5UtilsTest {
 				blockSize001,
 				new long[]{0, 0, 1},
 				fillData(blockSize001));
-		n5.writeBlock(datasetName, datasetAttributes, block001);
+		n5.writeChunk(datasetName, datasetAttributes, block001);
 
 		final RandomAccessibleInterval<UnsignedShortType> img = N5Utils.open(n5, datasetName);
 

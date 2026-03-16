@@ -121,7 +121,7 @@ public class N5CacheLoader<T extends NativeType<T>, A extends ArrayDataAccess<A>
 		final int n = grid.numDimensions();
 		final long[] cellGridPosition = new long[n];
 		grid.getCellGridPositionFlat(key, cellGridPosition);
-		final DataBlock<?> dataBlock = n5.readBlock(dataset, attributes, cellGridPosition);
+		final DataBlock<?> dataBlock = n5.readChunk(dataset, attributes, cellGridPosition);
 		if (dataBlock != null) {
 			final long[] cellMin = new long[n];
 			final int[] cellDims = new int[n];

@@ -93,9 +93,9 @@ public class N5LabelMultisetCacheLoader extends AbstractLabelMultisetLoader {
 	protected byte[] getData(final long... gridPosition) {
 
 		final DataBlock<?> block;
-		LOG.debug("Reading block for position {}", gridPosition);
-		block = n5.readBlock(dataset, n5.getDatasetAttributes(dataset), gridPosition);
-		LOG.debug("Read block for position {} {}", gridPosition, block);
+		LOG.debug("Reading chunk for position {}", gridPosition);
+		block = n5.readChunk(dataset, n5.getDatasetAttributes(dataset), gridPosition);
+		LOG.debug("Read chunk for position {} {}", gridPosition, block);
 		return block == null ? nullReplacement.apply(super.grid, gridPosition) : (byte[])block.getData();
 	}
 
