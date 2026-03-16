@@ -617,8 +617,9 @@ public class N5Utils {
 
 		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
 		final long[] dimensions = attributes.getDimensions();
-		final int[] blockSize = attributes.getBlockSize();
-		final CellGrid grid = new CellGrid(dimensions, blockSize);
+		// the N5CacheLoader calls readChunk, therefore needs chunkSize
+		final int[] chunkSize = attributes.getChunkSize();
+		final CellGrid grid = new CellGrid(dimensions, chunkSize);
 		final Consumer<IterableInterval<T>> blockNotFoundHandler = missingBlockHandler(attributes, defaultBlockNotFoundHandler);
 		final CacheLoader<Long, Cell<A>> loader = new N5CacheLoader<>(n5, dataset, grid, type, accessFlags, blockNotFoundHandler);
 		final Cache<Long, Cell<A>> cache = loaderCache.withLoader(loader);
@@ -834,9 +835,10 @@ public class N5Utils {
 
 		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
 		final long[] dimensions = attributes.getDimensions();
-		final int[] blockSize = attributes.getBlockSize();
+		// the N5CacheLoader calls readChunk, therefore needs chunkSize
+		final int[] chunkSize = attributes.getChunkSize();
 
-		final CellGrid grid = new CellGrid(dimensions, blockSize);
+		final CellGrid grid = new CellGrid(dimensions, chunkSize);
 		final T type = type(attributes.getDataType());
 		final Set<AccessFlags> accessFlags = AccessFlags.setOf(AccessFlags.VOLATILE, AccessFlags.DIRTY);
 		final Consumer<IterableInterval<T>> blockNotFoundHandler = missingBlockHandler(attributes, defaultBlockNotFoundHandler);
@@ -844,7 +846,7 @@ public class N5Utils {
 
 		final DiskCachedCellImgOptions options = DiskCachedCellImgOptions
 				.options()
-				.cellDimensions(blockSize)
+				.cellDimensions(chunkSize)
 				.dirtyAccesses(true)
 				.maxCacheSize(100);
 
@@ -913,9 +915,9 @@ public class N5Utils {
 			final String dataset,
 			final DatasetAttributes attributes) {
 
-		final int[] blockSize = attributes.getBlockSize();
-		final long[] gridOffset = new long[blockSize.length];
-		Arrays.setAll(gridOffset, d -> source.min(d) / blockSize[d]);
+		final int[] chunkSize = attributes.getChunkSize();
+		final long[] gridOffset = new long[chunkSize.length];
+		Arrays.setAll(gridOffset, d -> source.min(d) / chunkSize[d]);
 		saveBlock(source, n5, dataset, attributes, gridOffset);
 	}
 
@@ -1120,9 +1122,9 @@ public class N5Utils {
 			final DatasetAttributes attributes,
 			final T defaultValue) {
 
-		final int[] blockSize = attributes.getBlockSize();
-		final long[] gridOffset = new long[blockSize.length];
-		Arrays.setAll(gridOffset, d -> source.min(d) / blockSize[d]);
+		final int[] chunkSize = attributes.getChunkSize();
+		final long[] gridOffset = new long[chunkSize.length];
+		Arrays.setAll(gridOffset, d -> source.min(d) / chunkSize[d]);
 		saveNonEmptyBlock(source, n5, dataset, attributes, gridOffset, defaultValue);
 	}
 
@@ -1503,26 +1505,26 @@ public class N5Utils {
 	 * @param attributes
 	 *            dataset attributes
 	 * @param gridOffset
-	 *            the position in the block grid
+	 *            the position in the chunk grid
 	 */
 	// TODO: the interval is assumed to be zero-min in this method.
 	//       Should we change the argument type to Dimensions to make that more obvious?>
-	public static void deleteBlock(
+	public static void deleteChunk(
 			final Interval interval,
 			final N5Writer n5,
 			final String dataset,
 			final DatasetAttributes attributes,
 			final long[] gridOffset) {
 
-		final RandomAccessibleInterval<Interval> gridBlocks = new CellGrid(interval.dimensionsAsLongArray(), attributes.getBlockSize())
+		final RandomAccessibleInterval<Interval> gridBlocks = new CellGrid(interval.dimensionsAsLongArray(), attributes.getChunkSize())
 				.cellIntervals()
 				.view().translate(gridOffset);
 		Streams.localizing(gridBlocks)
-				.forEach(b -> n5.deleteBlock(dataset, b.positionAsLongArray()));
+				.forEach(b -> n5.deleteChunk(dataset, b.positionAsLongArray()));
 	}
 
 	/**
-	 * Delete an {@link Interval} in an N5 dataset. The block offset is
+	 * Delete an {@link Interval} in an N5 dataset. The chunk offset is
 	 * determined by the interval position, and the interval is assumed to align
 	 * with the {@link DataBlock} grid of the dataset.
 	 *
@@ -1535,20 +1537,20 @@ public class N5Utils {
 	 * @param attributes
 	 *            dataset attributes
 	 */
-	public static void deleteBlock(
+	public static void deleteChunk(
 			final Interval interval,
 			final N5Writer n5,
 			final String dataset,
 			final DatasetAttributes attributes) {
 
-		final int[] blockSize = attributes.getBlockSize();
-		final long[] gridOffset = new long[blockSize.length];
-		Arrays.setAll(gridOffset, d -> interval.min(d) / blockSize[d]);
-		deleteBlock(interval, n5, dataset, attributes, gridOffset);
+		final int[] chunkSize = attributes.getChunkSize();
+		final long[] gridOffset = new long[chunkSize.length];
+		Arrays.setAll(gridOffset, d -> interval.min(d) / chunkSize[d]);
+		deleteChunk(interval, n5, dataset, attributes, gridOffset);
 	}
 
 	/**
-	 * Delete an {@link Interval} in an N5 dataset. The block offset is
+	 * Delete an {@link Interval} in an N5 dataset. The chunk offset is
 	 * determined by the interval position, and the interval is assumed to align
 	 * with the {@link DataBlock} grid of the dataset.
 	 *
@@ -1559,14 +1561,14 @@ public class N5Utils {
 	 * @param dataset
 	 *            the dataset path
 	 */
-	public static void deleteBlock(
+	public static void deleteChunk(
 			final Interval interval,
 			final N5Writer n5,
 			final String dataset) {
 
 		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
 		if (attributes != null) {
-			deleteBlock(interval, n5, dataset, attributes);
+			deleteChunk(interval, n5, dataset, attributes);
 		} else {
 			throw new N5IOException("Dataset " + dataset + " does not exist.");
 		}
@@ -1584,9 +1586,9 @@ public class N5Utils {
 	 * @param dataset
 	 *            the dataset path
 	 * @param gridOffset
-	 *            the position in the block grid
+	 *            the position in the chunk grid
 	 */
-	public static void deleteBlock(
+	public static void deleteChunk(
 			final Interval interval,
 			final N5Writer n5,
 			final String dataset,
@@ -1594,7 +1596,7 @@ public class N5Utils {
 
 		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
 		if (attributes != null) {
-			deleteBlock(interval, n5, dataset, attributes, gridOffset);
+			deleteChunk(interval, n5, dataset, attributes, gridOffset);
 		} else {
 			throw new N5IOException("Dataset " + dataset + " does not exist.");
 		}
@@ -1704,7 +1706,9 @@ public class N5Utils {
 				final RandomAccessibleInterval<T> source,
 				final long[] gridOffset) {
 			dataType = attributes.getDataType();
-			blockSize = attributes.getBlockSize();
+
+			// use the chunk size
+			blockSize = attributes.getChunkSize();
 
 			sourceBlocks = PrimitiveBlocks.of(source.view().zeroMin(), OnFallback.ACCEPT);
 			this.gridOffset = gridOffset;
