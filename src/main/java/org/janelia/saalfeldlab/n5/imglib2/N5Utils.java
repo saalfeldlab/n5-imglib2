@@ -1509,22 +1509,22 @@ public class N5Utils {
 	 */
 	// TODO: the interval is assumed to be zero-min in this method.
 	//       Should we change the argument type to Dimensions to make that more obvious?>
-	public static void deleteChunk(
+	public static void deleteBlock(
 			final Interval interval,
 			final N5Writer n5,
 			final String dataset,
 			final DatasetAttributes attributes,
 			final long[] gridOffset) {
 
-		final RandomAccessibleInterval<Interval> gridBlocks = new CellGrid(interval.dimensionsAsLongArray(), attributes.getChunkSize())
+		final RandomAccessibleInterval<Interval> gridBlocks = new CellGrid(interval.dimensionsAsLongArray(), attributes.getBlockSize())
 				.cellIntervals()
 				.view().translate(gridOffset);
 		Streams.localizing(gridBlocks)
-				.forEach(b -> n5.deleteChunk(dataset, b.positionAsLongArray()));
+				.forEach(b -> n5.deleteBlock(dataset, b.positionAsLongArray()));
 	}
 
 	/**
-	 * Delete an {@link Interval} in an N5 dataset. The chunk offset is
+	 * Delete an {@link Interval} in an N5 dataset. The block offset is
 	 * determined by the interval position, and the interval is assumed to align
 	 * with the {@link DataBlock} grid of the dataset.
 	 *
@@ -1537,20 +1537,20 @@ public class N5Utils {
 	 * @param attributes
 	 *            dataset attributes
 	 */
-	public static void deleteChunk(
+	public static void deleteBlock(
 			final Interval interval,
 			final N5Writer n5,
 			final String dataset,
 			final DatasetAttributes attributes) {
 
-		final int[] chunkSize = attributes.getChunkSize();
-		final long[] gridOffset = new long[chunkSize.length];
-		Arrays.setAll(gridOffset, d -> interval.min(d) / chunkSize[d]);
-		deleteChunk(interval, n5, dataset, attributes, gridOffset);
+		final int[] blockSize = attributes.getBlockSize();
+		final long[] gridOffset = new long[blockSize.length];
+		Arrays.setAll(gridOffset, d -> interval.min(d) / blockSize[d]);
+		deleteBlock(interval, n5, dataset, attributes, gridOffset);
 	}
 
 	/**
-	 * Delete an {@link Interval} in an N5 dataset. The chunk offset is
+	 * Delete an {@link Interval} in an N5 dataset. The block offset is
 	 * determined by the interval position, and the interval is assumed to align
 	 * with the {@link DataBlock} grid of the dataset.
 	 *
@@ -1561,14 +1561,14 @@ public class N5Utils {
 	 * @param dataset
 	 *            the dataset path
 	 */
-	public static void deleteChunk(
+	public static void deleteBlock(
 			final Interval interval,
 			final N5Writer n5,
 			final String dataset) {
 
 		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
 		if (attributes != null) {
-			deleteChunk(interval, n5, dataset, attributes);
+			deleteBlock(interval, n5, dataset, attributes);
 		} else {
 			throw new N5IOException("Dataset " + dataset + " does not exist.");
 		}
@@ -1586,9 +1586,9 @@ public class N5Utils {
 	 * @param dataset
 	 *            the dataset path
 	 * @param gridOffset
-	 *            the position in the chunk grid
+	 *            the position in the block grid
 	 */
-	public static void deleteChunk(
+	public static void deleteBlock(
 			final Interval interval,
 			final N5Writer n5,
 			final String dataset,
@@ -1596,7 +1596,7 @@ public class N5Utils {
 
 		final DatasetAttributes attributes = n5.getDatasetAttributes(dataset);
 		if (attributes != null) {
-			deleteChunk(interval, n5, dataset, attributes, gridOffset);
+			deleteBlock(interval, n5, dataset, attributes, gridOffset);
 		} else {
 			throw new N5IOException("Dataset " + dataset + " does not exist.");
 		}
