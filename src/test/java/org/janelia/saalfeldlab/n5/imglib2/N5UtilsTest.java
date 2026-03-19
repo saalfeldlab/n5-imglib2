@@ -429,7 +429,7 @@ public class N5UtilsTest {
 				.flatIterable(Views.interval(Views.pair(img, loaded), img)))
 			Assert.assertEquals(pair.getA().get(), pair.getB().get());
 
-		N5Utils.deleteChunk(new FinalInterval(dimensions), n5, datasetName);
+		N5Utils.deleteBlock(new FinalInterval(dimensions), n5, datasetName);
 
 		loaded = N5Utils.open(n5, datasetName);
 		for (final UnsignedShortType val : Views.iterable(loaded))
