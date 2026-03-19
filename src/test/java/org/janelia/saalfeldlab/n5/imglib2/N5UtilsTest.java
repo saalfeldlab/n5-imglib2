@@ -42,6 +42,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import org.hamcrest.CoreMatchers;
@@ -420,25 +421,114 @@ public class N5UtilsTest {
 	}
 
 	@Test
-	public void testDelete() {
+	public void testDeleteAllBlocks() {
 
 		final ArrayImg<UnsignedShortType, ?> img = ArrayImgs.unsignedShorts(data, dimensions);
 		N5Utils.save(img, n5, datasetName, blockSize, new RawCompression());
-		RandomAccessibleInterval<UnsignedShortType> loaded = N5Utils.open(n5, datasetName);
-		for (final Pair<UnsignedShortType, UnsignedShortType> pair : Views
-				.flatIterable(Views.interval(Views.pair(img, loaded), img)))
-			Assert.assertEquals(pair.getA().get(), pair.getB().get());
+
+		CachedCellImg<UnsignedShortType, ?> loaded = N5Utils.open(n5, datasetName);
+		assertOnlyBlocksDeleted( img, loaded, p -> false);
 
 		N5Utils.deleteBlock(new FinalInterval(dimensions), n5, datasetName);
+		assertOnlyBlocksDeleted( img, N5Utils.open(n5, datasetName), p -> true);
+	}
 
-		loaded = N5Utils.open(n5, datasetName);
-		for (final UnsignedShortType val : Views.iterable(loaded))
-			Assert.assertEquals(0, val.get());
+	@Test
+	public void testDeleteSingleBlockExplicitOffset() {
+
+		// Overload: deleteBlock(Interval, N5Writer, String, long[] gridOffset)
+		// Block grid is 4x4x4. Delete interior block (1,2,1),
+		// voxels [5,9]x[14,20]x[9,17].
+		final ArrayImg<UnsignedShortType, ShortArray> img = ArrayImgs.unsignedShorts(data, dimensions);
+		N5Utils.save(img, n5, datasetName, blockSize, new RawCompression());
+
+		final long[] blockPosition = {1, 2, 1};
+		final Interval singleBlock = new FinalInterval(
+				new long[]{blockSize[0], blockSize[1], blockSize[2]});
+		N5Utils.deleteBlock(singleBlock, n5, datasetName, blockPosition);
+
+		assertOnlyBlocksDeleted(img, N5Utils.open(n5, datasetName),
+				pos -> Arrays.equals(pos, blockPosition));
+	}
+
+	@Test
+	public void testDeleteSingleBlockByIntervalMin() {
+
+		// Overload: deleteBlock(Interval, N5Writer, String)
+		// Non-zero-min interval: min is the voxel origin of block (2,1,2).
+		// gridOffset is derived as min[d] / blockSize[d] → {2,1,2}.
+		final ArrayImg<UnsignedShortType, ShortArray> img = ArrayImgs.unsignedShorts(data, dimensions);
+		N5Utils.save(img, n5, datasetName, blockSize, new RawCompression());
+
+		final long[] target = {2, 1, 2};
+		final long[] voxelMin = {
+				target[0] * blockSize[0],
+				target[1] * blockSize[1],
+				target[2] * blockSize[2]};
+		final long[] voxelMax = {
+				voxelMin[0] + blockSize[0] - 1,
+				voxelMin[1] + blockSize[1] - 1,
+				voxelMin[2] + blockSize[2] - 1};
+
+		N5Utils.deleteBlock(new FinalInterval(voxelMin, voxelMax), n5, datasetName);
+
+		assertOnlyBlocksDeleted(img, N5Utils.open(n5, datasetName),
+				pos -> Arrays.equals(pos, target));
+	}
+
+	@Test
+	public void testDeleteBlockRegion() {
+
+		// Overload: deleteBlock(Interval, N5Writer, String, long[] gridOffset)
+		// Delete a 2x2x2 region of blocks starting at grid offset (1,1,1),
+		// i.e. grid positions (1,1,1) through (2,2,2) — 8 out of 64 blocks.
+		final ArrayImg<UnsignedShortType, ShortArray> img = ArrayImgs.unsignedShorts(data, dimensions);
+		N5Utils.save(img, n5, datasetName, blockSize, new RawCompression());
+
+		final long[] blockGridOffset = {1, 1, 1};
+		final Interval region = new FinalInterval(new long[]{
+				2 * blockSize[0],
+				2 * blockSize[1],
+				2 * blockSize[2]});
+
+		N5Utils.deleteBlock(region, n5, datasetName, blockGridOffset);
+		assertOnlyBlocksDeleted(img, N5Utils.open(n5, datasetName),
+				pos -> (pos[0] == 1 || pos[0] == 2) &&
+						(pos[1] == 1 || pos[1] == 2) &&
+						(pos[2] == 1 || pos[2] == 2));
 	}
 
 	private short[] fillData(final int[] size) {
 
 		return Arrays.copyOf(excessData, Arrays.stream(size).reduce(1, (a, b) -> a * b));
+	}
+
+	/**
+	 * Iterates every block in the dataset's grid and asserts: - blocks where
+	 * isDeleted returns true → all pixels are 0 - blocks where isDeleted
+	 * returns false → all pixels match original
+	 */
+	private void assertOnlyBlocksDeleted(
+			final ArrayImg<UnsignedShortType, ?> original,
+			final RandomAccessibleInterval<UnsignedShortType> loaded,
+			final Predicate<long[]> isDeleted) {
+
+		final CellIntervals blocks = new CellGrid(dimensions, blockSize).cellIntervals();
+		final Cursor<Interval> c = blocks.cursor();
+		final long[] blockPos = new long[3];
+		while (c.hasNext()) {
+			final Interval block = c.next();
+			c.localize(blockPos);
+			final String label = "block " + Arrays.toString(blockPos);
+			if (isDeleted.test(blockPos)) {
+				for (final UnsignedShortType val : Views.interval(loaded, block))
+					Assert.assertEquals(label + " should be 0", 0, val.get());
+			} else {
+				for (final Pair<UnsignedShortType, UnsignedShortType> pair : Views.flatIterable(Views.interval(Views.pair(original, loaded), block)))
+					Assert.assertEquals(label + " should be intact",
+							pair.getA().get(), pair.getB().get());
+			}
+		}
 	}
 
 	@Test
