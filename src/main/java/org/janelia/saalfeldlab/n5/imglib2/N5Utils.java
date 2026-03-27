@@ -109,25 +109,25 @@ public class N5Utils {
 
 	public static <T extends NativeType<T>> DataType dataType(final T type) {
 
-		if (DoubleType.class.isInstance(type))
+		if (type instanceof DoubleType)
 			return DataType.FLOAT64;
-		if (FloatType.class.isInstance(type))
+		if (type instanceof FloatType)
 			return DataType.FLOAT32;
-		if (LongType.class.isInstance(type))
+		if (type instanceof LongType)
 			return DataType.INT64;
-		if (UnsignedLongType.class.isInstance(type))
+		if (type instanceof UnsignedLongType)
 			return DataType.UINT64;
-		if (IntType.class.isInstance(type))
+		if (type instanceof IntType)
 			return DataType.INT32;
-		if (UnsignedIntType.class.isInstance(type))
+		if (type instanceof UnsignedIntType)
 			return DataType.UINT32;
-		if (ShortType.class.isInstance(type))
+		if (type instanceof ShortType)
 			return DataType.INT16;
-		if (UnsignedShortType.class.isInstance(type))
+		if (type instanceof UnsignedShortType)
 			return DataType.UINT16;
-		if (ByteType.class.isInstance(type))
+		if (type instanceof ByteType)
 			return DataType.INT8;
-		if (UnsignedByteType.class.isInstance(type))
+		if (type instanceof UnsignedByteType)
 			return DataType.UINT8;
 		else
 			return null;
@@ -138,25 +138,25 @@ public class N5Utils {
 
 		switch (dataType) {
 		case INT8:
-			return (T)new ByteType();
+			return (T) new ByteType();
 		case UINT8:
-			return (T)new UnsignedByteType();
+			return (T) new UnsignedByteType();
 		case INT16:
-			return (T)new ShortType();
+			return (T) new ShortType();
 		case UINT16:
-			return (T)new UnsignedShortType();
+			return (T) new UnsignedShortType();
 		case INT32:
-			return (T)new IntType();
+			return (T) new IntType();
 		case UINT32:
-			return (T)new UnsignedIntType();
+			return (T) new UnsignedIntType();
 		case INT64:
-			return (T)new LongType();
+			return (T) new LongType();
 		case UINT64:
-			return (T)new UnsignedLongType();
+			return (T) new UnsignedLongType();
 		case FLOAT32:
-			return (T)new FloatType();
+			return (T) new FloatType();
 		case FLOAT64:
-			return (T)new DoubleType();
+			return (T) new DoubleType();
 		default:
 			return null;
 		}
@@ -170,25 +170,25 @@ public class N5Utils {
 
 		switch (dataType) {
 		case INT8:
-			return (T)new ByteType(defaultValue.getAsByte());
+			return (T) new ByteType(defaultValue.getAsByte());
 		case UINT8:
-			return (T)new UnsignedByteType(defaultValue.getAsInt());
+			return (T) new UnsignedByteType(defaultValue.getAsInt());
 		case INT16:
-			return (T)new ShortType(defaultValue.getAsShort());
+			return (T) new ShortType(defaultValue.getAsShort());
 		case UINT16:
-			return (T)new UnsignedShortType(defaultValue.getAsInt());
+			return (T) new UnsignedShortType(defaultValue.getAsInt());
 		case INT32:
-			return (T)new IntType(defaultValue.getAsInt());
+			return (T) new IntType(defaultValue.getAsInt());
 		case UINT32:
-			return (T)new UnsignedIntType(defaultValue.getAsInt());
+			return (T) new UnsignedIntType(defaultValue.getAsInt());
 		case INT64:
-			return (T)new LongType(defaultValue.getAsLong());
+			return (T) new LongType(defaultValue.getAsLong());
 		case UINT64:
-			return (T)new UnsignedLongType(defaultValue.getAsLong());
+			return (T) new UnsignedLongType(defaultValue.getAsLong());
 		case FLOAT32:
 
 			try {
-				return (T)new FloatType(defaultValue.getAsFloat());
+				return (T) new FloatType(defaultValue.getAsFloat());
 			} catch (Exception e) {}
 
 			try {
@@ -199,7 +199,7 @@ public class N5Utils {
 				else
 					val = Float.parseFloat(str);
 
-				return (T)new FloatType(val);
+				return (T) new FloatType(val);
 			} catch (Exception e) {
 				e.printStackTrace();
 				return null;
@@ -208,7 +208,7 @@ public class N5Utils {
 		case FLOAT64:
 
 			try {
-				return (T)new DoubleType(defaultValue.getAsDouble());
+				return (T) new DoubleType(defaultValue.getAsDouble());
 			} catch (Exception e) {}
 
 			try {
@@ -219,7 +219,7 @@ public class N5Utils {
 				else
 					val = Double.parseDouble(str);
 
-				return (T)new DoubleType(val);
+				return (T) new DoubleType(val);
 			} catch (Exception e) {
 				return null;
 			}
@@ -247,9 +247,9 @@ public class N5Utils {
 			final String dataset) {
 
 		if (N5LabelMultisets.isLabelMultisetType(n5, dataset))
-			return (CachedCellImg<T, ?>)N5LabelMultisets.openLabelMultiset(n5, dataset);
+			return (CachedCellImg<T, ?>) N5LabelMultisets.openLabelMultiset(n5, dataset);
 		else
-			return open(n5, dataset, (Consumer<IterableInterval<T>>)img -> {});
+			return open(n5, dataset, (Consumer<IterableInterval<T>>) img -> {});
 	}
 
 	/**
@@ -270,7 +270,7 @@ public class N5Utils {
 			final String dataset,
 			final int maxNumCacheEntries) {
 
-		return openWithBoundedSoftRefCache(n5, dataset, (Consumer<IterableInterval<T>>)img -> {}, maxNumCacheEntries);
+		return openWithBoundedSoftRefCache(n5, dataset, img -> {}, maxNumCacheEntries);
 	}
 
 	/**
@@ -292,9 +292,9 @@ public class N5Utils {
 			final String dataset) {
 
 		if (N5LabelMultisets.isLabelMultisetType(n5, dataset))
-			return (CachedCellImg<T, ?>)N5LabelMultisets.openLabelMultiset(n5, dataset);
+			return (CachedCellImg<T, ?>) N5LabelMultisets.openLabelMultiset(n5, dataset);
 		else
-			return openVolatile(n5, dataset, (Consumer<IterableInterval<T>>)img -> {});
+			return openVolatile(n5, dataset, (Consumer<IterableInterval<T>>) img -> {});
 	}
 
 	/**
@@ -336,7 +336,7 @@ public class N5Utils {
 			final N5Reader n5,
 			final String dataset) {
 
-		return openWithDiskCache(n5, dataset, (Consumer<IterableInterval<T>>)img -> {});
+		return openWithDiskCache(n5, dataset, (Consumer<IterableInterval<T>>) img -> {});
 	}
 
 	/**
@@ -633,14 +633,14 @@ public class N5Utils {
 	 * If the {@link DatasetAttributes} specify a default value, the resulting
 	 * consumer will fill blocks with that default value. Otherwise, the given
 	 * handler will be returned.
-	 * 
+	 *
 	 * @param <T>
 	 *            the type
 	 * @param attributes
 	 *            the Dataset Attributes
 	 * @param defaultBlockNotFoundHandler
 	 *            a default handler for missing blocks
-	 * 
+	 *
 	 * @return a consumer for missing blocks.
 	 */
 	private static <T extends NativeType<T>> Consumer<IterableInterval<T>> missingBlockHandler(
@@ -1529,7 +1529,7 @@ public class N5Utils {
 	 * an integer multiple of the {@link DataBlock} size of the dataset.
 	 *
 	 * @param interval
-	 *            the interval size to delete in pixel units and whose min 
+	 *            the interval size to delete in pixel units and whose min
 	 *            determines the block grid offset
 	 * @param n5
 	 *            the n5 writer
@@ -1892,11 +1892,10 @@ public class N5Utils {
 	/**
 	 * @return primitive array with one element corresponding to the given value
 	 */
-	private static < T extends NativeType< T > > Object extractValue( final T value )
-	{
-		final ArrayImg< T, ? > img = new ArrayImgFactory<>( value ).create( 1 );
-		img.firstElement().set( value );
-		return ( ( ArrayDataAccess< ? > ) ( img.update( null ) ) ).getCurrentStorageArray();
+	private static <T extends NativeType<T>> Object extractValue(final T value) {
+		final ArrayImg<T, ?> img = new ArrayImgFactory<>(value).create(1);
+		img.firstElement().set(value);
+		return ((ArrayDataAccess<?>) (img.update(null))).getCurrentStorageArray();
 	}
 
 	/**
