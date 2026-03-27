@@ -1493,7 +1493,7 @@ public class N5Utils {
 
 	/**
 	 * Delete an {@link Interval} in an N5 dataset at a given offset. The offset
-	 * is given in {@link DataBlock} grid coordinates and the interval size is assumed to a
+	 * is given in {@link DataBlock} grid coordinates and the interval size is assumed to be
 	 * an integer multiple of the {@link DataBlock} size of the dataset.
 	 *
 	 * @param interval
@@ -1525,7 +1525,7 @@ public class N5Utils {
 
 	/**
 	 * Delete an {@link Interval} in an N5 dataset. The block offset is
-	 * determined by the interval position, and the interval size is assumed to a
+	 * determined by the interval position, and the interval size is assumed to be
 	 * an integer multiple of the {@link DataBlock} size of the dataset.
 	 *
 	 * @param interval
@@ -1552,7 +1552,7 @@ public class N5Utils {
 
 	/**
 	 * Delete an {@link Interval} in an N5 dataset. The block offset is
-	 * determined by the interval position, and the interval size is assumed to a
+	 * determined by the interval position, and the interval size is assumed to be
 	 * an integer multiple of the {@link DataBlock} size of the dataset.
 	 *
 	 * @param interval
