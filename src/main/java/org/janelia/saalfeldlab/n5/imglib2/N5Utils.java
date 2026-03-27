@@ -889,8 +889,8 @@ public class N5Utils {
 			return;
 		}
 
-		final Blocks<T,?> blocks = new DefaultDataBlockSupplier<>(attributes, source, gridOffset);
-		n5.writeRegion(dataset, attributes, blocks.regionMin(), blocks.regionSize(), blocks, true);
+		final ChunkSupplier<T,?> chunkSupplier = new DefaultChunkSupplier<>(attributes, source, gridOffset);
+		n5.writeRegion(dataset, attributes, chunkSupplier.regionMin(), chunkSupplier.regionSize(), chunkSupplier, true);
 	}
 
 	/**
@@ -1019,8 +1019,8 @@ public class N5Utils {
 			return;
 		}
 
-		final Blocks<T,?> blocks = new DefaultDataBlockSupplier<>(attributes, source, gridOffset).threadSafe();
-		n5.writeRegion(dataset, attributes, blocks.regionMin(), blocks.regionSize(), blocks, true, exec);
+		final ChunkSupplier<T,?> chunkSupplier = new DefaultChunkSupplier<>(attributes, source, gridOffset).threadSafe();
+		n5.writeRegion(dataset, attributes, chunkSupplier.regionMin(), chunkSupplier.regionSize(), chunkSupplier, true, exec);
 	}
 
 	/**
@@ -1091,8 +1091,8 @@ public class N5Utils {
 			final long[] gridOffset,
 			final T defaultValue) {
 
-		final Blocks<T,?> blocks = new NonEmptyDataBlockSupplier<>(attributes, source, gridOffset, defaultValue);
-		n5.writeRegion(dataset, attributes, blocks.regionMin(), blocks.regionSize(), blocks, true);
+		final ChunkSupplier<T,?> chunkSupplier = new NonEmptyChunkSupplier<>(attributes, source, gridOffset, defaultValue);
+		n5.writeRegion(dataset, attributes, chunkSupplier.regionMin(), chunkSupplier.regionSize(), chunkSupplier, true);
 	}
 
 	/**
@@ -1380,8 +1380,8 @@ public class N5Utils {
 			attributes = n5.getDatasetAttributes(dataset);
 		}
 
-		final Blocks<T, ?> blocks = new MergeDataBlockSupplier<>(attributes, source);
-		n5.writeRegion(dataset, attributes, blocks.regionMin(), blocks.regionSize(), blocks, false);
+		final ChunkSupplier<T, ?> chunkSupplier = new MergeChunkSupplier<>(attributes, source);
+		n5.writeRegion(dataset, attributes, chunkSupplier.regionMin(), chunkSupplier.regionSize(), chunkSupplier, false);
 	}
 
 	/**
@@ -1425,8 +1425,8 @@ public class N5Utils {
 			attributes = n5.getDatasetAttributes(dataset);
 		}
 
-		final Blocks<T, ?> blocks = new MergeDataBlockSupplier<>(attributes, source).threadSafe();
-		n5.writeRegion(dataset, attributes, blocks.regionMin(), blocks.regionSize(), blocks, false, exec);
+		final ChunkSupplier<T, ?> chunkSupplier = new MergeChunkSupplier<>(attributes, source).threadSafe();
+		n5.writeRegion(dataset, attributes, chunkSupplier.regionMin(), chunkSupplier.regionSize(), chunkSupplier, false, exec);
 	}
 
 	/**
@@ -1608,34 +1608,34 @@ public class N5Utils {
 	//   DataBlockSupplier implementations
 	// ------------------------------------------------------------------------
 
-	private static abstract class Blocks<T extends NativeType<T>, P> implements DataBlockSupplier<P> {
+	private static abstract class ChunkSupplier<T extends NativeType<T>, P> implements DataBlockSupplier<P> {
 
-		abstract Blocks<T, P> independentCopy();
+		abstract ChunkSupplier<T, P> independentCopy();
 
-		private Supplier<Blocks<T, P>> threadSafeSupplier;
+		private Supplier<ChunkSupplier<T, P>> threadSafeSupplier;
 
 		abstract long[] regionMin();
 
 		abstract long[] regionSize();
 
-		Blocks<T, P> threadSafe() {
+		ChunkSupplier<T, P> threadSafe() {
 			if (threadSafeSupplier == null)
 				threadSafeSupplier = CloseableThreadLocal.withInitial(this::independentCopy)::get;
-			return new Blocks<T, P>() {
+			return new ChunkSupplier<T, P>() {
 
 				@Override
-				Blocks<T, P> independentCopy() {
-					return Blocks.this.independentCopy().threadSafe();
+				ChunkSupplier<T, P> independentCopy() {
+					return ChunkSupplier.this.independentCopy().threadSafe();
 				}
 
 				@Override
 				long[] regionMin() {
-					return Blocks.this.regionMin();
+					return ChunkSupplier.this.regionMin();
 				}
 
 				@Override
 				long[] regionSize() {
-					return Blocks.this.regionSize();
+					return ChunkSupplier.this.regionSize();
 				}
 
 				@Override
@@ -1644,73 +1644,73 @@ public class N5Utils {
 				}
 
 				@Override
-				Blocks<T, P> threadSafe() {
+				ChunkSupplier<T, P> threadSafe() {
 					return this;
 				}
 			};
 		}
 	}
 
-	private static class NonEmptyDataBlockSupplier<T extends NativeType<T>, P> extends Blocks<T, P> {
+	private static class NonEmptyChunkSupplier<T extends NativeType<T>, P> extends ChunkSupplier<T, P> {
 
-		private DefaultDataBlockSupplier<T, P> blocks;
+		private final DefaultChunkSupplier<T, P> chunkSupplier;
 		private final T defaultValue;
 
-		NonEmptyDataBlockSupplier(
+		NonEmptyChunkSupplier(
 				final DatasetAttributes attributes,
 				final RandomAccessibleInterval<T> source,
 				final long[] gridOffset,
 				final T defaultValue) {
-			blocks = new DefaultDataBlockSupplier<>(attributes, source, gridOffset);
+			chunkSupplier = new DefaultChunkSupplier<>(attributes, source, gridOffset);
 			this.defaultValue = defaultValue;
 		}
 
-		private NonEmptyDataBlockSupplier(final NonEmptyDataBlockSupplier<T, P> supplier) {
-			blocks = supplier.blocks.independentCopy();
+		private NonEmptyChunkSupplier(final NonEmptyChunkSupplier<T, P> supplier) {
+			chunkSupplier = supplier.chunkSupplier.independentCopy();
 			defaultValue = supplier.defaultValue;
 		}
 
 		@Override
-		Blocks<T, P> independentCopy() {
-			return new NonEmptyDataBlockSupplier<>(this);
+		ChunkSupplier<T, P> independentCopy() {
+			return new NonEmptyChunkSupplier<>(this);
 		}
 
 		@Override
 		long[] regionMin() {
-			return blocks.regionMin();
+			return chunkSupplier.regionMin();
 		}
 
 		@Override
 		long[] regionSize() {
-			return blocks.regionSize();
+			return chunkSupplier.regionSize();
 		}
 
 		@Override
 		public DataBlock<P> get(final long[] gridPos, final DataBlock<P> existingDataBlock) {
-			final DataBlock<P> dataBlock = blocks.get(gridPos, existingDataBlock);
+			final DataBlock<P> dataBlock = chunkSupplier.get(gridPos, existingDataBlock);
 			return allEqual(defaultValue, dataBlock.getData()) ? null : dataBlock;
 		}
 	}
 
-	private static class DefaultDataBlockSupplier<T extends NativeType<T>, P> extends Blocks<T, P> {
+	private static class DefaultChunkSupplier<T extends NativeType<T>, P> extends ChunkSupplier<T, P> {
 
 		private final DataType dataType;
-		private final int[] blockSize; // (of the dataset)
+		private final int[] chunkSize; // (chunk size of the dataset)
 		private final PrimitiveBlocks<T> sourceBlocks;
 		private final long[] gridOffset;
 		private final long[] regionMin;
 		private final long[] regionSize;
-		private final long[] currentBlockMin;
-		private final int[] currentBlockSize;
+		private final long[] currentChunkMin;
+		private final int[] currentChunkSize;
 
-		DefaultDataBlockSupplier(
+		DefaultChunkSupplier(
 				final DatasetAttributes attributes,
 				final RandomAccessibleInterval<T> source,
 				final long[] gridOffset) {
 			dataType = attributes.getDataType();
 
 			// use the chunk size
-			blockSize = attributes.getChunkSize();
+			chunkSize = attributes.getChunkSize();
 
 			sourceBlocks = PrimitiveBlocks.of(source.view().zeroMin(), OnFallback.ACCEPT);
 			this.gridOffset = gridOffset;
@@ -1718,28 +1718,28 @@ public class N5Utils {
 			final int n = source.numDimensions();
 			regionMin = new long[n];
 			regionSize = new long[n];
-			Arrays.setAll(regionMin, d -> gridOffset[d] * blockSize[d]);
+			Arrays.setAll(regionMin, d -> gridOffset[d] * chunkSize[d]);
 			source.dimensions(regionSize);
 
-			currentBlockMin = new long[n];
-			currentBlockSize = new int[n];
+			currentChunkMin = new long[n];
+			currentChunkSize = new int[n];
 		}
 
-		private DefaultDataBlockSupplier(final DefaultDataBlockSupplier<T, P> supplier) {
+		private DefaultChunkSupplier(final DefaultChunkSupplier<T, P> supplier) {
 			dataType = supplier.dataType;
-			blockSize = supplier.blockSize;
+			chunkSize = supplier.chunkSize;
 			sourceBlocks = supplier.sourceBlocks.independentCopy();
 			gridOffset = supplier.gridOffset;
 			regionMin = supplier.regionMin;
 			regionSize = supplier.regionSize;
-			final int n = blockSize.length;
-			currentBlockMin = new long[n];
-			currentBlockSize = new int[n];
+			final int n = chunkSize.length;
+			currentChunkMin = new long[n];
+			currentChunkSize = new int[n];
 		}
 
 		@Override
-		DefaultDataBlockSupplier<T, P > independentCopy() {
-			return new DefaultDataBlockSupplier<>(this);
+		DefaultChunkSupplier<T, P > independentCopy() {
+			return new DefaultChunkSupplier<>(this);
 		}
 
 		@Override
@@ -1754,18 +1754,18 @@ public class N5Utils {
 
 		@Override
 		public DataBlock<P> get(final long[] gridPos, final DataBlock<P> existingDataBlock) {
-			Arrays.setAll(currentBlockMin, d -> (gridPos[d] - gridOffset[d]) * blockSize[d]);
-			Arrays.setAll(currentBlockSize, d -> (int) Math.min(blockSize[d], regionSize[d] - currentBlockMin[d]));
-			final DataBlock<P> dataBlock = Cast.unchecked(dataType.createDataBlock(currentBlockSize, gridPos));
-			sourceBlocks.copy(currentBlockMin, dataBlock.getData(), currentBlockSize);
-			return dataBlock;
+			Arrays.setAll(currentChunkMin, d -> (gridPos[d] - gridOffset[d]) * chunkSize[d]);
+			Arrays.setAll(currentChunkSize, d -> (int) Math.min(chunkSize[d], regionSize[d] - currentChunkMin[d]));
+			final DataBlock<P> chunk = Cast.unchecked(dataType.createDataBlock(currentChunkSize, gridPos));
+			sourceBlocks.copy(currentChunkMin, chunk.getData(), currentChunkSize);
+			return chunk;
 		}
 	}
 
-	private static class MergeDataBlockSupplier<T extends NativeType<T>, P> extends Blocks<T, P> {
+	private static class MergeChunkSupplier<T extends NativeType<T>, P> extends ChunkSupplier<T, P> {
 
 		private final DataType dataType;
-		private final int[] blockSize; // (of the dataset)
+		private final int[] chunkSize; // (chunk size of the dataset)
 		private final long[] datasetSize;
 
 		private final PrimitiveBlocks<T> sourceBlocks;
@@ -1775,19 +1775,19 @@ public class N5Utils {
 		private final long[] regionMin;
 		private final long[] regionSize;
 
-		private final long[] currentBlockMin;
-		private final int[] currentBlockSize;
+		private final long[] currentChunkMin;
+		private final int[] currentChunkSize;
 
 		private final int[] zeroPos;
 		private final long[] intersectionMin;
 		private final int[] intersectionSize;
 		private final int[] intersectionOffset;
 
-		MergeDataBlockSupplier(
+		MergeChunkSupplier(
 				final DatasetAttributes attributes,
 				final RandomAccessibleInterval<T> source) {
 			dataType = attributes.getDataType();
-			blockSize = attributes.getBlockSize();
+			chunkSize = attributes.getBlockSize();
 			datasetSize = attributes.getDimensions();
 
 			sourceBlocks = PrimitiveBlocks.of(source, OnFallback.ACCEPT);
@@ -1801,17 +1801,17 @@ public class N5Utils {
 			source.min(regionMin);
 			source.dimensions(regionSize);
 
-			currentBlockMin = new long[n];
-			currentBlockSize = new int[n];
+			currentChunkMin = new long[n];
+			currentChunkSize = new int[n];
 			zeroPos = new int[n];
 			intersectionMin = new long[n];
 			intersectionSize = new int[n];
 			intersectionOffset = new int[n];
 		}
 
-		private MergeDataBlockSupplier(final MergeDataBlockSupplier<T, P> supplier) {
+		private MergeChunkSupplier(final MergeChunkSupplier<T, P> supplier) {
 			dataType = supplier.dataType;
-			blockSize = supplier.blockSize;
+			chunkSize = supplier.chunkSize;
 			datasetSize = supplier.datasetSize;
 
 			sourceBlocks = supplier.sourceBlocks.independentCopy();
@@ -1820,9 +1820,9 @@ public class N5Utils {
 
 			regionMin = supplier.regionMin;
 			regionSize = supplier.regionSize;
-			final int n = blockSize.length;
-			currentBlockMin = new long[n];
-			currentBlockSize = new int[n];
+			final int n = chunkSize.length;
+			currentChunkMin = new long[n];
+			currentChunkSize = new int[n];
 			zeroPos = supplier.zeroPos;
 			intersectionMin = new long[n];
 			intersectionSize = new int[n];
@@ -1830,8 +1830,8 @@ public class N5Utils {
 		}
 
 		@Override
-		MergeDataBlockSupplier<T, P > independentCopy() {
-			return new MergeDataBlockSupplier<>(this);
+		MergeChunkSupplier<T, P > independentCopy() {
+			return new MergeChunkSupplier<>(this);
 		}
 
 		@Override
@@ -1845,47 +1845,47 @@ public class N5Utils {
 		}
 
 		@Override
-		public DataBlock<P> get(final long[] gridPos, final DataBlock<P> existingDataBlock) {
+		public DataBlock<P> get(final long[] gridPos, final DataBlock<P> existingChunk) {
 
-			Arrays.setAll(currentBlockMin, d -> gridPos[d] * blockSize[d]);
-			Arrays.setAll(currentBlockSize, d -> (int) Math.min(blockSize[d], datasetSize[d] - currentBlockMin[d]));
+			Arrays.setAll(currentChunkMin, d -> gridPos[d] * chunkSize[d]);
+			Arrays.setAll(currentChunkSize, d -> (int) Math.min(chunkSize[d], datasetSize[d] - currentChunkMin[d]));
 
-			Arrays.setAll(intersectionMin, d -> Math.max(regionMin[d], currentBlockMin[d]));
-			Arrays.setAll(intersectionSize, d -> (int) (Math.min(regionMin[d] + regionSize[d], currentBlockMin[d] + currentBlockSize[d]) - intersectionMin[d]));
+			Arrays.setAll(intersectionMin, d -> Math.max(regionMin[d], currentChunkMin[d]));
+			Arrays.setAll(intersectionSize, d -> (int) (Math.min(regionMin[d] + regionSize[d], currentChunkMin[d] + currentChunkSize[d]) - intersectionMin[d]));
 
-			final DataBlock<P> dataBlock;
-			if (Arrays.equals(intersectionSize, currentBlockSize)) {
+			final DataBlock<P> chunk;
+			if (Arrays.equals(intersectionSize, currentChunkSize)) {
 				// Full overlap: Fill a new DataBlock with source data.
 				// (It doesn't matter, whether a block already exists at gridPos, we would override everything anyway.)
-				dataBlock = Cast.unchecked(dataType.createDataBlock(currentBlockSize, gridPos));
-				sourceBlocks.copy(currentBlockMin, dataBlock.getData(), currentBlockSize);
+				chunk = Cast.unchecked(dataType.createDataBlock(currentChunkSize, gridPos));
+				sourceBlocks.copy(currentChunkMin, chunk.getData(), currentChunkSize);
 			} else {
-				if (existingDataBlock == null) {
+				if (existingChunk == null) {
 					// There is no existing DataBlock. Create a new one.
-					dataBlock = Cast.unchecked(dataType.createDataBlock(currentBlockSize, gridPos));
+					chunk = Cast.unchecked(dataType.createDataBlock(currentChunkSize, gridPos));
 				} else {
 					// There is an existing DataBlock. Is it large enough?
 					// Perhaps it was a truncated border block, and now we
 					// expanded the dataset.
-					if (Arrays.equals(existingDataBlock.getSize(), currentBlockSize)) {
-						dataBlock = existingDataBlock;
+					if (Arrays.equals(existingChunk.getSize(), currentChunkSize)) {
+						chunk = existingChunk;
 					} else {
 						// Create a new DataBlock and copy existing data over.
-						dataBlock = Cast.unchecked(dataType.createDataBlock(currentBlockSize, gridPos));
+						chunk = Cast.unchecked(dataType.createDataBlock(currentChunkSize, gridPos));
 						subArrayCopy.copy(
-								existingDataBlock.getData(), existingDataBlock.getSize(), zeroPos,
-								dataBlock.getData(), dataBlock.getSize(), zeroPos, existingDataBlock.getSize());
+								existingChunk.getData(), existingChunk.getSize(), zeroPos,
+								chunk.getData(), chunk.getSize(), zeroPos, existingChunk.getSize());
 					}
 				}
 				// Copy intersecting portion of source data into the DataBlock
 				final P sourceData = tempArray.get((int) Intervals.numElements(intersectionSize));
 				sourceBlocks.copy(intersectionMin, sourceData, intersectionSize);
-				Arrays.setAll(intersectionOffset, d -> (int) (intersectionMin[d] - currentBlockMin[d]));
+				Arrays.setAll(intersectionOffset, d -> (int) (intersectionMin[d] - currentChunkMin[d]));
 				subArrayCopy.copy(
 						sourceData, intersectionSize, zeroPos,
-						dataBlock.getData(), dataBlock.getSize(), intersectionOffset, intersectionSize);
+						chunk.getData(), chunk.getSize(), intersectionOffset, intersectionSize);
 			}
-			return dataBlock;
+			return chunk;
 		}
 	}
 
