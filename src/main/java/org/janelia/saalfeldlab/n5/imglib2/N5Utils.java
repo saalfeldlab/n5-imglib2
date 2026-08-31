@@ -59,6 +59,7 @@ import org.janelia.saalfeldlab.n5.DataType;
 import org.janelia.saalfeldlab.n5.DatasetAttributes;
 import org.janelia.saalfeldlab.n5.N5Exception.N5IOException;
 import org.janelia.saalfeldlab.n5.N5Reader;
+import org.janelia.saalfeldlab.n5.N5URI;
 import org.janelia.saalfeldlab.n5.N5Writer;
 import org.janelia.saalfeldlab.n5.N5Writer.DataBlockSupplier;
 import org.janelia.saalfeldlab.n5.util.FloatValueParser;
@@ -1342,18 +1343,31 @@ public class N5Utils {
 			final RandomAccessibleInterval<T> source,
 			final N5Writer n5,
 			final String dataset,
-			DatasetAttributes attributes) {
+			final DatasetAttributes attributes) {
 
+		final String normalDataset = N5URI.normalizeGroupPath(dataset);
 		final Optional<long[]> newDimensionsOpt = saveRegionPreprocessing(source, attributes);
-
+		DatasetAttributes newAttributes = attributes;
 		if (newDimensionsOpt.isPresent()) {
-			// TODO not correct for zarr if mapDatasetAttributes not set. I think we need to create a new DatasetAttributes.
-			n5.setAttribute(dataset, "dimensions", newDimensionsOpt.get());
-			attributes = n5.getDatasetAttributes(dataset);
+			newAttributes = copyAttributesNewDimensions(attributes, newDimensionsOpt.get());
+			newAttributes = n5.getConvertedDatasetAttributes(newAttributes);
+
+			// will not overwrite user attributes
+			n5.setDatasetAttributes(normalDataset, newAttributes);
 		}
 
-		final ChunkSupplier<T, ?> chunkSupplier = new MergeChunkSupplier<>(attributes, source);
-		n5.writeRegion(dataset, attributes, chunkSupplier.regionMin(), chunkSupplier.regionSize(), chunkSupplier, false);
+		final ChunkSupplier<T, ?> chunkSupplier = new MergeChunkSupplier<>(newAttributes, source);
+		n5.writeRegion(normalDataset, newAttributes, chunkSupplier.regionMin(), chunkSupplier.regionSize(), chunkSupplier, false);
+	}
+
+	private static DatasetAttributes copyAttributesNewDimensions(DatasetAttributes originalAttributes, long[] newDimensions ) {
+
+		return new DatasetAttributes(newDimensions,
+				originalAttributes.getBlockSize(),
+				originalAttributes.getDataType(),
+				originalAttributes.getBlockCodecInfo(),
+				originalAttributes.getDatasetCodecInfos(),
+				originalAttributes.getDataCodecInfos());
 	}
 
 	/**
