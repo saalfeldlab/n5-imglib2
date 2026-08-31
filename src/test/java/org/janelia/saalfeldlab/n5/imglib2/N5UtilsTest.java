@@ -17,17 +17,22 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+import com.google.gson.GsonBuilder;
+
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.MatcherAssert;
 import org.janelia.saalfeldlab.n5.DataBlock;
 import org.janelia.saalfeldlab.n5.DataType;
 import org.janelia.saalfeldlab.n5.DatasetAttributes;
+import org.janelia.saalfeldlab.n5.FileSystemKeyValueAccess;
 import org.janelia.saalfeldlab.n5.GzipCompression;
 import org.janelia.saalfeldlab.n5.N5FSWriter;
 import org.janelia.saalfeldlab.n5.N5Reader;
 import org.janelia.saalfeldlab.n5.N5Writer;
 import org.janelia.saalfeldlab.n5.RawCompression;
 import org.janelia.saalfeldlab.n5.ShortArrayDataBlock;
+import org.janelia.saalfeldlab.n5.zarr.N5ZarrWriter;
+import org.janelia.saalfeldlab.n5.zarr.v3.ZarrV3KeyValueWriter;
 import org.janelia.saalfeldlab.n5.codec.DataCodecInfo;
 import org.janelia.saalfeldlab.n5.codec.N5BlockCodecInfo;
 import org.janelia.saalfeldlab.n5.codec.RawBlockCodecInfo;
@@ -209,6 +214,95 @@ public class N5UtilsTest {
 		final IntervalView<UnsignedShortType> loadedSubsetParallel = Views.offsetInterval(loaded, dimensions, dimensions);
 		for (final Pair<UnsignedShortType, UnsignedShortType> pair : Views.flatIterable(Views.interval(Views.pair(img, loadedSubsetParallel), img)))
 			Assert.assertEquals(pair.getA().getInteger(), pair.getB().getInteger());
+	}
+
+	@Test
+	public void testSaveRegionPreservesSurroundingData() {
+
+		assertSaveRegionPadsAndPreserves(n5, "/test/group/saveRegionPreserve");
+	}
+
+	@Test
+	public void testSaveRegionZarr2() throws IOException {
+
+		final File zarrDir = Files.createTempDirectory("n5utils-zarr-test-").toFile();
+		zarrDir.deleteOnExit();
+
+		// an old implementation required that mapN5DatasetAttributes be true,
+		// the current implementation should always work
+		for (final boolean mapN5DatasetAttributes : new boolean[]{true, false}) {
+			final String path = zarrDir.getAbsolutePath() + "/map" + mapN5DatasetAttributes + ".zarr";
+			try (final N5Writer zarr = new N5ZarrWriter(
+					path, new GsonBuilder(), ".", mapN5DatasetAttributes, false)) {
+				assertSaveRegionPadsAndPreserves(zarr, "/saveRegionPreserve");
+				zarr.remove();
+			}
+		}
+	}
+
+	@Test
+	public void testSaveRegionZarr3() throws IOException {
+
+		final File zarrDir = Files.createTempDirectory("n5utils-zarr3-test-").toFile();
+		zarrDir.deleteOnExit();
+
+		// zarr v3 has no n5 attribute mapping to vary
+		final String path = zarrDir.getAbsolutePath() + "/v3.zarr";
+		try (final N5Writer zarr = new ZarrV3KeyValueWriter(
+				new FileSystemKeyValueAccess(), path, new GsonBuilder(), false)) {
+			assertSaveRegionPadsAndPreserves(zarr, "/saveRegionPreserve");
+			zarr.remove();
+		}
+	}
+
+	/**
+	 * Write a region that starts inside the truncated border blocks of an
+	 * existing dataset and extends past its end, then check that the dataset
+	 * grew and that the data outside the region survived.
+	 */
+	private static void assertSaveRegionPadsAndPreserves(final N5Writer writer, final String dataset) {
+
+		// deliberately not multiples of blockSize, so the border blocks are truncated
+		final long[] dims = new long[]{18, 26, 34};
+
+		// fill the dataset with a known pattern
+		final short[] background = new short[(int)Intervals.numElements(dims)];
+		for (int i = 0; i < background.length; ++i)
+			background[i] = (short)(i % 1000 + 1); // never 0, so lost data is detectable
+
+		final ArrayImg<UnsignedShortType, ShortArray> img = ArrayImgs.unsignedShorts(background, dims);
+		N5Utils.save(img, writer, dataset, blockSize, new RawCompression());
+
+		// a region that is not block aligned, starts inside the truncated border
+		// blocks, and extends past the end of the dataset so that it needs padding
+		final long[] regionMin = new long[]{16, 23, 31};
+		final long[] regionSize = new long[]{8, 9, 10};
+		final int regionValue = 1234;
+		final ArrayImg<UnsignedShortType, ShortArray> region = ArrayImgs.unsignedShorts(regionSize);
+		region.forEach(t -> t.set(regionValue));
+		N5Utils.saveRegion(Views.translate(region, regionMin), writer, dataset);
+
+		final RandomAccessibleInterval<UnsignedShortType> loaded = N5Utils.open(writer, dataset);
+
+		// the dataset was padded to hold the region
+		final long[] expectedPaddedDims = new long[dims.length];
+		Arrays.setAll(expectedPaddedDims, d -> Math.max(dims[d], regionMin[d] + regionSize[d]));
+		Assert.assertArrayEquals("saveRegion padded dims", expectedPaddedDims, loaded.dimensionsAsLongArray());
+
+		// over the original bounds: the region holds the new values,
+		// everything else is untouched
+		final Interval regionInterval = Intervals.createMinSize(
+				regionMin[0], regionMin[1], regionMin[2], regionSize[0], regionSize[1], regionSize[2]);
+		final Cursor<Pair<UnsignedShortType, UnsignedShortType>> c = Views
+				.flatIterable(Views.interval(Views.pair(img, loaded), img)).localizingCursor();
+		while (c.hasNext()) {
+			final Pair<UnsignedShortType, UnsignedShortType> pair = c.next();
+			final int expected = Intervals.contains(regionInterval, c) ? regionValue : pair.getA().get();
+			Assert.assertEquals(
+					"value at " + Arrays.toString(c.positionAsLongArray()),
+					expected,
+					pair.getB().get());
+		}
 	}
 
 	@Test
